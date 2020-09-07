@@ -1,9 +1,12 @@
 const express = require("express");
 const path = require("path");
+const favicon = require("serve-favicon");
 
 const viewRouter = require("./routes/viewRoutes");
 
 const app = express();
+
+app.use(favicon(__dirname + "/public/imgs/favicon.ico"));
 
 // TELLS EXPRESS WHICH TEMPLATE ENGINE TO USE
 app.set("view engine", "pug");

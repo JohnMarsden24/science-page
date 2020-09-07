@@ -15,7 +15,8 @@
     "express": "^4.17.1",
     "gsap": "^3.5.1",
     "lottie-web": "^5.7.2",
-    "pug": "^3.0.0"
+    "pug": "^3.0.0",
+    "serve-favicon": "^2.5.0"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.4"
