@@ -22,19 +22,20 @@
 
 body {
   font-size: 1rem;
+  font-family: var(--font-regular);
   margin: 0;
   padding: 0;
 }
 
 h1 {
-  font-family: var(--font-bold);
+  /* font-family: var(--font-bold); */
   letter-spacing: 0.031875rem;
   font-size: 2.5rem;
   margin: 0;
 }
 
 h2 {
-  font-family: var(--font-medium);
+  /* font-family: var(--font-medium); */
   font-weight: lighter;
   letter-spacing: 0.0225rem;
   font-size: 2.5rem;
@@ -42,7 +43,7 @@ h2 {
 }
 
 h3 {
-  font-family: var(--font-medium);
+  /* font-family: var(--font-medium); */
   font-weight: lighter;
   letter-spacing: 0.0225rem;
   font-size: 1.75rem;
@@ -50,7 +51,7 @@ h3 {
 }
 
 p {
-  font-family: var(--font-regular);
+  /* font-family: var(--font-regular); */
   font-size: 1.25rem;
   line-height: 1.75rem;
   letter-spacing: 0.0225rem;
@@ -251,23 +252,12 @@ img {
   grid-template-columns: 1fr 1fr 1fr;
   column-gap: 24px;
   row-gap: 42px;
-  margin: 0 5%;
 }
 
 .flow-key-markers__block img {
   height: 80px;
   width: 80px;
   object-fit: contain;
-}
-
-.flow-key-markers__block p {
-  width: 80%;
-  margin: 0 auto;
-}
-
-.flow-key-markers__block h3 {
-  font-size: 1.5rem;
-  font-weight: 500;
 }
 
 .iris-impact-container {
@@ -503,16 +493,6 @@ p.active {
 
   .card {
     height: auto;
-  }
-
-  /* .flow-bother-card__img-container {
-    height: auto;
-    padding-top: 5%;
-  } */
-
-  .card__animation-container,
-  .flow-key-markers__block p {
-    width: 100%;
   }
 
   .hero-container,

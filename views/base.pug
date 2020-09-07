@@ -1,3 +1,10 @@
+mixin flow-key-marker(img, title, text)
+    .flow-key-markers__block
+        img.mb-24(src= img, alt="Flow key marker image")
+        h3.semi-bold.mb-24= title
+        p= text
+
+
 html(lang="en")
     head
         meta(charset="UTF-8")
@@ -66,42 +73,15 @@ html(lang="en")
             p.center.max-8 Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.
         h2.text-center.mtb-80 What are the key markers of flow?
         .flow-key-markers__container.text-center.mlr-30
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_1.png", alt="")
-                h3.mb-24 Challenge-skill balance
-                p Feeling competent to meet the current challenge
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_2.png", alt="")
-                h3.mb-24 Clear feedback
-                p Knowing precisely how well we are doing
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_3.png", alt="")
-                h3.mb-24 Loss of self-consciousness
-                p Not worrying what others will think of us 
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_4.png", alt="")
-                h3.mb-24 Action-awareness merging
-                p Attention comes effortlessly without thinking
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_5.png", alt="")
-                h3.mb-24 Intense concentration
-                p Being utterly focused on the task
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_6.png", alt="")
-                h3.mb-24 Time distortion
-                p Not being aware that the time flew by
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_7.png", alt="")
-                h3.mb-24 Clear goals
-                p Having a clear sense of what we want to do
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_8.png", alt="")
-                h3.mb-24 Sense of control
-                p A feeling of total control over the task
-            .flow-key-markers__block
-                img.mb-24(src="/imgs/flow_marker_9.png", alt="")
-                h3.mb-24 Intrinsic rewards
-                p Feeling the whole experience to be extremely positive
+            +flow-key-marker("/imgs/flow_marker_1.png", "Challenge-skill balance", "Feeling competent to meet the current challenge")
+            +flow-key-marker("/imgs/flow_marker_2.png", "Clear feedback", "Knowing precisely how well we are doing")
+            +flow-key-marker("/imgs/flow_marker_3.png", "Loss of self-consciousness", "Not worrying what others will think of us")
+            +flow-key-marker("/imgs/flow_marker_4.png", "Action-awareness merging", "Attention comes effortlessly without thinking")
+            +flow-key-marker("/imgs/flow_marker_5.png", "Intense concentration", "Being utterly focused on the task")
+            +flow-key-marker("/imgs/flow_marker_6.png", "Time distortion", "Not being aware that the time flew by")
+            +flow-key-marker("/imgs/flow_marker_7.png", "Clear goals", "Having a clear sense of what we want to do")
+            +flow-key-marker("/imgs/flow_marker_8.png", "Sense of control", "A feeling of total control over the task")
+            +flow-key-marker("/imgs/flow_marker_9.png", "Intrinsic rewards", "Feeling the whole experience to be extremely positive")
         .iris-impact-container
             img(src="/imgs/iris_impact.png", alt="")
             div
