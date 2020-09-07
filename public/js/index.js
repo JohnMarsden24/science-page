@@ -1,6 +1,5 @@
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { createTestAnimation } from "./testPage";
 import {
   createScrollAnimationSingle,
   createScrollAnimationMultiple,

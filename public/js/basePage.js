@@ -30,7 +30,7 @@ export function parallaxAnimation() {
           // start: "top bottom", // the default values
           // end: "+=200px",
           scrub: true,
-          markers: true,
+          // markers: true,
         },
       });
       if (index === targets.length - 1) {
@@ -44,7 +44,7 @@ export function parallaxAnimation() {
             // start: "top bottom", // the default values
             // end: "+=200px",
             scrub: true,
-            markers: true,
+            // markers: true,
           },
         });
       }
@@ -109,10 +109,10 @@ export function createScrollAnimationMultiple(arr) {
           scrub: true,
           start: "center center",
           end,
-          //   markers: true,
+          // markers: true,
           toggleActions: "restart none reverse reset",
           pinSpacing: pinSpacing,
-          snap: 1,
+          snap: 0.25,
         },
       })
       .from(target, { opacity: opacityFirst, duration: 0.2 }, 0)
