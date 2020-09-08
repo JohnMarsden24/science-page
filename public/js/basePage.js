@@ -120,6 +120,87 @@ export function createScrollAnimationMultiple(arr) {
   });
 }
 
+export function newScrollAnimationMultiple(arr) {
+  arr.forEach((elem, index) => {
+    const reversed = index % 2 !== 0;
+    const [img, textBlock] = [...elem.childNodes];
+    const [title, text] = [...textBlock.childNodes];
+    loadLottie(img);
+    const timeline = gsap.timeline({
+      defaults: {
+        duration: 0.6,
+        ease: "slow(0.5, 0.4, false)",
+        opacity: 0,
+      },
+      scrollTrigger: {
+        trigger: elem,
+        toggleActions: "restart none none reverse",
+        // markers: true,
+        start: "top center",
+      },
+    });
+
+    const elements = { img, title, text, elem, timeline };
+
+    if (window.innerWidth < 768) {
+      addToTimelineMobile(elements);
+    } else if (reversed) {
+      addToTimelineRight(elements);
+    } else {
+      addToTimelineLeft(elements);
+    }
+  });
+}
+
+function addToTimelineLeft(options) {
+  const { timeline, img, title, text, elem } = options;
+  timeline
+    .from(img, { x: "-50px", onComplete: parallaxImg(img, elem) })
+    .from(title, { x: "50px" }, "-=.2")
+    .from(text, { x: "50px" }, "-=.2");
+}
+
+function addToTimelineRight(options) {
+  const { timeline, img, title, text, elem } = options;
+  timeline
+    .from(title, { x: "-50px", onComplete: parallaxImg(img, elem) })
+    .from(text, { x: "-50px" }, "-=.2")
+    .from(img, { x: "50px" }, "-=.2");
+}
+
+function addToTimelineMobile(options) {
+  const { timeline, img, title, text, elem } = options;
+  timeline
+    .from(img, { y: "50px", onComplete: parallaxImg(img, elem) })
+    .from(title, { y: "50px" }, "-=.2")
+    .from(text, { y: "50px" }, "-=.2");
+}
+
+function parallaxImg(img, trigger) {
+  gsap.to(img, {
+    scrollTrigger: {
+      trigger,
+      start: "center center",
+      scrub: 1,
+      markers: true,
+    },
+    // y: "-200px",
+    yPercent: -40,
+    ease: "slow(0.5, 0.4, false)",
+  });
+}
+
+function loadLottie(container) {
+  const animationName = container.dataset.animation;
+  lottie.loadAnimation({
+    container,
+    renderer: "svg",
+    loop: true,
+    autoplay: true,
+    path: `../animations/${animationName}.json`,
+  });
+}
+
 export function lottieLoader() {
   function loadCircles() {
     lottie.loadAnimation({
@@ -140,28 +221,4 @@ export function lottieLoader() {
   });
 
   animation2.addEventListener("complete", loadCircles);
-
-  let animation3 = lottie.loadAnimation({
-    container: document.getElementById("a3"),
-    renderer: "svg",
-    loop: true,
-    autoplay: true,
-    path: "../animations/circle_breathing.json",
-  });
-
-  let animation4 = lottie.loadAnimation({
-    container: document.getElementById("a4"),
-    renderer: "svg",
-    loop: true,
-    autoplay: true,
-    path: "../animations/iris_enables_flow.json",
-  });
-
-  let animation5 = lottie.loadAnimation({
-    container: document.getElementById("a5"),
-    renderer: "svg",
-    loop: true,
-    autoplay: true,
-    path: "../animations/neuro.json",
-  });
 }

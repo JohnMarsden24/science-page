@@ -1,6 +1,7 @@
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import {
+  newScrollAnimationMultiple,
   createScrollAnimationSingle,
   createScrollAnimationMultiple,
   createScrollFadeInAnimationTimeline,
@@ -17,30 +18,31 @@ const flowBotherTitle = document.querySelector(".flow-bother-title");
 const flowKeyMarkers = document.querySelector(".flow-key-markers");
 const waveTitles = document.querySelector(".wave-container__titles");
 
-waveTitles.addEventListener("click", toggleActive);
+// waveTitles.addEventListener("click", toggleActive);
 
-const totalHeight = Array.from(flowBotherCards).reduce(
-  (acc, curr) => acc + curr.offsetHeight,
-  0
-);
+// const totalHeight = Array.from(flowBotherCards).reduce(
+//   (acc, curr) => acc + curr.offsetHeight,
+//   0
+// );
 
-const flowBotherTitleOptions = {
-  trigger: flowBotherCards[0],
-  pin: flowBotherTitle,
-  scrub: true,
-  start: "center center",
-  end: `+=${totalHeight}px`,
-  // markers: true,
-  pinSpacing: false,
-};
+// const flowBotherTitleOptions = {
+//   trigger: flowBotherCards[0],
+//   pin: flowBotherTitle,
+//   scrub: true,
+//   start: "center center",
+//   end: `+=${totalHeight}px`,
+//   // markers: true,
+//   pinSpacing: false,
+// };
 
 if (targetCards && flowBotherCards) {
-  createScrollAnimationMultiple(targetCards);
-  createScrollAnimationMultiple(flowBotherCards);
-  createScrollAnimationSingle(flowBotherTitleOptions);
-  createScrollFadeInAnimationTimeline();
+  newScrollAnimationMultiple(targetCards);
+  // createScrollAnimationMultiple(targetCards);
+  // createScrollAnimationMultiple(flowBotherCards);
+  // createScrollAnimationSingle(flowBotherTitleOptions);
+  // createScrollFadeInAnimationTimeline();
   lottieLoader();
-  parallaxAnimation();
+  // parallaxAnimation();
 }
 
 // createTestAnimation();
