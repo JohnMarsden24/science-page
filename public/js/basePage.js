@@ -182,9 +182,7 @@ function parallaxImg(img, trigger) {
       trigger,
       start: "center center",
       scrub: 1,
-      markers: true,
     },
-    // y: "-200px",
     yPercent: -40,
     ease: "slow(0.5, 0.4, false)",
   });
