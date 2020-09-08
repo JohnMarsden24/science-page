@@ -4,6 +4,22 @@ mixin flow-key-marker(img, title, text)
         h3.semi-bold.mb-24= title
         p= text
 
+mixin flow-bother-card(img, title, text)
+    .flow-bother-card.text-center.text-dark-teal.mlr-16-mob
+        .flow-bother-card__img-container
+            img.mb-40(src= img, alt="Why bother with flow illustration")
+        h3.mb-40= title
+        p.center.max-8= text
+
+mixin improve-container(img, title, text, optional)
+    .improve-container.plr-147(class= optional)
+        .improve-container__title
+            h3.mb-32= title
+        .improve-container__text
+            p= text
+        .improve-container__image
+            img(src= img, alt="Models wearing IRIS headpones")
+
 
 html(lang="en")
     head
@@ -28,7 +44,7 @@ html(lang="en")
                 .hero-signoff__text
                     p.bold Professor J Bhattacharya
                     img(src="/imgs/Goldsmiths-Logo.png", alt="")
-        .flex-row.align-center.justify-between.max-10.center.card.text-dark-teal
+        .flex-row.align-center.justify-between.max-10.center.card.text-dark-teal.mlr-16-mob
             #a3.animation-container
             .max-4
                 h2.mb-24 What is 'flow' state?
@@ -36,13 +52,13 @@ html(lang="en")
                     br
                     br
                     | You are living in the moment, utterly absorbed in the present activity. You’re ‘In Flow’ - a state of complete immersion in an activity.
-        .flex-row.align-center.justify-between.max-10.center.card.card--reverse.text-dark-teal
+        .flex-row.align-center.justify-between.max-10.center.card.card--reverse.text-dark-teal.mlr-16-mob
             #a4.animation-container
             .max-4
                 h2.mb-24 IRIS enables flow
                 p IRIS sound technology activates this potential by engaging your brain through active listening - sound that connects and stimulates biology - enabling you to find your ‘flow’.
 
-        .flex-row.align-center.justify-between.max-10.center.card.text-dark-teal
+        .flex-row.align-center.justify-between.max-10.center.card.text-dark-teal.mlr-16-mob
             #a5.animation-container
             .max-4
                 h2.mb-24  IRIS neurological benefits 
@@ -51,28 +67,12 @@ html(lang="en")
             h2 How IRIS enables flow state
             p IRIS algorithm splits out and increases the phase information sent to the brain.
         h2.flow-bother-title.text-center.mb-48.text-dark-teal Why should I bother with flow?
-        .flow-bother-card.text-center.text-dark-teal
-            .flow-bother-card__img-container
-                img.mb-40(src="/imgs/flow_bother_1.png", alt="")
-            h3.mb-40 Activity is much more rewarding in flow
-            p.center.max-8 Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.
-        .flow-bother-card.text-center.text-dark-teal
-            .flow-bother-card__img-container
-                img.mb-40(src="/imgs/flow_bother_2.png", alt="")
-            h3.mb-40 We return to what we enjoy
-            p.center.max-8 As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong
-        .flow-bother-card.text-center.text-dark-teal
-            .flow-bother-card__img-container
-                img.mb-40(src="/imgs/flow_bother_3.png", alt="")
-            h3.mb-40 Supports learning
-            p.center.max-8 When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.
-        .flow-bother-card.text-center.text-dark-teal
-            .flow-bother-card__img-container
-                img.mb-40(src="/imgs/flow_bother_4.png", alt="")
-            h3.mb-40 Peak experience
-            p.center.max-8 Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.
-        h2.text-center.mtb-80 What are the key markers of flow?
-        .flow-key-markers__container.text-center.mlr-30
+        +flow-bother-card("/imgs/flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.")
+        +flow-bother-card("/imgs/flow_bother_2.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong")
+        +flow-bother-card("/imgs/flow_bother_3.png", "Supports learning", "hen we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.")
+        +flow-bother-card("/imgs/flow_bother_4.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.")
+        h2.text-center.mtb-80.mlr-16-mob What are the key markers of flow?
+        .flow-key-markers__container.text-center.mlr-30.mb-80
             +flow-key-marker("/imgs/flow_marker_1.png", "Challenge-skill balance", "Feeling competent to meet the current challenge")
             +flow-key-marker("/imgs/flow_marker_2.png", "Clear feedback", "Knowing precisely how well we are doing")
             +flow-key-marker("/imgs/flow_marker_3.png", "Loss of self-consciousness", "Not worrying what others will think of us")
@@ -82,67 +82,39 @@ html(lang="en")
             +flow-key-marker("/imgs/flow_marker_7.png", "Clear goals", "Having a clear sense of what we want to do")
             +flow-key-marker("/imgs/flow_marker_8.png", "Sense of control", "A feeling of total control over the task")
             +flow-key-marker("/imgs/flow_marker_9.png", "Intrinsic rewards", "Feeling the whole experience to be extremely positive")
-        .iris-impact-container
+        .iris-impact-container.flex-row.justify-around.align-center.text-white.bg-teal.ptb-80
             img(src="/imgs/iris_impact.png", alt="")
-            div
-                h2 How IRIS impacts our experience, brain and heart?
+            .max-5.mb-32-mob
+                h2.mb-32 How IRIS impacts our experience, brain and heart?
                 p We have a richer, absorbing and more fulfilling experience listening to music with IRIS than we do without it.
-        h2.mtb-80.max-50.center IRIS stimulates our brain – boosting high frequency brain waves (beta, gamma, higher gamma)
-        .wave-container.flex-row.justify-between.mlr-10.mb-80
+        h2.mtb-80.max-8.center.text-center.mlr-16-mob IRIS stimulates our brain – boosting high frequency brain waves (beta, gamma, higher gamma)
+        .wave-container.flex-row.justify-between.mlr-147.mb-80
             div
-                .wave-container__titles.flex-row.justify-around
+                .wave-container__titles.flex-row.justify-around.text-center.mlr-16-mob.mb-32
                     p.active(data-wave="beta") Beta wave <br> (13-30Hz)
                     p(data-wave="gamma") Gamma wave <br> (30-48Hz)
                     p(data-wave="upper-gamma") Upper gamma <br> wave (52-80Hz)
-                img.active(src="/imgs/beta_wave.jpg", alt="", data-wave="beta")
-                img(src="/imgs/gamma_wave.jpg", alt="", data-wave="gamma")
-                img(src="/imgs/upper_gamma_wave.jpg", alt="", data-wave="upper-gamma")
-            .flex-row.align-center.justify-center.max-40.text-left 
-                .wave-container__text.active(data-wave="beta")
-                    h3 Beta wave (13-30Hz)
+                img.hidden.mb-32-mob.active(src="/imgs/beta_wave.jpg", alt="", data-wave="beta")
+                img.hidden.mb-32-mob(src="/imgs/gamma_wave.jpg", alt="", data-wave="gamma")
+                img.hidden.mb-32-mob(src="/imgs/upper_gamma_wave.jpg", alt="", data-wave="upper-gamma")
+            .flex-row.align-center.justify-center.max-5.text-left 
+                .hidden.active(data-wave="beta")
+                    h3.mb-32 Beta wave (13-30Hz)
                     p Beta wave (13-30 Hz) is dominant in our waking state and is active when undertaking cognitive tasks. Beta wave is enhanced when we are alert, attentive and engaged in demanding task, making decisions or trying to focus.
-                .wave-container__text(data-wave="gamma")
-                    h3 Gamma wave (30-48 Hz)
+                .hidden(data-wave="gamma")
+                    h3.mb-32 Gamma wave (30-48 Hz)
                     p Gamma wave (30-48 Hz) is associated with alert mental states, active information processing and binding information together in the brain. Gamma wave is enhanced by attention, memory and focus.
-                .wave-container__text(data-wave="upper-gamma")
-                    h3 Upper gamma wave (52-80 Hz)
+                .hidden(data-wave="upper-gamma")
+                    h3.mb-32 Upper gamma wave (52-80 Hz)
                     p Upper gamma wave (52-80 Hz) is less studied but is supposed to be associated with higher cognitive functions such as working memory, language processing, and also suppressing distractions.
-        div
-            .improve-container
-                .improve-container__title
-                    h3 IRIS improves motivation and engagement 
-                .improve-container__text
-                    p A higher frontal alpha asymmetry (a neural marker representing approach/withdrawal model of emotion) for IRIS suggests a state with an increased motivational and engagement. 
-                .improve-container__image
-                    img(src="/imgs/iris_improve_1.png", alt="")
-            .improve-container
-                .improve-container__title
-                    h3 IRIS improves cardiac health 
-                .improve-container__text
-                    p Heart rate variability (HRV) is the variation in the time between consecutive heartbeats in milliseconds. IRIS is found to boost HRV, and an increased HRV is connected to reduced mortality and an overall improvement in cardiac health.
-                .improve-container__image
-                    img(src="/imgs/iris_improve_2.png", alt="")
-            .improve-container.improve-container__relax
-                .improve-container__title
-                    h3 IRIS induces relaxation 
-                .improve-container__text
-                    p A lower heart rate is an essential factor in maintaining healthy heart rhythm. IRIS leads to a reduction of heart rate, and a lower heart rate is a key marker of a more relaxed state.
-                .improve-container__image.improve-container__image-relax
-                    img(src="/imgs/iris_improve_3.png", alt="")
+        +improve-container("/imgs/iris_improve_1.png", "IRIS improves motivation and engagement", "A higher frontal alpha asymmetry (a neural marker representing approach/withdrawal model of emotion) for IRIS suggests a state with an increased motivational and engagement.")
+        +improve-container("/imgs/iris_improve_2.png", "IRIS improves cardiac health", "Heart rate variability (HRV) is the variation in the time between consecutive heartbeats in milliseconds. IRIS is found to boost HRV, and an increased HRV is connected to reduced mortality and an overall improvement in cardiac health.")
+        +improve-container("/imgs/iris_improve_3.png", "IRIS induces relaxation", "A lower heart rate is an essential factor in maintaining healthy heart rhythm. IRIS leads to a reduction of heart rate, and a lower heart rate is a key marker of a more relaxed state.", "improve-container__relax")
         video(src="/videos/video_1.mp4" width="100%" height="auto" controls)
-        //- .glide
-        //-     .glide__track(data-glide-el="track")
-        //-         ul.glide__slides
-        //-             li.glide__slide 0
-        //-             li.glide__slide 1
-        //-             li.glide__slide 2
-        //-     .glide__arrows(data-glide-el="controls")
-        //-         button.glide__arrow.glide__arrow--left(data-glide-dir="<") prev
-        //-         button.glide__arrow.glide__arrow--left(data-glide-dir=">") next
-        .experience-container.bg-teal.color-white
-            h2 Experiences with flow reinforced through case studies:
-            h3.max-60.center "Music is so important when you’re training, warming up. I have a playlist I listen to when I’m in competition, cooling down, stretching. It varies from Bob Marley to Diplo to Drake to Chris Brown. When I’m in competition I like to hear a lot of bass, a beat. I don’t care about the words too much, I just care about how it makes me feel"
-            p Red Bull article featuring British Fencer Miles Chamley-Watson
+        .experience-container.bg-teal.text-white.text-center
+            h2.ptb-80 Experiences with flow reinforced through case studies:
+            h3.max-8.center "Music is so important when you’re training, warming up. I have a playlist I listen to when I’m in competition, cooling down, stretching. It varies from Bob Marley to Diplo to Drake to Chris Brown. When I’m in competition I like to hear a lot of bass, a beat. I don’t care about the words too much, I just care about how it makes me feel"
+            p.ptb-80.max-4.center Red Bull article featuring British Fencer Miles Chamley-Watson
         .footer-container.flex-row
             img.hide.max-50(src="/imgs/footer_1.png", alt="")
             img.max-50(src="/imgs/footer_2.png", alt="")
