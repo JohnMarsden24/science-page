@@ -22108,6 +22108,7 @@ exports.parallaxAnimation = parallaxAnimation;
 exports.createScrollAnimationSingle = createScrollAnimationSingle;
 exports.createScrollFadeInAnimationTimeline = createScrollFadeInAnimationTimeline;
 exports.createScrollAnimationMultiple = createScrollAnimationMultiple;
+exports.newScrollAnimationMultiple = newScrollAnimationMultiple;
 exports.lottieLoader = lottieLoader;
 
 var _gsap = _interopRequireDefault(require("gsap"));
@@ -22259,6 +22260,125 @@ function createScrollAnimationMultiple(arr) {
   });
 }
 
+function newScrollAnimationMultiple(arr) {
+  arr.forEach(function (elem, index) {
+    var reversed = index % 2 !== 0;
+
+    var _ref2 = _toConsumableArray(elem.childNodes),
+        img = _ref2[0],
+        textBlock = _ref2[1];
+
+    var _ref3 = _toConsumableArray(textBlock.childNodes),
+        title = _ref3[0],
+        text = _ref3[1];
+
+    loadLottie(img);
+
+    var timeline = _gsap.default.timeline({
+      defaults: {
+        duration: 0.6,
+        ease: "slow(0.5, 0.4, false)",
+        opacity: 0
+      },
+      scrollTrigger: {
+        trigger: elem,
+        toggleActions: "restart none none reverse",
+        // markers: true,
+        start: "top center"
+      }
+    });
+
+    var elements = {
+      img: img,
+      title: title,
+      text: text,
+      elem: elem,
+      timeline: timeline
+    };
+
+    if (window.innerWidth < 768) {
+      addToTimelineMobile(elements);
+    } else if (reversed) {
+      addToTimelineRight(elements);
+    } else {
+      addToTimelineLeft(elements);
+    }
+  });
+}
+
+function addToTimelineLeft(options) {
+  var timeline = options.timeline,
+      img = options.img,
+      title = options.title,
+      text = options.text,
+      elem = options.elem;
+  timeline.from(img, {
+    x: "-50px",
+    onComplete: parallaxImg(img, elem)
+  }).from(title, {
+    x: "50px"
+  }, "-=.2").from(text, {
+    x: "50px"
+  }, "-=.2");
+}
+
+function addToTimelineRight(options) {
+  var timeline = options.timeline,
+      img = options.img,
+      title = options.title,
+      text = options.text,
+      elem = options.elem;
+  timeline.from(title, {
+    x: "-50px",
+    onComplete: parallaxImg(img, elem)
+  }).from(text, {
+    x: "-50px"
+  }, "-=.2").from(img, {
+    x: "50px"
+  }, "-=.2");
+}
+
+function addToTimelineMobile(options) {
+  var timeline = options.timeline,
+      img = options.img,
+      title = options.title,
+      text = options.text,
+      elem = options.elem;
+  timeline.from(img, {
+    y: "50px",
+    onComplete: parallaxImg(img, elem)
+  }).from(title, {
+    y: "50px"
+  }, "-=.2").from(text, {
+    y: "50px"
+  }, "-=.2");
+}
+
+function parallaxImg(img, trigger) {
+  _gsap.default.to(img, {
+    scrollTrigger: {
+      trigger: trigger,
+      start: "center center",
+      scrub: 1,
+      markers: true
+    },
+    // y: "-200px",
+    yPercent: -40,
+    ease: "slow(0.5, 0.4, false)"
+  });
+}
+
+function loadLottie(container) {
+  var animationName = container.dataset.animation;
+  lottie.loadAnimation({
+    container: container,
+    renderer: "svg",
+    loop: true,
+    autoplay: true,
+    path: "../animations/".concat(animationName, ".json")
+  });
+}
+
 function lottieLoader() {
   function loadCircles() {
     lottie.loadAnimation({
@@ -22278,27 +22398,6 @@ function lottieLoader() {
     path: "../animations/iris_switch.json"
   });
   animation2.addEventListener("complete", loadCircles);
-  var animation3 = lottie.loadAnimation({
-    container: document.getElementById("a3"),
-    renderer: "svg",
-    loop: true,
-    autoplay: true,
-    path: "../animations/circle_breathing.json"
-  });
-  var animation4 = lottie.loadAnimation({
-    container: document.getElementById("a4"),
-    renderer: "svg",
-    loop: true,
-    autoplay: true,
-    path: "../animations/iris_enables_flow.json"
-  });
-  var animation5 = lottie.loadAnimation({
-    container: document.getElementById("a5"),
-    renderer: "svg",
-    loop: true,
-    autoplay: true,
-    path: "../animations/neuro.json"
-  });
 }
 },{"lottie-web":"../../node_modules/lottie-web/build/player/lottie.js","gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js"}],"index.js":[function(require,module,exports) {
 "use strict";
@@ -22317,28 +22416,28 @@ var targetCards = document.querySelectorAll(".card");
 var flowBotherCards = document.querySelectorAll(".flow-bother-card");
 var flowBotherTitle = document.querySelector(".flow-bother-title");
 var flowKeyMarkers = document.querySelector(".flow-key-markers");
-var waveTitles = document.querySelector(".wave-container__titles");
-waveTitles.addEventListener("click", _basePage.toggleActive);
-var totalHeight = Array.from(flowBotherCards).reduce(function (acc, curr) {
-  return acc + curr.offsetHeight;
-}, 0);
-var flowBotherTitleOptions = {
-  trigger: flowBotherCards[0],
-  pin: flowBotherTitle,
-  scrub: true,
-  start: "center center",
-  end: "+=".concat(totalHeight, "px"),
-  // markers: true,
-  pinSpacing: false
-};
+var waveTitles = document.querySelector(".wave-container__titles"); // waveTitles.addEventListener("click", toggleActive);
+// const totalHeight = Array.from(flowBotherCards).reduce(
+//   (acc, curr) => acc + curr.offsetHeight,
+//   0
+// );
+// const flowBotherTitleOptions = {
+//   trigger: flowBotherCards[0],
+//   pin: flowBotherTitle,
+//   scrub: true,
+//   start: "center center",
+//   end: `+=${totalHeight}px`,
+//   // markers: true,
+//   pinSpacing: false,
+// };
 
 if (targetCards && flowBotherCards) {
-  (0, _basePage.createScrollAnimationMultiple)(targetCards);
-  (0, _basePage.createScrollAnimationMultiple)(flowBotherCards);
-  (0, _basePage.createScrollAnimationSingle)(flowBotherTitleOptions);
-  (0, _basePage.createScrollFadeInAnimationTimeline)();
-  (0, _basePage.lottieLoader)();
-  (0, _basePage.parallaxAnimation)();
+  (0, _basePage.newScrollAnimationMultiple)(targetCards); // createScrollAnimationMultiple(targetCards);
+  // createScrollAnimationMultiple(flowBotherCards);
+  // createScrollAnimationSingle(flowBotherTitleOptions);
+  // createScrollFadeInAnimationTimeline();
+
+  (0, _basePage.lottieLoader)(); // parallaxAnimation();
 } // createTestAnimation();
 // (function (doc, win) {
 //   var docEl = doc.documentElement,
