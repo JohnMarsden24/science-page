@@ -22361,10 +22361,8 @@ function parallaxImg(img, trigger) {
     scrollTrigger: {
       trigger: trigger,
       start: "center center",
-      scrub: 1 // markers: true,
-
+      scrub: 1
     },
-    // y: "-200px",
     yPercent: -40,
     ease: "slow(0.5, 0.4, false)"
   });
