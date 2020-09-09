@@ -22109,6 +22109,8 @@ exports.createScrollAnimationSingle = createScrollAnimationSingle;
 exports.createScrollFadeInAnimationTimeline = createScrollFadeInAnimationTimeline;
 exports.createScrollAnimationMultiple = createScrollAnimationMultiple;
 exports.newScrollAnimationMultiple = newScrollAnimationMultiple;
+exports.newScrollAnimationFlowBother = newScrollAnimationFlowBother;
+exports.newScrollAnimationFlowBotherText = newScrollAnimationFlowBotherText;
 exports.lottieLoader = lottieLoader;
 
 var _gsap = _interopRequireDefault(require("gsap"));
@@ -22377,6 +22379,99 @@ function loadLottie(container) {
   });
 }
 
+function newScrollAnimationFlowBother(arr) {
+  arr.forEach(function (target, index) {
+    var img = target.childNodes[0];
+    var opacityFirst = index === 0 ? 1 : 0;
+    var opacitySecond = index === arr.length - 1 ? 1 : 0;
+    var end = index === arr.length - 1 ? "bottom bottom" : "bottom top";
+    var pinSpacing = index === arr.length - 1 ? true : false;
+
+    _gsap.default.timeline({
+      scrollTrigger: {
+        trigger: img,
+        start: "top top",
+        pin: true,
+        // scrub: 1,
+        markers: true // end,
+        // snap: 1,
+        // pinSpacing,
+
+      }
+    }); // .to(img, { y: -50 });
+    // .from(img, { opacity: opacityFirst, duration: 0.2 });
+    // .to(img, { opacity: opacitySecond, duration: 0.2 });
+    // const pinSpacing = index === arr.length - 1 ? "true" : false;
+    // const end =
+    //   index === arr.length - 1
+    //     ? `+=${target.offsetHeight}px`
+    //     : `+=${arr[index + 1].offsetHeight}px`;
+    // const opacityFirst = index === 0 ? 1 : 0;
+    // const opacitySecond = index === arr.length - 1 ? 1 : 0;
+    // const tl = gsap.timeline({
+    //   // defaults: { duration: 1 },
+    //   scrollTrigger: {
+    //     trigger: target,
+    //     pin: true,
+    //     scrub: true,
+    //     start: "center center",
+    //     end,
+    //     markers: true,
+    //     toggleActions: "restart none reverse reset",
+    //     pinSpacing: pinSpacing,
+    //     snap: 0.25,
+    //   },
+    // });
+    // .from(target, { opacity: opacityFirst, duration: 0.2 }, 0)
+    // .to(target, { opacity: opacitySecond, duration: 0.2 }, 0.8);
+
+  });
+}
+
+var container = document.querySelector(".new-flow-bother-container");
+
+function newScrollAnimationFlowBotherText(arr) {
+  // const arr = elem.childNodes;
+  arr.forEach(function (target, index) {
+    var opacityFirst = index === 0 ? 1 : 0.2;
+    var opacitySecond = index === arr.length - 1 ? 1 : 0.2; // const end = index === arr.length - 1 ? "bottom bottom" : "bottom top";
+    // const pinSpacing = index === arr.length - 1 ? true : false;
+
+    _gsap.default.timeline({
+      scrollTrigger: {
+        trigger: target,
+        start: "top 60%",
+        end: "+=".concat(target.offsetHeight, "px"),
+        toggleActions: "restart none reverse reverse",
+        scrub: true,
+        markers: true,
+        onEnter: function onEnter() {
+          return changeImg(target);
+        },
+        onEnterBack: function onEnterBack() {
+          return changeImg(target);
+        }
+      }
+    }).from(target, {
+      opacity: opacityFirst,
+      duration: 0.2
+    }, 0).to(target, {
+      opacity: opacitySecond,
+      duration: 0.2
+    }, 0.8);
+  });
+}
+
+function changeImg(elem) {
+  var img = document.getElementById("flow-bother-img");
+  var newSource = elem.dataset.img;
+  container.style.backgroundColor = elem.dataset.bgcolor;
+  container.style.color = elem.dataset.textcolor;
+  img.src = newSource;
+}
+
+function changeBgColor(elem) {}
+
 function lottieLoader() {
   function loadCircles() {
     lottie.loadAnimation({
@@ -22410,8 +22505,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 _gsap.default.registerPlugin(_ScrollTrigger.default);
 
-var targetCards = document.querySelectorAll(".card");
-var flowBotherCards = document.querySelectorAll(".flow-bother-card");
+var animatedCards = document.querySelectorAll(".animated-card"); // const flowBotherCards = document.querySelectorAll(".flow-bother-card");
+
+var newFlowBotherCards = document.querySelectorAll(".new-flow-bother-card");
+var newFlowBotherGrid = document.querySelectorAll(".new-flow-bother-grid");
+var newFlowBotherText = document.querySelectorAll(".new-flow-bother-text");
 var flowBotherTitle = document.querySelector(".flow-bother-title");
 var flowKeyMarkers = document.querySelector(".flow-key-markers");
 var waveTitles = document.querySelector(".wave-container__titles"); // waveTitles.addEventListener("click", toggleActive);
@@ -22429,14 +22527,16 @@ var waveTitles = document.querySelector(".wave-container__titles"); // waveTitle
 //   pinSpacing: false,
 // };
 
-if (targetCards && flowBotherCards) {
-  (0, _basePage.newScrollAnimationMultiple)(targetCards); // createScrollAnimationMultiple(targetCards);
-  // createScrollAnimationMultiple(flowBotherCards);
-  // createScrollAnimationSingle(flowBotherTitleOptions);
-  // createScrollFadeInAnimationTimeline();
+(0, _basePage.newScrollAnimationMultiple)(animatedCards); // newScrollAnimationFlowBother(newFlowBotherCards);
 
-  (0, _basePage.lottieLoader)(); // parallaxAnimation();
-} // createTestAnimation();
+(0, _basePage.newScrollAnimationFlowBother)(newFlowBotherGrid);
+(0, _basePage.newScrollAnimationFlowBotherText)(newFlowBotherText); // createScrollAnimationMultiple(targetCards);
+// createScrollAnimationMultiple(flowBotherCards);
+// createScrollAnimationSingle(flowBotherTitleOptions);
+
+(0, _basePage.createScrollFadeInAnimationTimeline)();
+(0, _basePage.lottieLoader)(); // parallaxAnimation();
+// createTestAnimation();
 // (function (doc, win) {
 //   var docEl = doc.documentElement,
 //     recalc = function () {

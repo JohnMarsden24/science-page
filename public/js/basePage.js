@@ -199,6 +199,93 @@ function loadLottie(container) {
   });
 }
 
+export function newScrollAnimationFlowBother(arr) {
+  arr.forEach((target, index) => {
+    const img = target.childNodes[0];
+    const opacityFirst = index === 0 ? 1 : 0;
+    const opacitySecond = index === arr.length - 1 ? 1 : 0;
+    const end = index === arr.length - 1 ? "bottom bottom" : "bottom top";
+    const pinSpacing = index === arr.length - 1 ? true : false;
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: img,
+        start: "top top",
+        pin: true,
+        // scrub: 1,
+        markers: true,
+        // end,
+        // snap: 1,
+        // pinSpacing,
+      },
+    });
+    // .to(img, { y: -50 });
+    // .from(img, { opacity: opacityFirst, duration: 0.2 });
+    // .to(img, { opacity: opacitySecond, duration: 0.2 });
+
+    // const pinSpacing = index === arr.length - 1 ? "true" : false;
+    // const end =
+    //   index === arr.length - 1
+    //     ? `+=${target.offsetHeight}px`
+    //     : `+=${arr[index + 1].offsetHeight}px`;
+    // const opacityFirst = index === 0 ? 1 : 0;
+    // const opacitySecond = index === arr.length - 1 ? 1 : 0;
+    // const tl = gsap.timeline({
+    //   // defaults: { duration: 1 },
+    //   scrollTrigger: {
+    //     trigger: target,
+    //     pin: true,
+    //     scrub: true,
+    //     start: "center center",
+    //     end,
+    //     markers: true,
+    //     toggleActions: "restart none reverse reset",
+    //     pinSpacing: pinSpacing,
+    //     snap: 0.25,
+    //   },
+    // });
+    // .from(target, { opacity: opacityFirst, duration: 0.2 }, 0)
+    // .to(target, { opacity: opacitySecond, duration: 0.2 }, 0.8);
+  });
+}
+
+const container = document.querySelector(".new-flow-bother-container");
+
+export function newScrollAnimationFlowBotherText(arr) {
+  // const arr = elem.childNodes;
+  arr.forEach((target, index) => {
+    const opacityFirst = index === 0 ? 1 : 0.2;
+    const opacitySecond = index === arr.length - 1 ? 1 : 0.2;
+    // const end = index === arr.length - 1 ? "bottom bottom" : "bottom top";
+    // const pinSpacing = index === arr.length - 1 ? true : false;
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: target,
+          start: "top 60%",
+          end: `+=${target.offsetHeight}px`,
+          toggleActions: "restart none reverse reverse",
+          scrub: true,
+          markers: true,
+          onEnter: () => changeImg(target),
+          onEnterBack: () => changeImg(target),
+        },
+      })
+      .from(target, { opacity: opacityFirst, duration: 0.2 }, 0)
+      .to(target, { opacity: opacitySecond, duration: 0.2 }, 0.8);
+  });
+}
+
+function changeImg(elem) {
+  const img = document.getElementById("flow-bother-img");
+  const newSource = elem.dataset.img;
+  container.style.backgroundColor = elem.dataset.bgcolor;
+  container.style.color = elem.dataset.textcolor;
+
+  img.src = newSource;
+}
+
+function changeBgColor(elem) {}
+
 export function lottieLoader() {
   function loadCircles() {
     lottie.loadAnimation({
