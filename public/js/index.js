@@ -2,6 +2,8 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import {
   newScrollAnimationMultiple,
+  newScrollAnimationFlowBother,
+  newScrollAnimationFlowBotherText,
   createScrollAnimationSingle,
   createScrollAnimationMultiple,
   createScrollFadeInAnimationTimeline,
@@ -12,8 +14,12 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
-const targetCards = document.querySelectorAll(".card");
-const flowBotherCards = document.querySelectorAll(".flow-bother-card");
+const animatedCards = document.querySelectorAll(".animated-card");
+// const flowBotherCards = document.querySelectorAll(".flow-bother-card");
+const newFlowBotherCards = document.querySelectorAll(".new-flow-bother-card");
+const newFlowBotherGrid = document.querySelectorAll(".new-flow-bother-grid");
+const newFlowBotherText = document.querySelectorAll(".new-flow-bother-text");
+
 const flowBotherTitle = document.querySelector(".flow-bother-title");
 const flowKeyMarkers = document.querySelector(".flow-key-markers");
 const waveTitles = document.querySelector(".wave-container__titles");
@@ -35,15 +41,17 @@ const waveTitles = document.querySelector(".wave-container__titles");
 //   pinSpacing: false,
 // };
 
-if (targetCards && flowBotherCards) {
-  newScrollAnimationMultiple(targetCards);
-  // createScrollAnimationMultiple(targetCards);
-  // createScrollAnimationMultiple(flowBotherCards);
-  // createScrollAnimationSingle(flowBotherTitleOptions);
-  // createScrollFadeInAnimationTimeline();
-  lottieLoader();
-  // parallaxAnimation();
-}
+newScrollAnimationMultiple(animatedCards);
+// newScrollAnimationFlowBother(newFlowBotherCards);
+newScrollAnimationFlowBother(newFlowBotherGrid);
+newScrollAnimationFlowBotherText(newFlowBotherText);
+
+// createScrollAnimationMultiple(targetCards);
+// createScrollAnimationMultiple(flowBotherCards);
+// createScrollAnimationSingle(flowBotherTitleOptions);
+createScrollFadeInAnimationTimeline();
+lottieLoader();
+// parallaxAnimation();
 
 // createTestAnimation();
 
