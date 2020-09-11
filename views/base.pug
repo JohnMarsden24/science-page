@@ -1,5 +1,5 @@
 mixin animated-cards(animationName, title, text)
-    .animated-card.flex-row.align-center.justify-between.max-10.center.text-dark-teal.mlr-16-mob.mtb-100
+    .animated-card.flex-row.align-center.justify-between.max-10.center.mlr-16-mob.mtb-100
         .animation-container(data-animation= animationName)
         .max-4
             h2.mb-24= title
@@ -11,30 +11,35 @@ mixin flow-key-marker(img, title, text)
         h3.semi-bold.mb-24= title
         p= text
 
-mixin flow-bother-card(img, title, text)
-    .flow-bother-card.text-center.text-dark-teal.mlr-16-mob
-        .flow-bother-card__img-container
-            img.mb-40(src= img, alt="Why bother with flow illustration")
-        h3.mb-40= title
-        p.center.max-8= text
+//- mixin flow-bother-card(img, title, text)
+//-     .flow-bother-card.text-center.text-dark-teal.mlr-16-mob
+//-         .flow-bother-card__img-container
+//-             img.mb-40(src= img, alt="Why bother with flow illustration")
+//-         h3.mb-40= title
+//-         p.center.max-8= text
 
-mixin new-flow-bother-card(img, title, text)
-    .new-flow-bother-card
-        img(src= img, alt="", srcset="")
-        div 
-            h3= title
+mixin parallax-card(img, title, text, optional, imgMobile)
+    .parallax-card
+        //- .parallax-card__img
+        img(src= img, alt="", srcset="", data-mob= imgMobile)
+        .parallax-card__text.max-5.center
+            if optional
+                h2.mb-32= optional
+            h3.mb-24= title
             p= text
 
-mixin new-flow-bother-grid(img, title, text)
-    .new-flow-bother-grid
-        .new-flow-bother-grid__img-container
-            img(src= img, alt="", srcset="")
-        .new-flow-bother-grid__left 
-            h3= title
-            p= text
+//- mixin new-flow-bother-grid(img, title, text)
+//-     .new-flow-bother-grid
+//-         .new-flow-bother-grid__img-container
+//-             img(src= img, alt="", srcset="")
+//-         .new-flow-bother-grid__left 
+//-             h3= title
+//-             p= text
 
-mixin new-flow-bother-text(img, title, text, bgColor, textColor) 
-    .new-flow-bother-text(data-img= img, data-bgcolor= bgColor, data-textcolor= textColor)
+mixin sticky-card(id, img, title, text, bgColor, textColor, optional)
+    .new-flow-bother-text(data-img= id, data-bgcolor= bgColor, data-textcolor= textColor)
+        if optional
+            h2.mb-32.mlr-16-mob= optional
         h3.mb-24.mlr-16-mob= title
         p.mlr-16-mob= text
         img.show(src=img, alt="", srcset="")
@@ -78,29 +83,30 @@ html(lang="en")
         .video-container.text-center
             h2 How IRIS enables flow state
             p IRIS algorithm splits out and increases the phase information sent to the brain.
-        //- +flow-bother-card("/imgs/flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.")
-        //- +flow-bother-card("/imgs/flow_bother_2.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong")
-        //- +flow-bother-card("/imgs/flow_bother_3.png", "Supports learning", "When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.")
-        //- +flow-bother-card("/imgs/flow_bother_4.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.")
-        //- +new-flow-bother-card("/imgs/new_flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.")
-        //- +new-flow-bother-card("/imgs/new_flow_bother_2.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong")
-        //- +new-flow-bother-card("/imgs/new_flow_bother_3.png", "Helps motivation", "Flow is crucially linked with high intrinsic motivation – we like doing for the sake of doing, but not for an external reward. Research has shown that flow experience may help us going when the going gets tough and rough. ")
-        //- +new-flow-bother-card("/imgs/new_flow_bother_4.png", "Supports learning", "When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.")
-        //- +new-flow-bother-card("/imgs/new_flow_bother_5.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.")
+        
+        //- parallax cards
+        div
+            +parallax-card("/imgs/new_flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.", "Why should I bother with flow?")
+            +parallax-card("/imgs/new_flow_bother_10.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong", "", "/imgs/new_flow_bother_10_mob.png")
+            +parallax-card("/imgs/new_flow_bother_13.png", "Helps motivation", "Flow is crucially linked with high intrinsic motivation – we like doing for the sake of doing, but not for an external reward. Research has shown that flow experience may help us going when the going gets tough and rough. ")
+            +parallax-card("/imgs/new_flow_bother_11.png", "Supports learning", "When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.", "", "/imgs/new_flow_bother_11_mob.png")
+            +parallax-card("/imgs/new_flow_bother_5.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.")
+        .filler
+        //- sticky cards
         .new-flow-bother-container
-            //- +new-flow-bother-grid("/imgs/new_flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.")
-            //- +new-flow-bother-grid("/imgs/new_flow_bother_2.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong")
-            //- +new-flow-bother-grid("/imgs/new_flow_bother_3.png", "Helps motivation", "Flow is crucially linked with high intrinsic motivation – we like doing for the sake of doing, but not for an external reward. Research has shown that flow experience may help us going when the going gets tough and rough.")
-            //- +new-flow-bother-grid("/imgs/new_flow_bother_4.png", "Supports learning", "When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.")
-            //- +new-flow-bother-grid("/imgs/new_flow_bother_5.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.")
-            img(src="/imgs/new_flow_bother_1.png", alt="", srcset="", id="flow-bother-img")
+            .new-flow-bother-img-container
+                img.img-hidden.img-show(src="/imgs/new_flow_bother_1.png", alt="", srcset="", id="flow-bother-1")
+                img.img-hidden(src="/imgs/new_flow_bother_6.png", alt="", srcset="", id="flow-bother-2")
+                img.img-hidden(src="/imgs/new_flow_bother_3.png", alt="", srcset="", id="flow-bother-3")
+                img.img-hidden(src="/imgs/new_flow_bother_4.png", alt="", srcset="", id="flow-bother-4")
+                img.img-hidden(src="/imgs/new_flow_bother_5.png", alt="", srcset="", id="flow-bother-5")
             .new-flow-bother-container-text-container.max-5
-                h2.mb-32.mlr-16-mob Why should I bother with flow?
-                +new-flow-bother-text("/imgs/new_flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.", "white", "inherit")
-                +new-flow-bother-text("/imgs/new_flow_bother_2.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong", "#022730", "white")
-                +new-flow-bother-text("/imgs/new_flow_bother_3.png", "Helps motivation", "Flow is crucially linked with high intrinsic motivation – we like doing for the sake of doing, but not for an external reward. Research has shown that flow experience may help us going when the going gets tough and rough.", "#e6ebed", "inherit")
-                +new-flow-bother-text("/imgs/new_flow_bother_4.png", "Supports learning", "When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.", "white", "inherit")
-                +new-flow-bother-text("/imgs/new_flow_bother_5.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.", "#e6ebed", "inherit")
+                +sticky-card("1", "/imgs/new_flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.", "white", "inherit", "Why should I bother with flow?")
+                +sticky-card("2", "/imgs/new_flow_bother_6.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong", "#022730", "white")
+                +sticky-card("3", "/imgs/new_flow_bother_3.png", "Helps motivation", "Flow is crucially linked with high intrinsic motivation – we like doing for the sake of doing, but not for an external reward. Research has shown that flow experience may help us going when the going gets tough and rough.", "#e6ebed", "inherit")
+                +sticky-card("4", "/imgs/new_flow_bother_4.png", "Supports learning", "When we are fully focused and engaged in an activity, we are able to digest more information but with effortless attention, and return to the activity more successfully, therefore increasing our memory retention in the process. Research shows that students who have higher flow experience tend to show higher learning performances.", "white", "inherit")
+                +sticky-card("5", "/imgs/new_flow_bother_5.png", "Peak experience", "Flow is related to peak experience and optimal performance, psychological states of intensely positive, blissful feelings and personal fulfilment.", "#e6ebed", "inherit")
+        
         h2.text-center.mtb-80.mlr-16-mob What are the key markers of flow?
         .flow-key-markers__container.text-center.mlr-30.mb-80
             +flow-key-marker("/imgs/flow_marker_1.png", "Challenge-skill balance", "Feeling competent to meet the current challenge")

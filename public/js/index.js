@@ -1,11 +1,8 @@
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import {
-  newScrollAnimationMultiple,
-  newScrollAnimationFlowBother,
-  newScrollAnimationFlowBotherText,
-  createScrollAnimationSingle,
   createScrollAnimationMultiple,
+  newScrollAnimationFlowBotherText,
   createScrollFadeInAnimationTimeline,
   lottieLoader,
   toggleActive,
@@ -15,45 +12,21 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 
 const animatedCards = document.querySelectorAll(".animated-card");
-// const flowBotherCards = document.querySelectorAll(".flow-bother-card");
-const newFlowBotherCards = document.querySelectorAll(".new-flow-bother-card");
-const newFlowBotherGrid = document.querySelectorAll(".new-flow-bother-grid");
+const parallaxCards = document.querySelectorAll(".parallax-card");
 const newFlowBotherText = document.querySelectorAll(".new-flow-bother-text");
-
-const flowBotherTitle = document.querySelector(".flow-bother-title");
-const flowKeyMarkers = document.querySelector(".flow-key-markers");
 const waveTitles = document.querySelector(".wave-container__titles");
 
-// waveTitles.addEventListener("click", toggleActive);
+const animateOpts = { loadLottie: true, parallax: false };
+const parallaxOpts = { loadLottie: false, parallax: true };
 
-// const totalHeight = Array.from(flowBotherCards).reduce(
-//   (acc, curr) => acc + curr.offsetHeight,
-//   0
-// );
-
-// const flowBotherTitleOptions = {
-//   trigger: flowBotherCards[0],
-//   pin: flowBotherTitle,
-//   scrub: true,
-//   start: "center center",
-//   end: `+=${totalHeight}px`,
-//   // markers: true,
-//   pinSpacing: false,
-// };
-
-newScrollAnimationMultiple(animatedCards);
-// newScrollAnimationFlowBother(newFlowBotherCards);
-newScrollAnimationFlowBother(newFlowBotherGrid);
+createScrollAnimationMultiple(animatedCards, animateOpts);
+createScrollAnimationMultiple(parallaxCards, parallaxOpts);
 newScrollAnimationFlowBotherText(newFlowBotherText);
-
-// createScrollAnimationMultiple(targetCards);
-// createScrollAnimationMultiple(flowBotherCards);
-// createScrollAnimationSingle(flowBotherTitleOptions);
 createScrollFadeInAnimationTimeline();
 lottieLoader();
 // parallaxAnimation();
 
-// createTestAnimation();
+waveTitles.addEventListener("click", toggleActive);
 
 // (function (doc, win) {
 //   var docEl = doc.documentElement,
