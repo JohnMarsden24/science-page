@@ -22105,11 +22105,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.toggleActive = toggleActive;
 exports.parallaxAnimation = parallaxAnimation;
-exports.createScrollAnimationSingle = createScrollAnimationSingle;
 exports.createScrollFadeInAnimationTimeline = createScrollFadeInAnimationTimeline;
 exports.createScrollAnimationMultiple = createScrollAnimationMultiple;
-exports.newScrollAnimationMultiple = newScrollAnimationMultiple;
-exports.newScrollAnimationFlowBother = newScrollAnimationFlowBother;
 exports.newScrollAnimationFlowBotherText = newScrollAnimationFlowBotherText;
 exports.lottieLoader = lottieLoader;
 
@@ -22193,10 +22190,6 @@ function parallaxAnimation() {
   }
 }
 
-function createScrollAnimationSingle(options) {
-  _ScrollTrigger.default.create(options);
-}
-
 function createScrollFadeInAnimationTimeline(options) {
   if (window.innerWidth > 768) {
     _gsap.default.timeline({
@@ -22209,7 +22202,7 @@ function createScrollFadeInAnimationTimeline(options) {
     }).from(".flow-key-markers__block", {
       duration: 0.5,
       opacity: 0,
-      delay: 0.5,
+      delay: 0.4,
       stagger: 0.1
     });
   } else {
@@ -22219,50 +22212,20 @@ function createScrollFadeInAnimationTimeline(options) {
         scrollTrigger: {
           trigger: target,
           //   markers: true,
-          start: "top center",
+          start: "top 80%",
           toggleActions: "restart none none reset"
         },
         duration: 0.5,
         opacity: 0,
-        delay: 0.5
+        delay: 0.4
       });
     });
   }
 }
 
-function createScrollAnimationMultiple(arr) {
-  arr.forEach(function (target, index) {
-    var pinSpacing = index === arr.length - 1 ? "true" : false;
-    var end = index === arr.length - 1 ? "+=".concat(target.offsetHeight, "px") : "+=".concat(arr[index + 1].offsetHeight, "px");
-    var opacityFirst = index === 0 ? 1 : 0;
-    var opacitySecond = index === arr.length - 1 ? 1 : 0;
-
-    var tl = _gsap.default.timeline({
-      defaults: {
-        duration: 1
-      },
-      scrollTrigger: {
-        trigger: target,
-        pin: true,
-        scrub: true,
-        start: "center center",
-        end: end,
-        // markers: true,
-        toggleActions: "restart none reverse reset",
-        pinSpacing: pinSpacing,
-        snap: 0.25
-      }
-    }).from(target, {
-      opacity: opacityFirst,
-      duration: 0.2
-    }, 0).to(target, {
-      opacity: opacitySecond,
-      duration: 0.2
-    }, 0.8);
-  });
-}
-
-function newScrollAnimationMultiple(arr) {
+function createScrollAnimationMultiple(arr, options) {
+  var loadLottie = options.loadLottie,
+      parallax = options.parallax;
   arr.forEach(function (elem, index) {
     var reversed = index % 2 !== 0;
 
@@ -22274,19 +22237,21 @@ function newScrollAnimationMultiple(arr) {
         title = _ref3[0],
         text = _ref3[1];
 
-    loadLottie(img);
+    if (loadLottie) loadLottieAnimation(img);
 
     var timeline = _gsap.default.timeline({
       defaults: {
         duration: 0.6,
         ease: "slow(0.5, 0.4, false)",
-        opacity: 0
+        opacity: 0,
+        y: "50px"
       },
       scrollTrigger: {
         trigger: elem,
         toggleActions: "restart none none reverse",
         // markers: true,
-        start: "top center"
+        start: "top 75%",
+        end: "bottom center"
       }
     });
 
@@ -22295,8 +22260,19 @@ function newScrollAnimationMultiple(arr) {
       title: title,
       text: text,
       elem: elem,
-      timeline: timeline
+      timeline: timeline,
+      options: options
     };
+
+    if (window.innerWidth < 768 && parallax) {
+      if (img.dataset.mob) {
+        changeImgForMobile(img);
+      }
+
+      parallaxImgMobile(img, elem);
+    } else if (parallax) {
+      parallaxImg(img, elem);
+    }
 
     if (window.innerWidth < 768) {
       addToTimelineMobile(elements);
@@ -22308,67 +22284,65 @@ function newScrollAnimationMultiple(arr) {
   });
 }
 
-function addToTimelineLeft(options) {
-  var timeline = options.timeline,
-      img = options.img,
-      title = options.title,
-      text = options.text,
-      elem = options.elem;
-  timeline.from(img, {
-    x: "-50px",
-    onComplete: parallaxImg(img, elem)
-  }).from(title, {
-    x: "50px"
-  }, "-=.2").from(text, {
-    x: "50px"
-  }, "-=.2");
+function addToTimelineLeft(elements) {
+  var timeline = elements.timeline,
+      img = elements.img,
+      title = elements.title,
+      text = elements.text,
+      elem = elements.elem,
+      options = elements.options;
+  timeline.from(title, {}, "-=.2").from(text, {}, "-=.2").from(img, {});
 }
 
-function addToTimelineRight(options) {
-  var timeline = options.timeline,
-      img = options.img,
-      title = options.title,
-      text = options.text,
-      elem = options.elem;
-  timeline.from(title, {
-    x: "-50px",
-    onComplete: parallaxImg(img, elem)
-  }).from(text, {
-    x: "-50px"
-  }, "-=.2").from(img, {
-    x: "50px"
-  }, "-=.2");
+function addToTimelineRight(elements) {
+  var timeline = elements.timeline,
+      img = elements.img,
+      title = elements.title,
+      text = elements.text,
+      elem = elements.elem,
+      options = elements.options;
+  timeline.from(img, {}).from(title, {}, "-=.2").from(text, {}, "-=.2");
 }
 
-function addToTimelineMobile(options) {
-  var timeline = options.timeline,
-      img = options.img,
-      title = options.title,
-      text = options.text,
-      elem = options.elem;
-  timeline.from(img, {
-    y: "50px",
-    onComplete: parallaxImg(img, elem)
-  }).from(title, {
-    y: "50px"
-  }, "-=.2").from(text, {
-    y: "50px"
-  }, "-=.2");
+function addToTimelineMobile(elements) {
+  var timeline = elements.timeline,
+      img = elements.img,
+      title = elements.title,
+      text = elements.text,
+      elem = elements.elem,
+      options = elements.options;
+  timeline.from(title, {}, "-=.2").from(text, {}, "-=.2").from(img, {});
 }
 
 function parallaxImg(img, trigger) {
   _gsap.default.to(img, {
     scrollTrigger: {
       trigger: trigger,
-      start: "center center",
-      scrub: 1
+      start: "top center",
+      scrub: 1,
+      end: "bottom center" // markers: true,
+
     },
-    yPercent: -40,
+    y: -100,
     ease: "slow(0.5, 0.4, false)"
   });
 }
 
-function loadLottie(container) {
+function parallaxImgMobile(img, trigger) {
+  _gsap.default.from(img, {
+    scrollTrigger: {
+      trigger: trigger,
+      start: "top 75%",
+      scrub: 1,
+      end: "bottom center" // markers: true,
+
+    },
+    y: 100,
+    ease: "slow(0.5, 0.4, false)"
+  });
+}
+
+function loadLottieAnimation(container) {
   var animationName = container.dataset.animation;
   lottie.loadAnimation({
     container: container,
@@ -22379,63 +22353,16 @@ function loadLottie(container) {
   });
 }
 
-function newScrollAnimationFlowBother(arr) {
-  arr.forEach(function (target, index) {
-    var img = target.childNodes[0];
-    var opacityFirst = index === 0 ? 1 : 0;
-    var opacitySecond = index === arr.length - 1 ? 1 : 0;
-    var end = index === arr.length - 1 ? "bottom bottom" : "bottom top";
-    var pinSpacing = index === arr.length - 1 ? true : false;
-
-    _gsap.default.timeline({
-      scrollTrigger: {
-        trigger: img,
-        start: "top top",
-        pin: true,
-        // scrub: 1,
-        markers: true // end,
-        // snap: 1,
-        // pinSpacing,
-
-      }
-    }); // .to(img, { y: -50 });
-    // .from(img, { opacity: opacityFirst, duration: 0.2 });
-    // .to(img, { opacity: opacitySecond, duration: 0.2 });
-    // const pinSpacing = index === arr.length - 1 ? "true" : false;
-    // const end =
-    //   index === arr.length - 1
-    //     ? `+=${target.offsetHeight}px`
-    //     : `+=${arr[index + 1].offsetHeight}px`;
-    // const opacityFirst = index === 0 ? 1 : 0;
-    // const opacitySecond = index === arr.length - 1 ? 1 : 0;
-    // const tl = gsap.timeline({
-    //   // defaults: { duration: 1 },
-    //   scrollTrigger: {
-    //     trigger: target,
-    //     pin: true,
-    //     scrub: true,
-    //     start: "center center",
-    //     end,
-    //     markers: true,
-    //     toggleActions: "restart none reverse reset",
-    //     pinSpacing: pinSpacing,
-    //     snap: 0.25,
-    //   },
-    // });
-    // .from(target, { opacity: opacityFirst, duration: 0.2 }, 0)
-    // .to(target, { opacity: opacitySecond, duration: 0.2 }, 0.8);
-
-  });
+function changeImgForMobile(img) {
+  img.src = img.dataset.mob;
 }
 
 var container = document.querySelector(".new-flow-bother-container");
 
 function newScrollAnimationFlowBotherText(arr) {
-  // const arr = elem.childNodes;
   arr.forEach(function (target, index) {
     var opacityFirst = index === 0 ? 1 : 0.2;
-    var opacitySecond = index === arr.length - 1 ? 1 : 0.2; // const end = index === arr.length - 1 ? "bottom bottom" : "bottom top";
-    // const pinSpacing = index === arr.length - 1 ? true : false;
+    var opacitySecond = index === arr.length - 1 ? 1 : 0.2;
 
     _gsap.default.timeline({
       scrollTrigger: {
@@ -22444,7 +22371,7 @@ function newScrollAnimationFlowBotherText(arr) {
         end: "+=".concat(target.offsetHeight, "px"),
         toggleActions: "restart none reverse reverse",
         scrub: true,
-        markers: true,
+        // markers: true,
         onEnter: function onEnter() {
           return changeImg(target);
         },
@@ -22463,14 +22390,14 @@ function newScrollAnimationFlowBotherText(arr) {
 }
 
 function changeImg(elem) {
-  var img = document.getElementById("flow-bother-img");
-  var newSource = elem.dataset.img;
-  container.style.backgroundColor = elem.dataset.bgcolor;
-  container.style.color = elem.dataset.textcolor;
-  img.src = newSource;
-}
+  var originalImg = document.querySelector(".img-show");
+  originalImg.classList.remove("img-show");
+  var newImg = document.getElementById("flow-bother-".concat(elem.dataset.img));
+  newImg.classList.add("img-show"); // const newSource = elem.dataset.img;
 
-function changeBgColor(elem) {}
+  container.style.backgroundColor = elem.dataset.bgcolor;
+  container.style.color = elem.dataset.textcolor; // img.src = newSource;
+}
 
 function lottieLoader() {
   function loadCircles() {
@@ -22505,39 +22432,25 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 _gsap.default.registerPlugin(_ScrollTrigger.default);
 
-var animatedCards = document.querySelectorAll(".animated-card"); // const flowBotherCards = document.querySelectorAll(".flow-bother-card");
-
-var newFlowBotherCards = document.querySelectorAll(".new-flow-bother-card");
-var newFlowBotherGrid = document.querySelectorAll(".new-flow-bother-grid");
+var animatedCards = document.querySelectorAll(".animated-card");
+var parallaxCards = document.querySelectorAll(".parallax-card");
 var newFlowBotherText = document.querySelectorAll(".new-flow-bother-text");
-var flowBotherTitle = document.querySelector(".flow-bother-title");
-var flowKeyMarkers = document.querySelector(".flow-key-markers");
-var waveTitles = document.querySelector(".wave-container__titles"); // waveTitles.addEventListener("click", toggleActive);
-// const totalHeight = Array.from(flowBotherCards).reduce(
-//   (acc, curr) => acc + curr.offsetHeight,
-//   0
-// );
-// const flowBotherTitleOptions = {
-//   trigger: flowBotherCards[0],
-//   pin: flowBotherTitle,
-//   scrub: true,
-//   start: "center center",
-//   end: `+=${totalHeight}px`,
-//   // markers: true,
-//   pinSpacing: false,
-// };
-
-(0, _basePage.newScrollAnimationMultiple)(animatedCards); // newScrollAnimationFlowBother(newFlowBotherCards);
-
-(0, _basePage.newScrollAnimationFlowBother)(newFlowBotherGrid);
-(0, _basePage.newScrollAnimationFlowBotherText)(newFlowBotherText); // createScrollAnimationMultiple(targetCards);
-// createScrollAnimationMultiple(flowBotherCards);
-// createScrollAnimationSingle(flowBotherTitleOptions);
-
+var waveTitles = document.querySelector(".wave-container__titles");
+var animateOpts = {
+  loadLottie: true,
+  parallax: false
+};
+var parallaxOpts = {
+  loadLottie: false,
+  parallax: true
+};
+(0, _basePage.createScrollAnimationMultiple)(animatedCards, animateOpts);
+(0, _basePage.createScrollAnimationMultiple)(parallaxCards, parallaxOpts);
+(0, _basePage.newScrollAnimationFlowBotherText)(newFlowBotherText);
 (0, _basePage.createScrollFadeInAnimationTimeline)();
 (0, _basePage.lottieLoader)(); // parallaxAnimation();
-// createTestAnimation();
-// (function (doc, win) {
+
+waveTitles.addEventListener("click", _basePage.toggleActive); // (function (doc, win) {
 //   var docEl = doc.documentElement,
 //     recalc = function () {
 //       var clientWidth = docEl.clientWidth;
@@ -22589,7 +22502,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57289" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51213" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
