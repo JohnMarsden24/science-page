@@ -449,6 +449,10 @@ img {
 
   /* COMPONENTS */
 
+  .card {
+    height: auto;
+  }
+
   .half-width-card {
     width: 100%;
     margin-bottom: 2.5rem;
