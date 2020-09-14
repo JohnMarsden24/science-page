@@ -22103,11 +22103,8 @@ return lottie;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.toggleActive = toggleActive;
-exports.parallaxAnimation = parallaxAnimation;
-exports.createScrollFadeInAnimationTimeline = createScrollFadeInAnimationTimeline;
+exports.createFadeInAnimation = createFadeInAnimation;
 exports.createScrollAnimationMultiple = createScrollAnimationMultiple;
-exports.newScrollAnimationFlowBotherText = newScrollAnimationFlowBotherText;
 exports.lottieLoader = lottieLoader;
 
 var _gsap = _interopRequireDefault(require("gsap"));
@@ -22116,88 +22113,18 @@ var _ScrollTrigger = _interopRequireDefault(require("gsap/ScrollTrigger"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 var lottie = require("lottie-web");
 
 _gsap.default.registerPlugin(_ScrollTrigger.default);
 
-function toggleActive(event) {
-  var closestText = event.target.closest("p");
-
-  if (closestText) {
-    var waveType = closestText.dataset.wave;
-    var previousWaveList = document.querySelectorAll(".active");
-    previousWaveList.forEach(function (elem) {
-      return elem.classList.remove("active");
-    });
-    var waveList = document.querySelectorAll("[data-wave='".concat(waveType, "']"));
-    waveList.forEach(function (elem) {
-      return elem.classList.add("active");
-    });
-  }
-}
-
-function parallaxAnimation() {
-  if (window.innerWidth > 768) {
-    var targets = document.querySelectorAll(".improve-container");
-    targets.forEach(function (elem, index) {
-      var _ref = _toConsumableArray(elem.childNodes),
-          title = _ref[0],
-          text = _ref[1],
-          img = _ref[2];
-
-      _gsap.default.to(img, {
-        // yPercent: -40,
-        y: "-200px",
-        ease: "none",
-        scrollTrigger: {
-          trigger: title,
-          start: "center center",
-          // start: "top bottom", // the default values
-          // end: "+=200px",
-          scrub: true // markers: true,
-
-        }
-      });
-
-      if (index === targets.length - 1) {
-        _gsap.default.to(elem, {
-          // yPercent: -40,
-          paddingTop: "200px",
-          ease: "none",
-          scrollTrigger: {
-            trigger: title,
-            start: "center center",
-            // start: "top bottom", // the default values
-            // end: "+=200px",
-            scrub: true // markers: true,
-
-          }
-        });
-      }
-    });
-  }
-}
-
-function createScrollFadeInAnimationTimeline(options) {
+function createFadeInAnimation(options) {
   if (window.innerWidth > 768) {
     _gsap.default.timeline({
       scrollTrigger: {
         trigger: ".flow-key-markers__container",
         start: "top 80%",
         //   markers: true,
-        toggleActions: "restart none none reset"
+        toggleActions: "play none none none"
       }
     }).from(".flow-key-markers__block", {
       duration: 0.5,
@@ -22213,7 +22140,7 @@ function createScrollFadeInAnimationTimeline(options) {
           trigger: target,
           //   markers: true,
           start: "top 80%",
-          toggleActions: "restart none none reset"
+          toggleActions: "play none none none"
         },
         duration: 0.5,
         opacity: 0,
@@ -22224,45 +22151,22 @@ function createScrollFadeInAnimationTimeline(options) {
 }
 
 function createScrollAnimationMultiple(arr, options) {
+  // LOADS VALUES FROM OPTIONS
   var loadLottie = options.loadLottie,
       parallax = options.parallax;
   arr.forEach(function (elem, index) {
-    var reversed = index % 2 !== 0;
+    // GET ALL CHILD ELEMENTS AND FILTER THAT LIST TO KEEP H2, H3, P, DIV AND IMG
+    var HTMLelements = elem.getElementsByTagName("*");
+    var filteredElems = filterElements(HTMLelements); // REMOVE IMG FROM RETURNED FILTERED ARRAY AND PUT IT AT THE END
 
-    var _ref2 = _toConsumableArray(elem.childNodes),
-        img = _ref2[0],
-        textBlock = _ref2[1];
+    var img = filteredElems.shift();
+    filteredElems.push(img); // LOAD ANIMATION IF THE OPTION IS PASSED
 
-    var _ref3 = _toConsumableArray(textBlock.childNodes),
-        title = _ref3[0],
-        text = _ref3[1];
+    if (loadLottie) {
+      var animationContainer = elem.getElementsByClassName("animation-container")[0];
+      loadLottieAnimation(animationContainer);
+    } // LOAD IMG PARALLAX IF THE OPTION IS PASSED AS WELL AS DETECT IF THE IMG SHOULD CHANGE FOR MOBILE
 
-    if (loadLottie) loadLottieAnimation(img);
-
-    var timeline = _gsap.default.timeline({
-      defaults: {
-        duration: 0.6,
-        ease: "slow(0.5, 0.4, false)",
-        opacity: 0,
-        y: "50px"
-      },
-      scrollTrigger: {
-        trigger: elem,
-        toggleActions: "restart none none reverse",
-        // markers: true,
-        start: "top 75%",
-        end: "bottom center"
-      }
-    });
-
-    var elements = {
-      img: img,
-      title: title,
-      text: text,
-      elem: elem,
-      timeline: timeline,
-      options: options
-    };
 
     if (window.innerWidth < 768 && parallax) {
       if (img.dataset.mob) {
@@ -22272,46 +22176,33 @@ function createScrollAnimationMultiple(arr, options) {
       parallaxImgMobile(img, elem);
     } else if (parallax) {
       parallaxImg(img, elem);
-    }
+    } // CREATE FADE IN ANIMATION ON FILTERED AND SORTED CHILDREN ARRAY
 
-    if (window.innerWidth < 768) {
-      addToTimelineMobile(elements);
-    } else if (reversed) {
-      addToTimelineRight(elements);
-    } else {
-      addToTimelineLeft(elements);
-    }
+
+    _gsap.default.timeline({
+      scrollTrigger: {
+        trigger: elem,
+        start: "top 80%",
+        // markers: true,
+        toggleActions: "play none none none"
+      }
+    }).from(filteredElems, {
+      duration: 0.5,
+      y: "50px",
+      opacity: 0,
+      delay: 0.4,
+      stagger: 0.2
+    });
   });
 }
 
-function addToTimelineLeft(elements) {
-  var timeline = elements.timeline,
-      img = elements.img,
-      title = elements.title,
-      text = elements.text,
-      elem = elements.elem,
-      options = elements.options;
-  timeline.from(title, {}, "-=.2").from(text, {}, "-=.2").from(img, {});
-}
-
-function addToTimelineRight(elements) {
-  var timeline = elements.timeline,
-      img = elements.img,
-      title = elements.title,
-      text = elements.text,
-      elem = elements.elem,
-      options = elements.options;
-  timeline.from(img, {}).from(title, {}, "-=.2").from(text, {}, "-=.2");
-}
-
-function addToTimelineMobile(elements) {
-  var timeline = elements.timeline,
-      img = elements.img,
-      title = elements.title,
-      text = elements.text,
-      elem = elements.elem,
-      options = elements.options;
-  timeline.from(title, {}, "-=.2").from(text, {}, "-=.2").from(img, {});
+function filterElements(HTMLelements) {
+  // WILL FILTER OUT CHILD ARRAY TO PERSERVE ONLY THOSE ELEMENTS LISTED BELOW
+  var elementTypes = ["H2", "H3", "P", "IMG", "DIV"];
+  var allElemsArray = Array.from(HTMLelements);
+  return allElemsArray.filter(function (elem) {
+    return elementTypes.includes(elem.tagName);
+  });
 }
 
 function parallaxImg(img, trigger) {
@@ -22357,48 +22248,6 @@ function changeImgForMobile(img) {
   img.src = img.dataset.mob;
 }
 
-var container = document.querySelector(".new-flow-bother-container");
-
-function newScrollAnimationFlowBotherText(arr) {
-  arr.forEach(function (target, index) {
-    var opacityFirst = index === 0 ? 1 : 0.2;
-    var opacitySecond = index === arr.length - 1 ? 1 : 0.2;
-
-    _gsap.default.timeline({
-      scrollTrigger: {
-        trigger: target,
-        start: "top 60%",
-        end: "+=".concat(target.offsetHeight, "px"),
-        toggleActions: "restart none reverse reverse",
-        scrub: true,
-        // markers: true,
-        onEnter: function onEnter() {
-          return changeImg(target);
-        },
-        onEnterBack: function onEnterBack() {
-          return changeImg(target);
-        }
-      }
-    }).from(target, {
-      opacity: opacityFirst,
-      duration: 0.2
-    }, 0).to(target, {
-      opacity: opacitySecond,
-      duration: 0.2
-    }, 0.8);
-  });
-}
-
-function changeImg(elem) {
-  var originalImg = document.querySelector(".img-show");
-  originalImg.classList.remove("img-show");
-  var newImg = document.getElementById("flow-bother-".concat(elem.dataset.img));
-  newImg.classList.add("img-show"); // const newSource = elem.dataset.img;
-
-  container.style.backgroundColor = elem.dataset.bgcolor;
-  container.style.color = elem.dataset.textcolor; // img.src = newSource;
-}
-
 function lottieLoader() {
   function loadCircles() {
     lottie.loadAnimation({
@@ -22433,9 +22282,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 _gsap.default.registerPlugin(_ScrollTrigger.default);
 
 var animatedCards = document.querySelectorAll(".animated-card");
-var parallaxCards = document.querySelectorAll(".parallax-card");
-var newFlowBotherText = document.querySelectorAll(".new-flow-bother-text");
-var waveTitles = document.querySelector(".wave-container__titles");
+var parallaxCards = document.querySelectorAll(".parallax");
+var waveCards = document.querySelectorAll(".wave-card");
 var animateOpts = {
   loadLottie: true,
   parallax: false
@@ -22444,36 +22292,15 @@ var parallaxOpts = {
   loadLottie: false,
   parallax: true
 };
+var waveOpts = {
+  loadLottie: false,
+  parallax: false
+};
 (0, _basePage.createScrollAnimationMultiple)(animatedCards, animateOpts);
 (0, _basePage.createScrollAnimationMultiple)(parallaxCards, parallaxOpts);
-(0, _basePage.newScrollAnimationFlowBotherText)(newFlowBotherText);
-(0, _basePage.createScrollFadeInAnimationTimeline)();
-(0, _basePage.lottieLoader)(); // parallaxAnimation();
-
-waveTitles.addEventListener("click", _basePage.toggleActive); // (function (doc, win) {
-//   var docEl = doc.documentElement,
-//     recalc = function () {
-//       var clientWidth = docEl.clientWidth;
-//       if (!clientWidth) return;
-//       if (clientWidth < 1000) {
-//         return (docEl.style.fontSize = "1rem");
-//       }
-//       docEl.style.fontSize = clientWidth / 1440 + "rem";
-//       docEl.style.fontSize;
-//       docEl.style.display = "none";
-//       docEl.clientWidth; // Force relayout - important to new Androids
-//       docEl.style.display = "";
-//     };
-//   // Abort if browser does not support addEventListener
-//   if (!doc.addEventListener) return;
-//   // Test rem support
-//   var div = doc.createElement("div");
-//   div.setAttribute("style", "font-size: 1rem");
-//   // Abort if browser does not recognize rem
-//   if (div.style.fontSize != "1rem") return;
-//   win.addEventListener("resize", recalc, false);
-//   doc.addEventListener("DOMContentLoaded", recalc, false);
-// })(document, window);
+(0, _basePage.createScrollAnimationMultiple)(waveCards, waveOpts);
+(0, _basePage.createFadeInAnimation)();
+(0, _basePage.lottieLoader)();
 },{"gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js","./basePage":"basePage.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -22502,7 +22329,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51213" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55015" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

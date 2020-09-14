@@ -4,55 +4,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export function toggleActive(event) {
-  const closestText = event.target.closest("p");
-  if (closestText) {
-    const waveType = closestText.dataset.wave;
-    const previousWaveList = document.querySelectorAll(".active");
-    previousWaveList.forEach((elem) => elem.classList.remove("active"));
-    const waveList = document.querySelectorAll(`[data-wave='${waveType}']`);
-    waveList.forEach((elem) => elem.classList.add("active"));
-  }
-}
-
-export function parallaxAnimation() {
-  if (window.innerWidth > 768) {
-    const targets = document.querySelectorAll(".improve-container");
-    targets.forEach((elem, index) => {
-      const [title, text, img] = [...elem.childNodes];
-      gsap.to(img, {
-        // yPercent: -40,
-        y: "-200px",
-        ease: "none",
-        scrollTrigger: {
-          trigger: title,
-          start: "center center",
-          // start: "top bottom", // the default values
-          // end: "+=200px",
-          scrub: true,
-          // markers: true,
-        },
-      });
-      if (index === targets.length - 1) {
-        gsap.to(elem, {
-          // yPercent: -40,
-          paddingTop: "200px",
-          ease: "none",
-          scrollTrigger: {
-            trigger: title,
-            start: "center center",
-            // start: "top bottom", // the default values
-            // end: "+=200px",
-            scrub: true,
-            // markers: true,
-          },
-        });
-      }
-    });
-  }
-}
-
-export function createScrollFadeInAnimationTimeline(options) {
+export function createFadeInAnimation(options) {
   if (window.innerWidth > 768) {
     gsap
       .timeline({
@@ -60,7 +12,7 @@ export function createScrollFadeInAnimationTimeline(options) {
           trigger: ".flow-key-markers__container",
           start: "top 80%",
           //   markers: true,
-          toggleActions: "restart none none reset",
+          toggleActions: "play none none none",
         },
       })
       .from(".flow-key-markers__block", {
@@ -77,7 +29,7 @@ export function createScrollFadeInAnimationTimeline(options) {
           trigger: target,
           //   markers: true,
           start: "top 80%",
-          toggleActions: "restart none none reset",
+          toggleActions: "play none none none",
         },
         duration: 0.5,
         opacity: 0,
@@ -88,31 +40,27 @@ export function createScrollFadeInAnimationTimeline(options) {
 }
 
 export function createScrollAnimationMultiple(arr, options) {
+  // LOADS VALUES FROM OPTIONS
   let { loadLottie, parallax } = options;
+
   arr.forEach((elem, index) => {
-    const reversed = index % 2 !== 0;
-    const [img, textBlock] = [...elem.childNodes];
-    const [title, text] = [...textBlock.childNodes];
-    if (loadLottie) loadLottieAnimation(img);
+    // GET ALL CHILD ELEMENTS AND FILTER THAT LIST TO KEEP H2, H3, P, DIV AND IMG
+    const HTMLelements = elem.getElementsByTagName("*");
+    const filteredElems = filterElements(HTMLelements);
 
-    const timeline = gsap.timeline({
-      defaults: {
-        duration: 0.6,
-        ease: "slow(0.5, 0.4, false)",
-        opacity: 0,
-        y: "50px",
-      },
-      scrollTrigger: {
-        trigger: elem,
-        toggleActions: "restart none none reverse",
-        // markers: true,
-        start: "top 75%",
-        end: "bottom center",
-      },
-    });
+    // REMOVE IMG FROM RETURNED FILTERED ARRAY AND PUT IT AT THE END
+    const img = filteredElems.shift();
+    filteredElems.push(img);
 
-    const elements = { img, title, text, elem, timeline, options };
+    // LOAD ANIMATION IF THE OPTION IS PASSED
+    if (loadLottie) {
+      const animationContainer = elem.getElementsByClassName(
+        "animation-container"
+      )[0];
+      loadLottieAnimation(animationContainer);
+    }
 
+    // LOAD IMG PARALLAX IF THE OPTION IS PASSED AS WELL AS DETECT IF THE IMG SHOULD CHANGE FOR MOBILE
     if (window.innerWidth < 768 && parallax) {
       if (img.dataset.mob) {
         changeImgForMobile(img);
@@ -122,30 +70,31 @@ export function createScrollAnimationMultiple(arr, options) {
       parallaxImg(img, elem);
     }
 
-    if (window.innerWidth < 768) {
-      addToTimelineMobile(elements);
-    } else if (reversed) {
-      addToTimelineRight(elements);
-    } else {
-      addToTimelineLeft(elements);
-    }
+    // CREATE FADE IN ANIMATION ON FILTERED AND SORTED CHILDREN ARRAY
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: elem,
+          start: "top 80%",
+          // markers: true,
+          toggleActions: "play none none none",
+        },
+      })
+      .from(filteredElems, {
+        duration: 0.5,
+        y: "50px",
+        opacity: 0,
+        delay: 0.4,
+        stagger: 0.2,
+      });
   });
 }
 
-function addToTimelineLeft(elements) {
-  const { timeline, img, title, text, elem, options } = elements;
-  timeline.from(title, {}, "-=.2").from(text, {}, "-=.2").from(img, {});
-}
-
-function addToTimelineRight(elements) {
-  const { timeline, img, title, text, elem, options } = elements;
-
-  timeline.from(img, {}).from(title, {}, "-=.2").from(text, {}, "-=.2");
-}
-
-function addToTimelineMobile(elements) {
-  const { timeline, img, title, text, elem, options } = elements;
-  timeline.from(title, {}, "-=.2").from(text, {}, "-=.2").from(img, {});
+function filterElements(HTMLelements) {
+  // WILL FILTER OUT CHILD ARRAY TO PERSERVE ONLY THOSE ELEMENTS LISTED BELOW
+  const elementTypes = ["H2", "H3", "P", "IMG", "DIV"];
+  const allElemsArray = Array.from(HTMLelements);
+  return allElemsArray.filter((elem) => elementTypes.includes(elem.tagName));
 }
 
 function parallaxImg(img, trigger) {
@@ -189,43 +138,6 @@ function loadLottieAnimation(container) {
 
 function changeImgForMobile(img) {
   img.src = img.dataset.mob;
-}
-
-const container = document.querySelector(".new-flow-bother-container");
-
-export function newScrollAnimationFlowBotherText(arr) {
-  arr.forEach((target, index) => {
-    const opacityFirst = index === 0 ? 1 : 0.2;
-    const opacitySecond = index === arr.length - 1 ? 1 : 0.2;
-    gsap
-      .timeline({
-        scrollTrigger: {
-          trigger: target,
-          start: "top 60%",
-          end: `+=${target.offsetHeight}px`,
-          toggleActions: "restart none reverse reverse",
-          scrub: true,
-          // markers: true,
-          onEnter: () => changeImg(target),
-          onEnterBack: () => changeImg(target),
-        },
-      })
-      .from(target, { opacity: opacityFirst, duration: 0.2 }, 0)
-      .to(target, { opacity: opacitySecond, duration: 0.2 }, 0.8);
-  });
-}
-
-function changeImg(elem) {
-  const originalImg = document.querySelector(".img-show");
-  originalImg.classList.remove("img-show");
-  const newImg = document.getElementById(`flow-bother-${elem.dataset.img}`);
-  newImg.classList.add("img-show");
-
-  // const newSource = elem.dataset.img;
-  container.style.backgroundColor = elem.dataset.bgcolor;
-  container.style.color = elem.dataset.textcolor;
-
-  // img.src = newSource;
 }
 
 export function lottieLoader() {
