@@ -22183,7 +22183,7 @@ function createScrollAnimationMultiple(arr, options) {
       scrollTrigger: {
         trigger: elem,
         start: "top 80%",
-        // markers: true,
+        markers: true,
         toggleActions: "play none none none"
       }
     }).from(filteredElems, {
