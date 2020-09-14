@@ -65,7 +65,7 @@ export function createScrollAnimationMultiple(arr, options) {
       if (img.dataset.mob) {
         changeImgForMobile(img);
       }
-      parallaxImgMobile(img, elem);
+      // parallaxImgMobile(img, elem);
     } else if (parallax) {
       parallaxImg(img, elem);
     }
@@ -76,7 +76,7 @@ export function createScrollAnimationMultiple(arr, options) {
         scrollTrigger: {
           trigger: elem,
           start: "top 80%",
-          markers: true,
+          // markers: true,
           toggleActions: "play none none none",
         },
       })
