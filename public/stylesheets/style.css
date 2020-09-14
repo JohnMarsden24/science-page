@@ -450,16 +450,15 @@ img {
   /* COMPONENTS */
 
   .half-width-card {
-    width: auto;
+    width: 100%;
     margin-bottom: 2.5rem;
   }
 
-  .full-width-card {
+  .full-width-card img {
     height: auto;
   }
 
   .card img {
-    height: auto;
     order: 2;
   }
 
@@ -496,8 +495,7 @@ img {
   }
 
   .key-markers__title {
-    margin: 2.5rem auto;
-    padding: 0;
+    padding: 2.5rem 1rem;
   }
 
   .video-container {
@@ -512,6 +510,4 @@ img {
     margin-top: 2rem;
     order: 2;
   }
-
-  /* TESTING */
 }
