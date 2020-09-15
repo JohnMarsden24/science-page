@@ -385,6 +385,19 @@ img {
   width: 50%;
 }
 
+.test-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.test-container img {
+  width: 50%;
+}
+
+.test__text {
+  width: 50%;
+}
+
 @media screen and (max-width: 768px) {
   /* GLOBAL STYLING */
 
@@ -548,7 +561,18 @@ img {
 
   .full-width-card__img {
     width: 100%;
+    object-fit: contain;
     order: 2;
     /* height: unset; */
+  }
+
+  .test__text {
+    width: 100%;
+    order: 1;
+  }
+
+  .test-container img {
+    width: 100%;
+    order: 2;
   }
 }
