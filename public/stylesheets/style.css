@@ -387,17 +387,17 @@ img {
 
 .test-container {
   display: flex;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
 }
 
-/* .test__img1,
+.test__img1,
 .test__img2 {
   width: 50%;
-} */
+}
 
-/* .test__text {
+.test__text {
   width: 50%;
-} */
+}
 
 @media screen and (max-width: 768px) {
   /* GLOBAL STYLING */
@@ -567,7 +567,11 @@ img {
     /* height: unset; */
   }
 
-  /* .test__text {
+  .test-container {
+    flex-direction: column;
+  }
+
+  .test__text {
     width: 100%;
     order: 1;
   }
@@ -582,8 +586,7 @@ img {
   }
 
   .test__img2 {
-
     width: auto;
     max-width: 100%;
-  } */
+  }
 }
