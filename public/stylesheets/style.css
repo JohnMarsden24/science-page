@@ -389,7 +389,7 @@ img {
 
 .test-img {
   width: 50%;
-  justify-self: flex-start;
+  align-self: flex-start;
 }
 
 .test-text {
