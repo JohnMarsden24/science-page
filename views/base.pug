@@ -15,8 +15,8 @@ mixin half-width-card(img, title, text)
             p= text
 
 mixin animated-card(animationName, title, text)
-    .card.animated-card.flex-row.align-center.justify-between.max-10.center.mlr-16-mob.mtb-100
-        .animation-container(data-animation= animationName)
+    .card.animated-card
+        .animation-container.card__img(data-animation= animationName)
         .max-4
             h2.mb-24= title
             p!= text
@@ -96,5 +96,19 @@ html(lang="en")
             h2.ptb-80 Experiences with flow reinforced through case studies:
             h3.max-8.center "Music is so important when you’re training, warming up. I have a playlist I listen to when I’m in competition, cooling down, stretching. It varies from Bob Marley to Diplo to Drake to Chris Brown. When I’m in competition I like to hear a lot of bass, a beat. I don’t care about the words too much, I just care about how it makes me feel"
             p.ptb-80.max-4.center Red Bull article featuring British Fencer Miles Chamley-Watson
-
+        .test-card-1
+            img(class="test-img-1", src="/imgs/test-img.jpg", alt="", srcset="")
+            .test-text-1.test-text
+                h3 IRIS improves cardiac health
+                p A lower heart rate is an essential factor in maintaining healthy heart rhythm. IRIS leads to a reduction of heart rate, and a lower heart rate is a key marker of a more relaxed state.
+        .test-card-2
+            img(class="test-img-2", src="/imgs/test-img.jpg", alt="", srcset="")
+            .test-text-2.test-text
+                h3 IRIS improves cardiac health
+                p A lower heart rate is an essential factor in maintaining healthy heart rhythm. IRIS leads to a reduction of heart rate, and a lower heart rate is a key marker of a more relaxed state.
+        .test-card-3
+            img(class="test-img-3", src="/imgs/test-img.jpg", alt="", srcset="")
+            .test-text-3.test-text
+                h3 IRIS improves cardiac health
+                p A lower heart rate is an essential factor in maintaining healthy heart rhythm. IRIS leads to a reduction of heart rate, and a lower heart rate is a key marker of a more relaxed state.
         script(src='/js/bundle.js')
