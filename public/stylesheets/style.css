@@ -281,7 +281,7 @@ img {
 .full-width-card__img {
   object-fit: contain;
   width: 50%;
-  height: 700px;
+  /* height: 700px; */
 }
 
 .full-width-card__text {
@@ -515,7 +515,7 @@ img {
   /* TESTING */
 
   .full-width-card {
-    height: unset;
+    height: auto;
   }
 
   /* .card div {
@@ -534,6 +534,6 @@ img {
   .full-width-card__img {
     width: 100%;
     /* order: 2; */
-    height: unset;
+    /* height: unset; */
   }
 }
