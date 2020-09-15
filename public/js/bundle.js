@@ -22171,8 +22171,9 @@ function createScrollAnimationMultiple(arr, options) {
     if (window.innerWidth < 768 && parallax) {
       if (img.dataset.mob) {
         changeImgForMobile(img);
-      } // parallaxImgMobile(img, elem);
+      }
 
+      parallaxImgMobile(img, elem);
     } else if (parallax) {
       parallaxImg(img, elem);
     } // CREATE FADE IN ANIMATION ON FILTERED AND SORTED CHILDREN ARRAY

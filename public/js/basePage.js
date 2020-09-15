@@ -65,7 +65,7 @@ export function createScrollAnimationMultiple(arr, options) {
       if (img.dataset.mob) {
         changeImgForMobile(img);
       }
-      // parallaxImgMobile(img, elem);
+      parallaxImgMobile(img, elem);
     } else if (parallax) {
       parallaxImg(img, elem);
     }
