@@ -239,24 +239,22 @@ img {
 /* CARDS */
 
 .card {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas: "img text";
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .card:nth-child(even) {
-  grid-template-areas: "text img";
+  flex-direction: row-reverse;
 }
 
 .card__img {
-  grid-area: img;
+  width: 50%;
+  align-self: flex-start;
 }
 
 .card__text {
-  grid-area: text;
   width: 35rem;
   margin: 0 auto;
-  box-sizing: border-box;
 }
 
 .half-width-card {
@@ -272,18 +270,17 @@ img {
 }
 
 .full-width-card__img {
-  object-fit: contain;
   height: 700px;
 }
 
 .card:nth-child(odd) img {
   object-position: 0 100%;
-  justify-self: start;
+  /* justify-self: start; */
 }
 
 .card:nth-child(even) img {
   object-position: 100% 100%;
-  justify-self: end;
+  /* justify-self: end; */
 }
 
 .flow-bother-card:nth-child(2) {
@@ -380,22 +377,6 @@ img {
   margin: 0 auto 64px;
 }
 
-/* TESTING */
-
-.test-card {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.test-img {
-  width: 50%;
-  align-self: flex-start;
-}
-
-.test-text {
-  width: 50%;
-}
-
 @media screen and (max-width: 768px) {
   /* GLOBAL STYLING */
 
@@ -475,23 +456,15 @@ img {
 
   /* CARDS */
 
-  .card {
-    justify-items: center;
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "text"
-      "img";
-  }
-
-  .card:nth-child(even) {
-    grid-template-areas:
-      "text"
-      "img";
+  .card__img {
+    height: auto;
+    width: auto;
+    order: 2;
   }
 
   .card__text {
-    padding: 2.5rem 1rem;
-    width: 100%;
+    width: auto;
+    margin: 2.5rem 1rem;
   }
 
   /* .full-width-card__text {
@@ -503,8 +476,7 @@ img {
     margin-bottom: 2.5rem;
   }
 
-  .full-width-card,
-  .full-width-card__img {
+  .full-width-card {
     height: auto;
   }
 
@@ -544,16 +516,5 @@ img {
     height: 16.25rem;
     margin-top: 2rem;
     order: 2;
-  }
-
-  /* TESTING */
-
-  .test-text {
-    margin: 1rem;
-  }
-
-  .test-text,
-  .test-img {
-    width: auto;
   }
 }
