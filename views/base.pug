@@ -1,6 +1,6 @@
 mixin full-width-card(img, title, text, optionalTitle, imgMobile)
     .card.full-width-card(class!=attributes.class)
-        img(class="full-width-card__img", src= img, alt="", srcset="", data-mob= imgMobile)
+        img(class="card__img full-width-card__img", src= img, alt="", srcset="", data-mob= imgMobile)
         .card__text.full-width-card__text
             if optionalTitle
                 h2.mb-32= optionalTitle
@@ -9,7 +9,7 @@ mixin full-width-card(img, title, text, optionalTitle, imgMobile)
 
 mixin half-width-card(img, title, text)
     .card.half-width-card(class!=attributes.class)
-        img(src= img, alt="", srcset="")
+        img(class="card__img half-width-card__img", src= img, alt="", srcset="")
         .card__text
             h3.mb-24= title
             p= text
