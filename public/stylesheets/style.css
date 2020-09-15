@@ -425,6 +425,10 @@ img {
   width: 50%;
 }
 
+.test-text-4 {
+  margin: 1rem;
+}
+
 @media screen and (max-width: 768px) {
   /* GLOBAL STYLING */
 
@@ -577,12 +581,16 @@ img {
 
   /* TESTING */
 
+  .test-text {
+    margin: 1rem;
+  }
+
   .test-img-1 {
-    width: 100%;
+    width: auto;
   }
 
   .test-text-1 {
-    width: 100%;
+    width: auto;
   }
 
   .test-card-2 {
@@ -590,11 +598,11 @@ img {
   }
 
   .test-img-2 {
-    width: 100%;
+    width: auto;
   }
 
   .test-text-2 {
-    width: 100%;
+    width: auto;
   }
 
   .test-card-3 {
@@ -602,10 +610,10 @@ img {
   }
 
   .test-img-3 {
-    width: 100%;
+    width: auto;
   }
 
   .test-text-3 {
-    width: 100%;
+    width: auto;
   }
 }
