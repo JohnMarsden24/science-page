@@ -16,9 +16,9 @@ const animateOpts = { loadLottie: true, parallax: false };
 const parallaxOpts = { loadLottie: false, parallax: true };
 const waveOpts = { loadLottie: false, parallax: false };
 
-createScrollAnimationMultiple(animatedCards, animateOpts);
-createScrollAnimationMultiple(parallaxCards, parallaxOpts);
-createScrollAnimationMultiple(waveCards, waveOpts);
+// createScrollAnimationMultiple(animatedCards, animateOpts);
+// createScrollAnimationMultiple(parallaxCards, parallaxOpts);
+// createScrollAnimationMultiple(waveCards, waveOpts);
 
-createFadeInAnimation();
-lottieLoader();
+// createFadeInAnimation();
+// lottieLoader();
