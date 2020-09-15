@@ -1,6 +1,6 @@
 mixin full-width-card(img, title, text, optionalTitle, imgMobile)
     .card.full-width-card(class!=attributes.class)
-        img(src= img, alt="", srcset="", data-mob= imgMobile)
+        img(class="full-width-card__img", src= img, alt="", srcset="", data-mob= imgMobile)
         .card__text.full-width-card__text
             if optionalTitle
                 h2.mb-32= optionalTitle
