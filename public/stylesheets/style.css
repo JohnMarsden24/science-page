@@ -272,13 +272,13 @@ img {
   width: 80px;
 }
 
-/* .full-width-card {
+.full-width-card {
   height: 600px;
   position: relative;
   background-color: white;
-} */
+}
 
-/* .full-width-card__img {
+.full-width-card__img {
   object-fit: contain;
   width: 50%;
   height: 700px;
@@ -286,15 +286,15 @@ img {
 
 .full-width-card__text {
   margin-top: 11.25rem;
-} */
+}
 
-/* .full-width-card:nth-child(odd) img {
+.full-width-card:nth-child(odd) img {
   object-position: 0 100%;
 }
 
 .full-width-card:nth-child(even) img {
   object-position: 100% 100%;
-} */
+}
 
 .flow-bother-card:nth-child(2) {
   background-color: var(--dark-teal);
@@ -372,7 +372,7 @@ img {
 
 /* TESTING */
 
-.full-width-card {
+/* .full-width-card {
   display: flex;
   flex-wrap: wrap;
 }
@@ -387,7 +387,6 @@ img {
 
 .test-container {
   display: flex;
-  /* flex-wrap: wrap; */
 }
 
 .test__img1,
@@ -397,7 +396,7 @@ img {
 
 .test__text {
   width: 50%;
-}
+} */
 
 @media screen and (max-width: 768px) {
   /* GLOBAL STYLING */
@@ -483,22 +482,26 @@ img {
     margin-bottom: 2.5rem;
   }
 
-  /* .full-width-card,
+  .full-width-card,
   .full-width-card img {
     height: auto;
-  } */
+  }
 
-  /* .card img {
+  .card {
+    flex-direction: column;
+  }
+
+  .card img {
     order: 2;
-  } */
+  }
 
-  /* .card__text {
+  .card__text {
     margin: 0 1rem 1rem;
-  } */
+  }
 
-  /* .full-width-card__text {
+  .full-width-card__text {
     margin: 2.5rem 1rem 1rem;
-  } */
+  }
 
   .card div,
   .card img {
@@ -555,38 +558,37 @@ img {
     order: 2;
   } */
 
-  .full-width-card__text {
+  /* .full-width-card__text {
     max-width: 100%;
     order: 1;
-  }
+  } */
 
-  .full-width-card__img {
+  /* .full-width-card__img {
     max-width: 100%;
     object-fit: contain;
     order: 2;
-    /* height: unset; */
-  }
+  } */
 
-  .test-container {
+  /* .test-container {
     flex-direction: column;
-  }
+  } */
 
-  .test__text {
+  /* .test__text {
     width: 100%;
     order: 1;
-  }
+  } */
 
-  .test-container img {
+  /* .test-container img {
     order: 2;
-  }
+  } */
 
-  .test__img1 {
+  /* .test__img1 {
     width: 100%;
     max-width: 100%;
-  }
+  } */
 
-  .test__img2 {
+  /* .test__img2 {
     width: auto;
     max-width: 100%;
-  }
+  } */
 }
