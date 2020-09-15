@@ -22295,11 +22295,12 @@ var parallaxOpts = {
 var waveOpts = {
   loadLottie: false,
   parallax: false
-}; // createScrollAnimationMultiple(animatedCards, animateOpts);
-// createScrollAnimationMultiple(parallaxCards, parallaxOpts);
-// createScrollAnimationMultiple(waveCards, waveOpts);
-// createFadeInAnimation();
-// lottieLoader();
+};
+(0, _basePage.createScrollAnimationMultiple)(animatedCards, animateOpts);
+(0, _basePage.createScrollAnimationMultiple)(parallaxCards, parallaxOpts);
+(0, _basePage.createScrollAnimationMultiple)(waveCards, waveOpts);
+(0, _basePage.createFadeInAnimation)();
+(0, _basePage.lottieLoader)();
 },{"gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js","./basePage":"basePage.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
