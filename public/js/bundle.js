@@ -22281,7 +22281,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 _gsap.default.registerPlugin(_ScrollTrigger.default);
 
-var animatedCards = document.querySelectorAll(".animated-card");
+var animatedCards = document.querySelectorAll(".card--animated");
 var parallaxCards = document.querySelectorAll(".parallax");
 var waveCards = document.querySelectorAll(".wave-card");
 var animateOpts = {
@@ -22296,6 +22296,9 @@ var waveOpts = {
   loadLottie: false,
   parallax: false
 };
+
+_ScrollTrigger.default.refresh();
+
 (0, _basePage.createScrollAnimationMultiple)(animatedCards, animateOpts);
 (0, _basePage.createScrollAnimationMultiple)(parallaxCards, parallaxOpts);
 (0, _basePage.createScrollAnimationMultiple)(waveCards, waveOpts);
