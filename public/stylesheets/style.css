@@ -65,6 +65,11 @@ img {
   object-fit: contain;
 }
 
+video {
+  object-fit: cover;
+  max-height: 100vh;
+}
+
 /* SPACING - MARGINS */
 
 .center {
