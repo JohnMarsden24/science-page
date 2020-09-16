@@ -1,6 +1,6 @@
 mixin full-width-card(img, title, text, optionalTitle, imgMobile)
     .card.card__full-width(class!=attributes.class)
-        img(class="card__img card__full-width-img", src= img, alt="", srcset="", data-mob= imgMobile)
+        img(class="card__img card__full-width-img", src= img, alt="Lifestyle photo of people using IRIS headphones", srcset="", data-mob= imgMobile)
         .card__text-container
             .card__text
                 if optionalTitle
@@ -10,7 +10,7 @@ mixin full-width-card(img, title, text, optionalTitle, imgMobile)
 
 mixin half-width-card(img, title, text)
     .card.card__half-width(class!=attributes.class)
-        img(class="card__img card__half-width-img", src= img, alt="", srcset="")
+        img(class="card__img card__half-width-img", src= img, alt="Brain activity comparison scan of using IRIS headphones ", srcset="")
         .card__text
             h3.mb-24= title
             p= text
@@ -24,7 +24,7 @@ mixin animated-card(animationName, title, text)
 
 mixin flow-key-marker(img, title, text)
     .flow-key-markers__block
-        img.mb-24(src= img, alt="Flow key marker image")
+        img.mb-24(src= img, alt="Illustration for the benefit of using IRIS")
         h3.semi-bold.mb-24= title
         p= text
 
@@ -56,7 +56,7 @@ html(lang="en")
             +animated-card("iris_enables_flow", "IRIS enables flow", "IRIS sound technology activates this potential by engaging your brain through active listening - sound that connects and stimulates biology - enabling you to find your ‘flow’.")
             +animated-card("neuro", "IRIS neurological benefits", "This immersive sound experience brings neurological benefits; your experience of music and entertainment, your mental wellbeing and your performance levels.")
         .video-container
-            video(src="/videos/video_2.mp4" width="100%" height="auto" controls="true")
+            video(src="/videos/video_2.mp4" width="100%" height="auto" controls="true", poster="/imgs/video-poster-1.png")
         
         //- parallax cards
         .card__full-width-container
@@ -88,7 +88,7 @@ html(lang="en")
             +half-width-card("/imgs/gamma_wave.jpg", "Gamma wave (30-48 Hz)", "Gamma wave (30-48 Hz) is associated with alert mental states, active information processing and binding information together in the brain. Gamma wave is enhanced by attention, memory and focus.")(class="wave-card")
             +half-width-card("/imgs/upper_gamma_wave.jpg", "Upper gamma wave (52-80 Hz)", "Upper gamma wave (52-80 Hz) is less studied but is supposed to be associated with higher cognitive functions such as working memory, language processing, and also suppressing distractions.")(class="wave-card")
         .video-container
-            video(src="/videos/video_1.mp4" width="100%" height="auto" controls="true")
+            video(src="/videos/video_1.mp4" width="100%" height="auto" controls="true", poster="/imgs/video-poster-2.png")
         .card__full-width-container
             +full-width-card("/imgs/iris_improve_5.png", "IRIS improves motivation and engagement", "A higher frontal alpha asymmetry (a neural marker representing approach/withdrawal model of emotion) for IRIS suggests a state with an increased motivational and engagement.")(class="improve-card parallax")
             +full-width-card("/imgs/iris_improve_2.png", "IRIS improves cardiac health", "Heart rate variability (HRV) is the variation in the time between consecutive heartbeats in milliseconds. IRIS is found to boost HRV, and an increased HRV is connected to reduced mortality and an overall improvement in cardiac health.")(class="improve-card parallax")
