@@ -1,23 +1,24 @@
 mixin full-width-card(img, title, text, optionalTitle, imgMobile)
-    .card.full-width-card(class!=attributes.class)
-        img(class="card__img full-width-card__img", src= img, alt="", srcset="", data-mob= imgMobile)
-        .card__text.full-width-card__text
-            if optionalTitle
-                h2.mb-32= optionalTitle
-            h3.mb-24= title
-            p= text
+    .card.card__full-width(class!=attributes.class)
+        img(class="card__img card__full-width-img", src= img, alt="", srcset="", data-mob= imgMobile)
+        .card__text-container
+            .card__text
+                if optionalTitle
+                    h2.mb-32= optionalTitle
+                h3.mb-24= title
+                p= text
 
 mixin half-width-card(img, title, text)
-    .card.half-width-card(class!=attributes.class)
-        img(class="card__img half-width-card__img", src= img, alt="", srcset="")
+    .card.card__half-width(class!=attributes.class)
+        img(class="card__img card__half-width-img", src= img, alt="", srcset="")
         .card__text
             h3.mb-24= title
             p= text
 
 mixin animated-card(animationName, title, text)
-    .card.animated-card
-        .animation-container.card__img(data-animation= animationName)
-        .max-4
+    .card.card__half-width.card--animated
+        .animation-container(data-animation= animationName)
+        .card__text
             h2.mb-24= title
             p!= text
 
@@ -35,7 +36,7 @@ html(lang="en")
         link(href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;700&display=swap", rel="stylesheet")
         title Science Page
     body
-        .hero-container.ptb-90.text-center.text-white.mb-48
+        .hero-container.ptb-90.text-center.text-white
             #a1.hide
             .max-8.center
                 #a2
@@ -50,7 +51,7 @@ html(lang="en")
                 .hero-signoff__text
                     p.bold Professor J Bhattacharya
                     img(src="/imgs/Goldsmiths-Logo.png", alt="")
-        div
+        .card__half-width-container
             +animated-card("circle_breathing", "What is 'flow' state?", "Imagine for a moment that you are running a race. Your attention is focused on the movements of your body, the power of your muscles, and the force of your lungs. <br><br> You are living in the moment, utterly absorbed in the present activity. You’re ‘In Flow’ - a state of complete immersion in an activity.")
             +animated-card("iris_enables_flow", "IRIS enables flow", "IRIS sound technology activates this potential by engaging your brain through active listening - sound that connects and stimulates biology - enabling you to find your ‘flow’.")
             +animated-card("neuro", "IRIS neurological benefits", "This immersive sound experience brings neurological benefits; your experience of music and entertainment, your mental wellbeing and your performance levels.")
@@ -58,7 +59,7 @@ html(lang="en")
             video(src="/videos/video_2.mp4" width="100%" height="auto" controls="true")
         
         //- parallax cards
-        div
+        .card__full-width-container
             +full-width-card("/imgs/new_flow_bother_1.png", "Activity is much more rewarding in flow", "Flow is related to dopamine, a key neurochemical relevant for learning and reward. The release of endorphins and other neurochemicals during flow state further makes the activity extremely rewarding.", "Why should I bother with flow?")(class="flow-bother-card parallax")
             +full-width-card("/imgs/new_flow_bother_10.png", "We return to what we enjoy", "As we are pleasure seeking species, performing in flow state is one of the best ways to indulge this side of our personalities, making our desire to return to this state strong", "", "/imgs/new_flow_bother_10_mob.png")(class="flow-bother-card parallax")
             +full-width-card("/imgs/new_flow_bother_13.png", "Helps motivation", "Flow is crucially linked with high intrinsic motivation – we like doing for the sake of doing, but not for an external reward. Research has shown that flow experience may help us going when the going gets tough and rough. ")(class="flow-bother-card parallax")
@@ -82,19 +83,19 @@ html(lang="en")
                 h2.mb-32 How IRIS impacts our experience, brain and heart?
                 p We have a richer, absorbing and more fulfilling experience listening to music with IRIS than we do without it.
         h2.mtb-80.max-8.center.text-center.mlr-16-mob IRIS stimulates our brain – boosting high frequency brain waves (beta, gamma, higher gamma)
-        div
+        .card__half-width-container
             +half-width-card("/imgs/beta_wave.jpg", "Beta wave (13-30Hz)", "Beta wave (13-30 Hz) is dominant in our waking state and is active when undertaking cognitive tasks. Beta wave is enhanced when we are alert, attentive and engaged in demanding task, making decisions or trying to focus.")(class="wave-card")
             +half-width-card("/imgs/gamma_wave.jpg", "Gamma wave (30-48 Hz)", "Gamma wave (30-48 Hz) is associated with alert mental states, active information processing and binding information together in the brain. Gamma wave is enhanced by attention, memory and focus.")(class="wave-card")
             +half-width-card("/imgs/upper_gamma_wave.jpg", "Upper gamma wave (52-80 Hz)", "Upper gamma wave (52-80 Hz) is less studied but is supposed to be associated with higher cognitive functions such as working memory, language processing, and also suppressing distractions.")(class="wave-card")
         .video-container
             video(src="/videos/video_1.mp4" width="100%" height="auto" controls="true")
-        div
+        .card__full-width-container
             +full-width-card("/imgs/iris_improve_5.png", "IRIS improves motivation and engagement", "A higher frontal alpha asymmetry (a neural marker representing approach/withdrawal model of emotion) for IRIS suggests a state with an increased motivational and engagement.")(class="improve-card parallax")
             +full-width-card("/imgs/iris_improve_2.png", "IRIS improves cardiac health", "Heart rate variability (HRV) is the variation in the time between consecutive heartbeats in milliseconds. IRIS is found to boost HRV, and an increased HRV is connected to reduced mortality and an overall improvement in cardiac health.")(class="improve-card parallax")
             +full-width-card("/imgs/iris_improve_4.png", "IRIS induces relaxation", "A lower heart rate is an essential factor in maintaining healthy heart rhythm. IRIS leads to a reduction of heart rate, and a lower heart rate is a key marker of a more relaxed state.")(class="improve-card parallax")
-        .experience-container.bg-gray.text-center
+        .experience-container.bg-white.text-center
             h2.ptb-80 Experiences with flow reinforced through case studies:
-            h3.max-8.center "Music is so important when you’re training, warming up. I have a playlist I listen to when I’m in competition, cooling down, stretching. It varies from Bob Marley to Diplo to Drake to Chris Brown. When I’m in competition I like to hear a lot of bass, a beat. I don’t care about the words too much, I just care about how it makes me feel"
-            p.ptb-80.max-4.center Red Bull article featuring British Fencer Miles Chamley-Watson
+            p.max-8.center.semi-bold.larger "Music is so important when you’re training, warming up. I have a playlist I listen to when I’m in competition, cooling down, stretching. It varies from Bob Marley to Diplo to Drake to Chris Brown. When I’m in competition I like to hear a lot of bass, a beat. I don’t care about the words too much, I just care about how it makes me feel"
+            p.ptb-80.max-4.center.smaller RED BULL ARTICLE FEATURING BRITISH FENCER MILES CHAMLEY-WATSON
                
         script(src='/js/bundle.js')
