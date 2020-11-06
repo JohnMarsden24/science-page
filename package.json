@@ -14,7 +14,9 @@
   "dependencies": {
     "express": "^4.17.1",
     "gsap": "^3.5.1",
+    "howler": "^2.2.0",
     "lottie-web": "^5.7.2",
+    "plyr": "^3.6.2",
     "pug": "^3.0.0",
     "serve-favicon": "^2.5.0"
   },

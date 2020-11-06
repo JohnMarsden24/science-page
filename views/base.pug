@@ -33,6 +33,7 @@ html(lang="en")
         meta(charset="UTF-8")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         link(rel="stylesheet", href="./stylesheets/style.css", type='text/css')
+        link(rel="stylesheet", href="https://cdn.plyr.io/3.6.2/plyr.css", type='text/css')
         link(href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;700&display=swap", rel="stylesheet")
         title Science Page
     body
@@ -97,5 +98,24 @@ html(lang="en")
             h2.ptb-80 Experiences with flow reinforced through case studies:
             p.max-8.center.semi-bold.larger "Music is so important when you’re training, warming up. I have a playlist I listen to when I’m in competition, cooling down, stretching. It varies from Bob Marley to Diplo to Drake to Chris Brown. When I’m in competition I like to hear a lot of bass, a beat. I don’t care about the words too much, I just care about how it makes me feel"
             p.ptb-80.max-4.center.smaller RED BULL ARTICLE FEATURING BRITISH FENCER MILES CHAMLEY-WATSON
+        ul#playlist
+            li(data-track="track-0") Etta James - At Last
+            li(data-track="track-1") Jack Johnson - Better Together
+        button(id="prevBtn") Previous
+        button(id="nextBtn") Next
+        button(id="irisBtn") Iris
+        button(id="playBtn") Play
+        button(id="pauseBtn") Pause
+
+        button(id="mute") Mute
+
+
+        //- audio(src="../audio/track-0.mp3" id="player1" controls)
+        //- audio(src="../audio/track-0-iris.mp3" id="player2")
+        audio(src="", controls, id="player1")
+        .iris-player
+            audio(src="", controls, id="player2")
+
+
                
         script(src='/js/bundle.js')

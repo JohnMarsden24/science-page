@@ -117,7 +117,758 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"../../node_modules/gsap/gsap-core.js":[function(require,module,exports) {
+})({"../../node_modules/regenerator-runtime/runtime.js":[function(require,module,exports) {
+var define;
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var runtime = (function (exports) {
+  "use strict";
+
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined; // More compressible than void 0.
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+    return obj[key];
+  }
+  try {
+    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+    define({}, "");
+  } catch (err) {
+    define = function(obj, key, value) {
+      return obj[key] = value;
+    };
+  }
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []);
+
+    // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+    return generator;
+  }
+  exports.wrap = wrap;
+
+  // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+  function tryCatch(fn, obj, arg) {
+    try {
+      return { type: "normal", arg: fn.call(obj, arg) };
+    } catch (err) {
+      return { type: "throw", arg: err };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed";
+
+  // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+  var ContinueSentinel = {};
+
+  // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+  function Generator() {}
+  function GeneratorFunction() {}
+  function GeneratorFunctionPrototype() {}
+
+  // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+  var IteratorPrototype = {};
+  IteratorPrototype[iteratorSymbol] = function () {
+    return this;
+  };
+
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+  if (NativeIteratorPrototype &&
+      NativeIteratorPrototype !== Op &&
+      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype =
+    Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+  GeneratorFunction.displayName = define(
+    GeneratorFunctionPrototype,
+    toStringTagSymbol,
+    "GeneratorFunction"
+  );
+
+  // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function(method) {
+      define(prototype, method, function(arg) {
+        return this._invoke(method, arg);
+      });
+    });
+  }
+
+  exports.isGeneratorFunction = function(genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor
+      ? ctor === GeneratorFunction ||
+        // For the native GeneratorFunction constructor, the best we can
+        // do is to check its .name property.
+        (ctor.displayName || ctor.name) === "GeneratorFunction"
+      : false;
+  };
+
+  exports.mark = function(genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      define(genFun, toStringTagSymbol, "GeneratorFunction");
+    }
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  };
+
+  // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+  exports.awrap = function(arg) {
+    return { __await: arg };
+  };
+
+  function AsyncIterator(generator, PromiseImpl) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+        if (value &&
+            typeof value === "object" &&
+            hasOwn.call(value, "__await")) {
+          return PromiseImpl.resolve(value.__await).then(function(value) {
+            invoke("next", value, resolve, reject);
+          }, function(err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return PromiseImpl.resolve(value).then(function(unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration.
+          result.value = unwrapped;
+          resolve(result);
+        }, function(error) {
+          // If a rejected Promise was yielded, throw the rejection back
+          // into the async generator function so it can be handled there.
+          return invoke("throw", error, resolve, reject);
+        });
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new PromiseImpl(function(resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise =
+        // If enqueue has been called before, then we want to wait until
+        // all previous Promises have been resolved before calling invoke,
+        // so that results are always delivered in the correct order. If
+        // enqueue has not been called before, then it is important to
+        // call invoke immediately, without waiting on a callback to fire,
+        // so that the async generator function has the opportunity to do
+        // any necessary setup in a predictable way. This predictability
+        // is why the Promise constructor synchronously invokes its
+        // executor callback, and why async functions synchronously
+        // execute code before the first await. Since we implement simple
+        // async functions in terms of async generators, it is especially
+        // important to get this right, even though it requires care.
+        previousPromise ? previousPromise.then(
+          callInvokeWithMethodAndArg,
+          // Avoid propagating failures to Promises returned by later
+          // invocations of the iterator.
+          callInvokeWithMethodAndArg
+        ) : callInvokeWithMethodAndArg();
+    }
+
+    // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+    return this;
+  };
+  exports.AsyncIterator = AsyncIterator;
+
+  // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+  exports.async = function(innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+    if (PromiseImpl === void 0) PromiseImpl = Promise;
+
+    var iter = new AsyncIterator(
+      wrap(innerFn, outerFn, self, tryLocsList),
+      PromiseImpl
+    );
+
+    return exports.isGeneratorFunction(outerFn)
+      ? iter // If outerFn is a generator, return the full iterator.
+      : iter.next().then(function(result) {
+          return result.done ? result.value : iter.next();
+        });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        }
+
+        // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+
+        var record = tryCatch(innerFn, self, context);
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done
+            ? GenStateCompleted
+            : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+
+        } else if (record.type === "throw") {
+          state = GenStateCompleted;
+          // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  }
+
+  // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+    if (method === undefined) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError(
+          "The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (! info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value;
+
+      // Resume execution at the desired location (see delegateYield).
+      context.next = delegate.nextLoc;
+
+      // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined;
+      }
+
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    }
+
+    // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+    context.delegate = null;
+    return ContinueSentinel;
+  }
+
+  // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+  defineIteratorMethods(Gp);
+
+  define(Gp, toStringTagSymbol, "Generator");
+
+  // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+  Gp[iteratorSymbol] = function() {
+    return this;
+  };
+
+  Gp.toString = function() {
+    return "[object Generator]";
+  };
+
+  function pushTryEntry(locs) {
+    var entry = { tryLoc: locs[0] };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{ tryLoc: "root" }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  exports.keys = function(object) {
+    var keys = [];
+    for (var key in object) {
+      keys.push(key);
+    }
+    keys.reverse();
+
+    // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      }
+
+      // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1, next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined;
+          next.done = true;
+
+          return next;
+        };
+
+        return next.next = next;
+      }
+    }
+
+    // Return an iterator with no values.
+    return { next: doneResult };
+  }
+  exports.values = values;
+
+  function doneResult() {
+    return { value: undefined, done: true };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+
+    reset: function(skipTempReset) {
+      this.prev = 0;
+      this.next = 0;
+      // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+      this.sent = this._sent = undefined;
+      this.done = false;
+      this.delegate = null;
+
+      this.method = "next";
+      this.arg = undefined;
+
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" &&
+              hasOwn.call(this, name) &&
+              !isNaN(+name.slice(1))) {
+            this[name] = undefined;
+          }
+        }
+      }
+    },
+
+    stop: function() {
+      this.done = true;
+
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+
+    dispatchException: function(exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined;
+        }
+
+        return !! caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+
+    abrupt: function(type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc <= this.prev &&
+            hasOwn.call(entry, "finallyLoc") &&
+            this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry &&
+          (type === "break" ||
+           type === "continue") &&
+          finallyEntry.tryLoc <= arg &&
+          arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+
+    complete: function(record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" ||
+          record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+
+    finish: function(finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+
+    "catch": function(tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+          return thrown;
+        }
+      }
+
+      // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+      throw new Error("illegal catch attempt");
+    },
+
+    delegateYield: function(iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined;
+      }
+
+      return ContinueSentinel;
+    }
+  };
+
+  // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+  return exports;
+
+}(
+  // If this script is executing as a CommonJS module, use module.exports
+  // as the regeneratorRuntime namespace. Otherwise create a new empty
+  // object. Either way, the resulting object will be used to initialize
+  // the regeneratorRuntime variable at the top of this file.
+  typeof module === "object" ? module.exports : {}
+));
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  Function("r", "regeneratorRuntime = r")(runtime);
+}
+
+},{}],"../../node_modules/gsap/gsap-core.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -22268,14 +23019,8145 @@ function lottieLoader() {
   });
   animation2.addEventListener("complete", loadCircles);
 }
-},{"lottie-web":"../../node_modules/lottie-web/build/player/lottie.js","gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js"}],"index.js":[function(require,module,exports) {
+},{"lottie-web":"../../node_modules/lottie-web/build/player/lottie.js","gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js"}],"../../node_modules/plyr/dist/plyr.min.js":[function(require,module,exports) {
+var define;
+var global = arguments[3];
+"object" == typeof navigator && function (e, t) {
+  "object" == typeof exports && "undefined" != typeof module ? module.exports = t() : "function" == typeof define && define.amd ? define("Plyr", t) : (e = e || self).Plyr = t();
+}(this, function () {
+  "use strict";
+
+  function e(e, t) {
+    if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
+  }
+
+  function t(e, t) {
+    for (var i = 0; i < t.length; i++) {
+      var n = t[i];
+      n.enumerable = n.enumerable || !1, n.configurable = !0, "value" in n && (n.writable = !0), Object.defineProperty(e, n.key, n);
+    }
+  }
+
+  function i(e, i, n) {
+    return i && t(e.prototype, i), n && t(e, n), e;
+  }
+
+  function n(e, t, i) {
+    return t in e ? Object.defineProperty(e, t, {
+      value: i,
+      enumerable: !0,
+      configurable: !0,
+      writable: !0
+    }) : e[t] = i, e;
+  }
+
+  function a(e, t) {
+    var i = Object.keys(e);
+
+    if (Object.getOwnPropertySymbols) {
+      var n = Object.getOwnPropertySymbols(e);
+      t && (n = n.filter(function (t) {
+        return Object.getOwnPropertyDescriptor(e, t).enumerable;
+      })), i.push.apply(i, n);
+    }
+
+    return i;
+  }
+
+  function s(e) {
+    for (var t = 1; t < arguments.length; t++) {
+      var i = null != arguments[t] ? arguments[t] : {};
+      t % 2 ? a(Object(i), !0).forEach(function (t) {
+        n(e, t, i[t]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(i)) : a(Object(i)).forEach(function (t) {
+        Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(i, t));
+      });
+    }
+
+    return e;
+  }
+
+  function r(e, t) {
+    if (null == e) return {};
+
+    var i,
+        n,
+        a = function (e, t) {
+      if (null == e) return {};
+      var i,
+          n,
+          a = {},
+          s = Object.keys(e);
+
+      for (n = 0; n < s.length; n++) i = s[n], t.indexOf(i) >= 0 || (a[i] = e[i]);
+
+      return a;
+    }(e, t);
+
+    if (Object.getOwnPropertySymbols) {
+      var s = Object.getOwnPropertySymbols(e);
+
+      for (n = 0; n < s.length; n++) i = s[n], t.indexOf(i) >= 0 || Object.prototype.propertyIsEnumerable.call(e, i) && (a[i] = e[i]);
+    }
+
+    return a;
+  }
+
+  function o(e, t) {
+    return function (e) {
+      if (Array.isArray(e)) return e;
+    }(e) || function (e, t) {
+      if ("undefined" == typeof Symbol || !(Symbol.iterator in Object(e))) return;
+      var i = [],
+          n = !0,
+          a = !1,
+          s = void 0;
+
+      try {
+        for (var r, o = e[Symbol.iterator](); !(n = (r = o.next()).done) && (i.push(r.value), !t || i.length !== t); n = !0);
+      } catch (e) {
+        a = !0, s = e;
+      } finally {
+        try {
+          n || null == o.return || o.return();
+        } finally {
+          if (a) throw s;
+        }
+      }
+
+      return i;
+    }(e, t) || c(e, t) || function () {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }();
+  }
+
+  function l(e) {
+    return function (e) {
+      if (Array.isArray(e)) return u(e);
+    }(e) || function (e) {
+      if ("undefined" != typeof Symbol && Symbol.iterator in Object(e)) return Array.from(e);
+    }(e) || c(e) || function () {
+      throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }();
+  }
+
+  function c(e, t) {
+    if (e) {
+      if ("string" == typeof e) return u(e, t);
+      var i = Object.prototype.toString.call(e).slice(8, -1);
+      return "Object" === i && e.constructor && (i = e.constructor.name), "Map" === i || "Set" === i ? Array.from(e) : "Arguments" === i || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(i) ? u(e, t) : void 0;
+    }
+  }
+
+  function u(e, t) {
+    (null == t || t > e.length) && (t = e.length);
+
+    for (var i = 0, n = new Array(t); i < t; i++) n[i] = e[i];
+
+    return n;
+  }
+
+  function d(e, t) {
+    for (var i = 0; i < t.length; i++) {
+      var n = t[i];
+      n.enumerable = n.enumerable || !1, n.configurable = !0, "value" in n && (n.writable = !0), Object.defineProperty(e, n.key, n);
+    }
+  }
+
+  function h(e, t, i) {
+    return t in e ? Object.defineProperty(e, t, {
+      value: i,
+      enumerable: !0,
+      configurable: !0,
+      writable: !0
+    }) : e[t] = i, e;
+  }
+
+  function p(e, t) {
+    var i = Object.keys(e);
+
+    if (Object.getOwnPropertySymbols) {
+      var n = Object.getOwnPropertySymbols(e);
+      t && (n = n.filter(function (t) {
+        return Object.getOwnPropertyDescriptor(e, t).enumerable;
+      })), i.push.apply(i, n);
+    }
+
+    return i;
+  }
+
+  function m(e) {
+    for (var t = 1; t < arguments.length; t++) {
+      var i = null != arguments[t] ? arguments[t] : {};
+      t % 2 ? p(Object(i), !0).forEach(function (t) {
+        h(e, t, i[t]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(i)) : p(Object(i)).forEach(function (t) {
+        Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(i, t));
+      });
+    }
+
+    return e;
+  }
+
+  var f = {
+    addCSS: !0,
+    thumbWidth: 15,
+    watch: !0
+  };
+
+  function g(e, t) {
+    return function () {
+      return Array.from(document.querySelectorAll(t)).includes(this);
+    }.call(e, t);
+  }
+
+  var y = function (e) {
+    return null != e ? e.constructor : null;
+  },
+      v = function (e, t) {
+    return !!(e && t && e instanceof t);
+  },
+      b = function (e) {
+    return null == e;
+  },
+      w = function (e) {
+    return y(e) === Object;
+  },
+      k = function (e) {
+    return y(e) === String;
+  },
+      T = function (e) {
+    return Array.isArray(e);
+  },
+      C = function (e) {
+    return v(e, NodeList);
+  },
+      A = k,
+      S = T,
+      P = C,
+      E = function (e) {
+    return v(e, Element);
+  },
+      N = function (e) {
+    return v(e, Event);
+  },
+      M = function (e) {
+    return b(e) || (k(e) || T(e) || C(e)) && !e.length || w(e) && !Object.keys(e).length;
+  };
+
+  function x(e, t) {
+    if (1 > t) {
+      var i = function (e) {
+        var t = "".concat(e).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+        return t ? Math.max(0, (t[1] ? t[1].length : 0) - (t[2] ? +t[2] : 0)) : 0;
+      }(t);
+
+      return parseFloat(e.toFixed(i));
+    }
+
+    return Math.round(e / t) * t;
+  }
+
+  var I,
+      L,
+      O,
+      _ = function () {
+    function e(t, i) {
+      (function (e, t) {
+        if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
+      })(this, e), E(t) ? this.element = t : A(t) && (this.element = document.querySelector(t)), E(this.element) && M(this.element.rangeTouch) && (this.config = m({}, f, {}, i), this.init());
+    }
+
+    return function (e, t, i) {
+      t && d(e.prototype, t), i && d(e, i);
+    }(e, [{
+      key: "init",
+      value: function () {
+        e.enabled && (this.config.addCSS && (this.element.style.userSelect = "none", this.element.style.webKitUserSelect = "none", this.element.style.touchAction = "manipulation"), this.listeners(!0), this.element.rangeTouch = this);
+      }
+    }, {
+      key: "destroy",
+      value: function () {
+        e.enabled && (this.config.addCSS && (this.element.style.userSelect = "", this.element.style.webKitUserSelect = "", this.element.style.touchAction = ""), this.listeners(!1), this.element.rangeTouch = null);
+      }
+    }, {
+      key: "listeners",
+      value: function (e) {
+        var t = this,
+            i = e ? "addEventListener" : "removeEventListener";
+        ["touchstart", "touchmove", "touchend"].forEach(function (e) {
+          t.element[i](e, function (e) {
+            return t.set(e);
+          }, !1);
+        });
+      }
+    }, {
+      key: "get",
+      value: function (t) {
+        if (!e.enabled || !N(t)) return null;
+        var i,
+            n = t.target,
+            a = t.changedTouches[0],
+            s = parseFloat(n.getAttribute("min")) || 0,
+            r = parseFloat(n.getAttribute("max")) || 100,
+            o = parseFloat(n.getAttribute("step")) || 1,
+            l = n.getBoundingClientRect(),
+            c = 100 / l.width * (this.config.thumbWidth / 2) / 100;
+        return 0 > (i = 100 / l.width * (a.clientX - l.left)) ? i = 0 : 100 < i && (i = 100), 50 > i ? i -= (100 - 2 * i) * c : 50 < i && (i += 2 * (i - 50) * c), s + x(i / 100 * (r - s), o);
+      }
+    }, {
+      key: "set",
+      value: function (t) {
+        e.enabled && N(t) && !t.target.disabled && (t.preventDefault(), t.target.value = this.get(t), function (e, t) {
+          if (e && t) {
+            var i = new Event(t, {
+              bubbles: !0
+            });
+            e.dispatchEvent(i);
+          }
+        }(t.target, "touchend" === t.type ? "change" : "input"));
+      }
+    }], [{
+      key: "setup",
+      value: function (t) {
+        var i = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : {},
+            n = null;
+        if (M(t) || A(t) ? n = Array.from(document.querySelectorAll(A(t) ? t : 'input[type="range"]')) : E(t) ? n = [t] : P(t) ? n = Array.from(t) : S(t) && (n = t.filter(E)), M(n)) return null;
+        var a = m({}, f, {}, i);
+
+        if (A(t) && a.watch) {
+          var s = new MutationObserver(function (i) {
+            Array.from(i).forEach(function (i) {
+              Array.from(i.addedNodes).forEach(function (i) {
+                E(i) && g(i, t) && new e(i, a);
+              });
+            });
+          });
+          s.observe(document.body, {
+            childList: !0,
+            subtree: !0
+          });
+        }
+
+        return n.map(function (t) {
+          return new e(t, i);
+        });
+      }
+    }, {
+      key: "enabled",
+      get: function () {
+        return "ontouchstart" in document.documentElement;
+      }
+    }]), e;
+  }(),
+      j = function (e) {
+    return null != e ? e.constructor : null;
+  },
+      q = function (e, t) {
+    return Boolean(e && t && e instanceof t);
+  },
+      D = function (e) {
+    return null == e;
+  },
+      H = function (e) {
+    return j(e) === Object;
+  },
+      F = function (e) {
+    return j(e) === String;
+  },
+      R = function (e) {
+    return j(e) === Function;
+  },
+      V = function (e) {
+    return Array.isArray(e);
+  },
+      B = function (e) {
+    return q(e, NodeList);
+  },
+      U = function (e) {
+    return D(e) || (F(e) || V(e) || B(e)) && !e.length || H(e) && !Object.keys(e).length;
+  },
+      W = D,
+      z = H,
+      K = function (e) {
+    return j(e) === Number && !Number.isNaN(e);
+  },
+      Y = F,
+      Q = function (e) {
+    return j(e) === Boolean;
+  },
+      X = R,
+      $ = V,
+      J = B,
+      G = function (e) {
+    return q(e, Element);
+  },
+      Z = function (e) {
+    return q(e, Event);
+  },
+      ee = function (e) {
+    return q(e, KeyboardEvent);
+  },
+      te = function (e) {
+    return q(e, TextTrack) || !D(e) && F(e.kind);
+  },
+      ie = function (e) {
+    return q(e, Promise) && R(e.then);
+  },
+      ne = function (e) {
+    if (q(e, window.URL)) return !0;
+    if (!F(e)) return !1;
+    var t = e;
+    e.startsWith("http://") && e.startsWith("https://") || (t = "http://".concat(e));
+
+    try {
+      return !U(new URL(t).hostname);
+    } catch (e) {
+      return !1;
+    }
+  },
+      ae = U,
+      se = (I = document.createElement("span"), L = {
+    WebkitTransition: "webkitTransitionEnd",
+    MozTransition: "transitionend",
+    OTransition: "oTransitionEnd otransitionend",
+    transition: "transitionend"
+  }, O = Object.keys(L).find(function (e) {
+    return void 0 !== I.style[e];
+  }), !!Y(O) && L[O]);
+
+  function re(e, t) {
+    setTimeout(function () {
+      try {
+        e.hidden = !0, e.offsetHeight, e.hidden = !1;
+      } catch (e) {}
+    }, t);
+  }
+
+  var oe = {
+    isIE:
+    /* @cc_on!@ */
+    !!document.documentMode,
+    isEdge: window.navigator.userAgent.includes("Edge"),
+    isWebkit: "WebkitAppearance" in document.documentElement.style && !/Edge/.test(navigator.userAgent),
+    isIPhone: /(iPhone|iPod)/gi.test(navigator.platform),
+    isIos: /(iPad|iPhone|iPod)/gi.test(navigator.platform)
+  };
+
+  function le(e, t) {
+    return t.split(".").reduce(function (e, t) {
+      return e && e[t];
+    }, e);
+  }
+
+  function ce() {
+    for (var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, t = arguments.length, i = new Array(t > 1 ? t - 1 : 0), a = 1; a < t; a++) i[a - 1] = arguments[a];
+
+    if (!i.length) return e;
+    var s = i.shift();
+    return z(s) ? (Object.keys(s).forEach(function (t) {
+      z(s[t]) ? (Object.keys(e).includes(t) || Object.assign(e, n({}, t, {})), ce(e[t], s[t])) : Object.assign(e, n({}, t, s[t]));
+    }), ce.apply(void 0, [e].concat(i))) : e;
+  }
+
+  function ue(e, t) {
+    var i = e.length ? e : [e];
+    Array.from(i).reverse().forEach(function (e, i) {
+      var n = i > 0 ? t.cloneNode(!0) : t,
+          a = e.parentNode,
+          s = e.nextSibling;
+      n.appendChild(e), s ? a.insertBefore(n, s) : a.appendChild(n);
+    });
+  }
+
+  function de(e, t) {
+    G(e) && !ae(t) && Object.entries(t).filter(function (e) {
+      var t = o(e, 2)[1];
+      return !W(t);
+    }).forEach(function (t) {
+      var i = o(t, 2),
+          n = i[0],
+          a = i[1];
+      return e.setAttribute(n, a);
+    });
+  }
+
+  function he(e, t, i) {
+    var n = document.createElement(e);
+    return z(t) && de(n, t), Y(i) && (n.innerText = i), n;
+  }
+
+  function pe(e, t, i, n) {
+    G(t) && t.appendChild(he(e, i, n));
+  }
+
+  function me(e) {
+    J(e) || $(e) ? Array.from(e).forEach(me) : G(e) && G(e.parentNode) && e.parentNode.removeChild(e);
+  }
+
+  function fe(e) {
+    if (G(e)) for (var t = e.childNodes.length; t > 0;) e.removeChild(e.lastChild), t -= 1;
+  }
+
+  function ge(e, t) {
+    return G(t) && G(t.parentNode) && G(e) ? (t.parentNode.replaceChild(e, t), e) : null;
+  }
+
+  function ye(e, t) {
+    if (!Y(e) || ae(e)) return {};
+    var i = {},
+        n = ce({}, t);
+    return e.split(",").forEach(function (e) {
+      var t = e.trim(),
+          a = t.replace(".", ""),
+          s = t.replace(/[[\]]/g, "").split("="),
+          r = o(s, 1)[0],
+          l = s.length > 1 ? s[1].replace(/["']/g, "") : "";
+
+      switch (t.charAt(0)) {
+        case ".":
+          Y(n.class) ? i.class = "".concat(n.class, " ").concat(a) : i.class = a;
+          break;
+
+        case "#":
+          i.id = t.replace("#", "");
+          break;
+
+        case "[":
+          i[r] = l;
+      }
+    }), ce(n, i);
+  }
+
+  function ve(e, t) {
+    if (G(e)) {
+      var i = t;
+      Q(i) || (i = !e.hidden), e.hidden = i;
+    }
+  }
+
+  function be(e, t, i) {
+    if (J(e)) return Array.from(e).map(function (e) {
+      return be(e, t, i);
+    });
+
+    if (G(e)) {
+      var n = "toggle";
+      return void 0 !== i && (n = i ? "add" : "remove"), e.classList[n](t), e.classList.contains(t);
+    }
+
+    return !1;
+  }
+
+  function we(e, t) {
+    return G(e) && e.classList.contains(t);
+  }
+
+  function ke(e, t) {
+    var i = Element.prototype;
+    return (i.matches || i.webkitMatchesSelector || i.mozMatchesSelector || i.msMatchesSelector || function () {
+      return Array.from(document.querySelectorAll(t)).includes(this);
+    }).call(e, t);
+  }
+
+  function Te(e) {
+    return this.elements.container.querySelectorAll(e);
+  }
+
+  function Ce(e) {
+    return this.elements.container.querySelector(e);
+  }
+
+  function Ae() {
+    var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : null,
+        t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
+    G(e) && (e.focus({
+      preventScroll: !0
+    }), t && be(e, this.config.classNames.tabFocus));
+  }
+
+  var Se,
+      Pe = {
+    "audio/ogg": "vorbis",
+    "audio/wav": "1",
+    "video/webm": "vp8, vorbis",
+    "video/mp4": "avc1.42E01E, mp4a.40.2",
+    "video/ogg": "theora"
+  },
+      Ee = {
+    audio: "canPlayType" in document.createElement("audio"),
+    video: "canPlayType" in document.createElement("video"),
+    check: function (e, t, i) {
+      var n = oe.isIPhone && i && Ee.playsinline,
+          a = Ee[e] || "html5" !== t;
+      return {
+        api: a,
+        ui: a && Ee.rangeInput && ("video" !== e || !oe.isIPhone || n)
+      };
+    },
+    pip: !(oe.isIPhone || !X(he("video").webkitSetPresentationMode) && (!document.pictureInPictureEnabled || he("video").disablePictureInPicture)),
+    airplay: X(window.WebKitPlaybackTargetAvailabilityEvent),
+    playsinline: "playsInline" in document.createElement("video"),
+    mime: function (e) {
+      if (ae(e)) return !1;
+      var t = o(e.split("/"), 1)[0],
+          i = e;
+      if (!this.isHTML5 || t !== this.type) return !1;
+      Object.keys(Pe).includes(i) && (i += '; codecs="'.concat(Pe[e], '"'));
+
+      try {
+        return Boolean(i && this.media.canPlayType(i).replace(/no/, ""));
+      } catch (e) {
+        return !1;
+      }
+    },
+    textTracks: "textTracks" in document.createElement("video"),
+    rangeInput: (Se = document.createElement("input"), Se.type = "range", "range" === Se.type),
+    touch: "ontouchstart" in document.documentElement,
+    transitions: !1 !== se,
+    reducedMotion: "matchMedia" in window && window.matchMedia("(prefers-reduced-motion)").matches
+  },
+      Ne = function () {
+    var e = !1;
+
+    try {
+      var t = Object.defineProperty({}, "passive", {
+        get: function () {
+          return e = !0, null;
+        }
+      });
+      window.addEventListener("test", null, t), window.removeEventListener("test", null, t);
+    } catch (e) {}
+
+    return e;
+  }();
+
+  function Me(e, t, i) {
+    var n = this,
+        a = arguments.length > 3 && void 0 !== arguments[3] && arguments[3],
+        s = !(arguments.length > 4 && void 0 !== arguments[4]) || arguments[4],
+        r = arguments.length > 5 && void 0 !== arguments[5] && arguments[5];
+
+    if (e && "addEventListener" in e && !ae(t) && X(i)) {
+      var o = t.split(" "),
+          l = r;
+      Ne && (l = {
+        passive: s,
+        capture: r
+      }), o.forEach(function (t) {
+        n && n.eventListeners && a && n.eventListeners.push({
+          element: e,
+          type: t,
+          callback: i,
+          options: l
+        }), e[a ? "addEventListener" : "removeEventListener"](t, i, l);
+      });
+    }
+  }
+
+  function xe(e) {
+    var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "",
+        i = arguments.length > 2 ? arguments[2] : void 0,
+        n = !(arguments.length > 3 && void 0 !== arguments[3]) || arguments[3],
+        a = arguments.length > 4 && void 0 !== arguments[4] && arguments[4];
+    Me.call(this, e, t, i, !0, n, a);
+  }
+
+  function Ie(e) {
+    var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "",
+        i = arguments.length > 2 ? arguments[2] : void 0,
+        n = !(arguments.length > 3 && void 0 !== arguments[3]) || arguments[3],
+        a = arguments.length > 4 && void 0 !== arguments[4] && arguments[4];
+    Me.call(this, e, t, i, !1, n, a);
+  }
+
+  function Le(e) {
+    var t = this,
+        i = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "",
+        n = arguments.length > 2 ? arguments[2] : void 0,
+        a = !(arguments.length > 3 && void 0 !== arguments[3]) || arguments[3],
+        s = arguments.length > 4 && void 0 !== arguments[4] && arguments[4],
+        r = function r() {
+      Ie(e, i, r, a, s);
+
+      for (var o = arguments.length, l = new Array(o), c = 0; c < o; c++) l[c] = arguments[c];
+
+      n.apply(t, l);
+    };
+
+    Me.call(this, e, i, r, !0, a, s);
+  }
+
+  function Oe(e) {
+    var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "",
+        i = arguments.length > 2 && void 0 !== arguments[2] && arguments[2],
+        n = arguments.length > 3 && void 0 !== arguments[3] ? arguments[3] : {};
+
+    if (G(e) && !ae(t)) {
+      var a = new CustomEvent(t, {
+        bubbles: i,
+        detail: s(s({}, n), {}, {
+          plyr: this
+        })
+      });
+      e.dispatchEvent(a);
+    }
+  }
+
+  function _e() {
+    this && this.eventListeners && (this.eventListeners.forEach(function (e) {
+      var t = e.element,
+          i = e.type,
+          n = e.callback,
+          a = e.options;
+      t.removeEventListener(i, n, a);
+    }), this.eventListeners = []);
+  }
+
+  function je() {
+    var e = this;
+    return new Promise(function (t) {
+      return e.ready ? setTimeout(t, 0) : xe.call(e, e.elements.container, "ready", t);
+    }).then(function () {});
+  }
+
+  function qe(e) {
+    ie(e) && e.then(null, function () {});
+  }
+
+  function De(e) {
+    return !!($(e) || Y(e) && e.includes(":")) && ($(e) ? e : e.split(":")).map(Number).every(K);
+  }
+
+  function He(e) {
+    if (!$(e) || !e.every(K)) return null;
+
+    var t = o(e, 2),
+        i = t[0],
+        n = t[1],
+        a = function e(t, i) {
+      return 0 === i ? t : e(i, t % i);
+    }(i, n);
+
+    return [i / a, n / a];
+  }
+
+  function Fe(e) {
+    var t = function (e) {
+      return De(e) ? e.split(":").map(Number) : null;
+    },
+        i = t(e);
+
+    if (null === i && (i = t(this.config.ratio)), null === i && !ae(this.embed) && $(this.embed.ratio) && (i = this.embed.ratio), null === i && this.isHTML5) {
+      var n = this.media;
+      i = He([n.videoWidth, n.videoHeight]);
+    }
+
+    return i;
+  }
+
+  function Re(e) {
+    if (!this.isVideo) return {};
+    var t = this.elements.wrapper,
+        i = Fe.call(this, e),
+        n = o($(i) ? i : [0, 0], 2),
+        a = 100 / n[0] * n[1];
+
+    if (t.style.paddingBottom = "".concat(a, "%"), this.isVimeo && !this.config.vimeo.premium && this.supported.ui) {
+      var s = 100 / this.media.offsetWidth * parseInt(window.getComputedStyle(this.media).paddingBottom, 10),
+          r = (s - a) / (s / 50);
+      this.media.style.transform = "translateY(-".concat(r, "%)");
+    } else this.isHTML5 && t.classList.toggle(this.config.classNames.videoFixedRatio, null !== i);
+
+    return {
+      padding: a,
+      ratio: i
+    };
+  }
+
+  var Ve = {
+    getSources: function () {
+      var e = this;
+      return this.isHTML5 ? Array.from(this.media.querySelectorAll("source")).filter(function (t) {
+        var i = t.getAttribute("type");
+        return !!ae(i) || Ee.mime.call(e, i);
+      }) : [];
+    },
+    getQualityOptions: function () {
+      return this.config.quality.forced ? this.config.quality.options : Ve.getSources.call(this).map(function (e) {
+        return Number(e.getAttribute("size"));
+      }).filter(Boolean);
+    },
+    setup: function () {
+      if (this.isHTML5) {
+        var e = this;
+        e.options.speed = e.config.speed.options, ae(this.config.ratio) || Re.call(e), Object.defineProperty(e.media, "quality", {
+          get: function () {
+            var t = Ve.getSources.call(e).find(function (t) {
+              return t.getAttribute("src") === e.source;
+            });
+            return t && Number(t.getAttribute("size"));
+          },
+          set: function (t) {
+            if (e.quality !== t) {
+              if (e.config.quality.forced && X(e.config.quality.onChange)) e.config.quality.onChange(t);else {
+                var i = Ve.getSources.call(e).find(function (e) {
+                  return Number(e.getAttribute("size")) === t;
+                });
+                if (!i) return;
+                var n = e.media,
+                    a = n.currentTime,
+                    s = n.paused,
+                    r = n.preload,
+                    o = n.readyState,
+                    l = n.playbackRate;
+                e.media.src = i.getAttribute("src"), ("none" !== r || o) && (e.once("loadedmetadata", function () {
+                  e.speed = l, e.currentTime = a, s || qe(e.play());
+                }), e.media.load());
+              }
+              Oe.call(e, e.media, "qualitychange", !1, {
+                quality: t
+              });
+            }
+          }
+        });
+      }
+    },
+    cancelRequests: function () {
+      this.isHTML5 && (me(Ve.getSources.call(this)), this.media.setAttribute("src", this.config.blankVideo), this.media.load(), this.debug.log("Cancelled network requests"));
+    }
+  };
+
+  function Be(e) {
+    return $(e) ? e.filter(function (t, i) {
+      return e.indexOf(t) === i;
+    }) : e;
+  }
+
+  function Ue(e) {
+    for (var t = arguments.length, i = new Array(t > 1 ? t - 1 : 0), n = 1; n < t; n++) i[n - 1] = arguments[n];
+
+    return ae(e) ? e : e.toString().replace(/{(\d+)}/g, function (e, t) {
+      return i[t].toString();
+    });
+  }
+
+  var We = function () {
+    var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "",
+        t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "",
+        i = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : "";
+    return e.replace(new RegExp(t.toString().replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1"), "g"), i.toString());
+  },
+      ze = function () {
+    var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "";
+    return e.toString().replace(/\w\S*/g, function (e) {
+      return e.charAt(0).toUpperCase() + e.substr(1).toLowerCase();
+    });
+  };
+
+  function Ke() {
+    var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "",
+        t = e.toString();
+    return t = We(t, "-", " "), t = We(t, "_", " "), t = ze(t), We(t, " ", "");
+  }
+
+  function Ye(e) {
+    var t = document.createElement("div");
+    return t.appendChild(e), t.innerHTML;
+  }
+
+  var Qe = {
+    pip: "PIP",
+    airplay: "AirPlay",
+    html5: "HTML5",
+    vimeo: "Vimeo",
+    youtube: "YouTube"
+  },
+      Xe = function () {
+    var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "",
+        t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
+    if (ae(e) || ae(t)) return "";
+    var i = le(t.i18n, e);
+    if (ae(i)) return Object.keys(Qe).includes(e) ? Qe[e] : "";
+    var n = {
+      "{seektime}": t.seekTime,
+      "{title}": t.title
+    };
+    return Object.entries(n).forEach(function (e) {
+      var t = o(e, 2),
+          n = t[0],
+          a = t[1];
+      i = We(i, n, a);
+    }), i;
+  },
+      $e = function () {
+    function t(i) {
+      e(this, t), this.enabled = i.config.storage.enabled, this.key = i.config.storage.key;
+    }
+
+    return i(t, [{
+      key: "get",
+      value: function (e) {
+        if (!t.supported || !this.enabled) return null;
+        var i = window.localStorage.getItem(this.key);
+        if (ae(i)) return null;
+        var n = JSON.parse(i);
+        return Y(e) && e.length ? n[e] : n;
+      }
+    }, {
+      key: "set",
+      value: function (e) {
+        if (t.supported && this.enabled && z(e)) {
+          var i = this.get();
+          ae(i) && (i = {}), ce(i, e), window.localStorage.setItem(this.key, JSON.stringify(i));
+        }
+      }
+    }], [{
+      key: "supported",
+      get: function () {
+        try {
+          if (!("localStorage" in window)) return !1;
+          return window.localStorage.setItem("___test", "___test"), window.localStorage.removeItem("___test"), !0;
+        } catch (e) {
+          return !1;
+        }
+      }
+    }]), t;
+  }();
+
+  function Je(e) {
+    var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "text";
+    return new Promise(function (i, n) {
+      try {
+        var a = new XMLHttpRequest();
+        if (!("withCredentials" in a)) return;
+        a.addEventListener("load", function () {
+          if ("text" === t) try {
+            i(JSON.parse(a.responseText));
+          } catch (e) {
+            i(a.responseText);
+          } else i(a.response);
+        }), a.addEventListener("error", function () {
+          throw new Error(a.status);
+        }), a.open("GET", e, !0), a.responseType = t, a.send();
+      } catch (e) {
+        n(e);
+      }
+    });
+  }
+
+  function Ge(e, t) {
+    if (Y(e)) {
+      var i = Y(t),
+          n = function () {
+        return null !== document.getElementById(t);
+      },
+          a = function (e, t) {
+        e.innerHTML = t, i && n() || document.body.insertAdjacentElement("afterbegin", e);
+      };
+
+      if (!i || !n()) {
+        var s = $e.supported,
+            r = document.createElement("div");
+
+        if (r.setAttribute("hidden", ""), i && r.setAttribute("id", t), s) {
+          var o = window.localStorage.getItem("".concat("cache", "-").concat(t));
+
+          if (null !== o) {
+            var l = JSON.parse(o);
+            a(r, l.content);
+          }
+        }
+
+        Je(e).then(function (e) {
+          ae(e) || (s && window.localStorage.setItem("".concat("cache", "-").concat(t), JSON.stringify({
+            content: e
+          })), a(r, e));
+        }).catch(function () {});
+      }
+    }
+  }
+
+  var Ze = function (e) {
+    return Math.trunc(e / 60 / 60 % 60, 10);
+  },
+      et = function (e) {
+    return Math.trunc(e / 60 % 60, 10);
+  },
+      tt = function (e) {
+    return Math.trunc(e % 60, 10);
+  };
+
+  function it() {
+    var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
+        t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1],
+        i = arguments.length > 2 && void 0 !== arguments[2] && arguments[2];
+    if (!K(e)) return it(void 0, t, i);
+
+    var n = function (e) {
+      return "0".concat(e).slice(-2);
+    },
+        a = Ze(e),
+        s = et(e),
+        r = tt(e);
+
+    return a = t || a > 0 ? "".concat(a, ":") : "", "".concat(i && e > 0 ? "-" : "").concat(a).concat(n(s), ":").concat(n(r));
+  }
+
+  var nt = {
+    getIconUrl: function () {
+      var e = new URL(this.config.iconUrl, window.location).host !== window.location.host || oe.isIE && !window.svg4everybody;
+      return {
+        url: this.config.iconUrl,
+        cors: e
+      };
+    },
+    findElements: function () {
+      try {
+        return this.elements.controls = Ce.call(this, this.config.selectors.controls.wrapper), this.elements.buttons = {
+          play: Te.call(this, this.config.selectors.buttons.play),
+          pause: Ce.call(this, this.config.selectors.buttons.pause),
+          restart: Ce.call(this, this.config.selectors.buttons.restart),
+          rewind: Ce.call(this, this.config.selectors.buttons.rewind),
+          fastForward: Ce.call(this, this.config.selectors.buttons.fastForward),
+          mute: Ce.call(this, this.config.selectors.buttons.mute),
+          pip: Ce.call(this, this.config.selectors.buttons.pip),
+          airplay: Ce.call(this, this.config.selectors.buttons.airplay),
+          settings: Ce.call(this, this.config.selectors.buttons.settings),
+          captions: Ce.call(this, this.config.selectors.buttons.captions),
+          fullscreen: Ce.call(this, this.config.selectors.buttons.fullscreen)
+        }, this.elements.progress = Ce.call(this, this.config.selectors.progress), this.elements.inputs = {
+          seek: Ce.call(this, this.config.selectors.inputs.seek),
+          volume: Ce.call(this, this.config.selectors.inputs.volume)
+        }, this.elements.display = {
+          buffer: Ce.call(this, this.config.selectors.display.buffer),
+          currentTime: Ce.call(this, this.config.selectors.display.currentTime),
+          duration: Ce.call(this, this.config.selectors.display.duration)
+        }, G(this.elements.progress) && (this.elements.display.seekTooltip = this.elements.progress.querySelector(".".concat(this.config.classNames.tooltip))), !0;
+      } catch (e) {
+        return this.debug.warn("It looks like there is a problem with your custom controls HTML", e), this.toggleNativeControls(!0), !1;
+      }
+    },
+    createIcon: function (e, t) {
+      var i = nt.getIconUrl.call(this),
+          n = "".concat(i.cors ? "" : i.url, "#").concat(this.config.iconPrefix),
+          a = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      de(a, ce(t, {
+        "aria-hidden": "true",
+        focusable: "false"
+      }));
+      var s = document.createElementNS("http://www.w3.org/2000/svg", "use"),
+          r = "".concat(n, "-").concat(e);
+      return "href" in s && s.setAttributeNS("http://www.w3.org/1999/xlink", "href", r), s.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", r), a.appendChild(s), a;
+    },
+    createLabel: function (e) {
+      var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {},
+          i = Xe(e, this.config),
+          n = s(s({}, t), {}, {
+        class: [t.class, this.config.classNames.hidden].filter(Boolean).join(" ")
+      });
+      return he("span", n, i);
+    },
+    createBadge: function (e) {
+      if (ae(e)) return null;
+      var t = he("span", {
+        class: this.config.classNames.menu.value
+      });
+      return t.appendChild(he("span", {
+        class: this.config.classNames.menu.badge
+      }, e)), t;
+    },
+    createButton: function (e, t) {
+      var i = this,
+          n = ce({}, t),
+          a = function () {
+        var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "",
+            t = e.toString();
+        return (t = Ke(t)).charAt(0).toLowerCase() + t.slice(1);
+      }(e),
+          s = {
+        element: "button",
+        toggle: !1,
+        label: null,
+        icon: null,
+        labelPressed: null,
+        iconPressed: null
+      };
+
+      switch (["element", "icon", "label"].forEach(function (e) {
+        Object.keys(n).includes(e) && (s[e] = n[e], delete n[e]);
+      }), "button" !== s.element || Object.keys(n).includes("type") || (n.type = "button"), Object.keys(n).includes("class") ? n.class.split(" ").some(function (e) {
+        return e === i.config.classNames.control;
+      }) || ce(n, {
+        class: "".concat(n.class, " ").concat(this.config.classNames.control)
+      }) : n.class = this.config.classNames.control, e) {
+        case "play":
+          s.toggle = !0, s.label = "play", s.labelPressed = "pause", s.icon = "play", s.iconPressed = "pause";
+          break;
+
+        case "mute":
+          s.toggle = !0, s.label = "mute", s.labelPressed = "unmute", s.icon = "volume", s.iconPressed = "muted";
+          break;
+
+        case "captions":
+          s.toggle = !0, s.label = "enableCaptions", s.labelPressed = "disableCaptions", s.icon = "captions-off", s.iconPressed = "captions-on";
+          break;
+
+        case "fullscreen":
+          s.toggle = !0, s.label = "enterFullscreen", s.labelPressed = "exitFullscreen", s.icon = "enter-fullscreen", s.iconPressed = "exit-fullscreen";
+          break;
+
+        case "play-large":
+          n.class += " ".concat(this.config.classNames.control, "--overlaid"), a = "play", s.label = "play", s.icon = "play";
+          break;
+
+        default:
+          ae(s.label) && (s.label = a), ae(s.icon) && (s.icon = e);
+      }
+
+      var r = he(s.element);
+      return s.toggle ? (r.appendChild(nt.createIcon.call(this, s.iconPressed, {
+        class: "icon--pressed"
+      })), r.appendChild(nt.createIcon.call(this, s.icon, {
+        class: "icon--not-pressed"
+      })), r.appendChild(nt.createLabel.call(this, s.labelPressed, {
+        class: "label--pressed"
+      })), r.appendChild(nt.createLabel.call(this, s.label, {
+        class: "label--not-pressed"
+      }))) : (r.appendChild(nt.createIcon.call(this, s.icon)), r.appendChild(nt.createLabel.call(this, s.label))), ce(n, ye(this.config.selectors.buttons[a], n)), de(r, n), "play" === a ? ($(this.elements.buttons[a]) || (this.elements.buttons[a] = []), this.elements.buttons[a].push(r)) : this.elements.buttons[a] = r, r;
+    },
+    createRange: function (e, t) {
+      var i = he("input", ce(ye(this.config.selectors.inputs[e]), {
+        type: "range",
+        min: 0,
+        max: 100,
+        step: .01,
+        value: 0,
+        autocomplete: "off",
+        role: "slider",
+        "aria-label": Xe(e, this.config),
+        "aria-valuemin": 0,
+        "aria-valuemax": 100,
+        "aria-valuenow": 0
+      }, t));
+      return this.elements.inputs[e] = i, nt.updateRangeFill.call(this, i), _.setup(i), i;
+    },
+    createProgress: function (e, t) {
+      var i = he("progress", ce(ye(this.config.selectors.display[e]), {
+        min: 0,
+        max: 100,
+        value: 0,
+        role: "progressbar",
+        "aria-hidden": !0
+      }, t));
+
+      if ("volume" !== e) {
+        i.appendChild(he("span", null, "0"));
+        var n = {
+          played: "played",
+          buffer: "buffered"
+        }[e],
+            a = n ? Xe(n, this.config) : "";
+        i.innerText = "% ".concat(a.toLowerCase());
+      }
+
+      return this.elements.display[e] = i, i;
+    },
+    createTime: function (e, t) {
+      var i = ye(this.config.selectors.display[e], t),
+          n = he("div", ce(i, {
+        class: "".concat(i.class ? i.class : "", " ").concat(this.config.classNames.display.time, " ").trim(),
+        "aria-label": Xe(e, this.config)
+      }), "00:00");
+      return this.elements.display[e] = n, n;
+    },
+    bindMenuItemShortcuts: function (e, t) {
+      var i = this;
+      xe.call(this, e, "keydown keyup", function (n) {
+        if ([32, 38, 39, 40].includes(n.which) && (n.preventDefault(), n.stopPropagation(), "keydown" !== n.type)) {
+          var a,
+              s = ke(e, '[role="menuitemradio"]');
+          if (!s && [32, 39].includes(n.which)) nt.showMenuPanel.call(i, t, !0);else 32 !== n.which && (40 === n.which || s && 39 === n.which ? (a = e.nextElementSibling, G(a) || (a = e.parentNode.firstElementChild)) : (a = e.previousElementSibling, G(a) || (a = e.parentNode.lastElementChild)), Ae.call(i, a, !0));
+        }
+      }, !1), xe.call(this, e, "keyup", function (e) {
+        13 === e.which && nt.focusFirstMenuItem.call(i, null, !0);
+      });
+    },
+    createMenuItem: function (e) {
+      var t = this,
+          i = e.value,
+          n = e.list,
+          a = e.type,
+          s = e.title,
+          r = e.badge,
+          o = void 0 === r ? null : r,
+          l = e.checked,
+          c = void 0 !== l && l,
+          u = ye(this.config.selectors.inputs[a]),
+          d = he("button", ce(u, {
+        type: "button",
+        role: "menuitemradio",
+        class: "".concat(this.config.classNames.control, " ").concat(u.class ? u.class : "").trim(),
+        "aria-checked": c,
+        value: i
+      })),
+          h = he("span");
+      h.innerHTML = s, G(o) && h.appendChild(o), d.appendChild(h), Object.defineProperty(d, "checked", {
+        enumerable: !0,
+        get: function () {
+          return "true" === d.getAttribute("aria-checked");
+        },
+        set: function (e) {
+          e && Array.from(d.parentNode.children).filter(function (e) {
+            return ke(e, '[role="menuitemradio"]');
+          }).forEach(function (e) {
+            return e.setAttribute("aria-checked", "false");
+          }), d.setAttribute("aria-checked", e ? "true" : "false");
+        }
+      }), this.listeners.bind(d, "click keyup", function (e) {
+        if (!ee(e) || 32 === e.which) {
+          switch (e.preventDefault(), e.stopPropagation(), d.checked = !0, a) {
+            case "language":
+              t.currentTrack = Number(i);
+              break;
+
+            case "quality":
+              t.quality = i;
+              break;
+
+            case "speed":
+              t.speed = parseFloat(i);
+          }
+
+          nt.showMenuPanel.call(t, "home", ee(e));
+        }
+      }, a, !1), nt.bindMenuItemShortcuts.call(this, d, a), n.appendChild(d);
+    },
+    formatTime: function () {
+      var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
+          t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
+      if (!K(e)) return e;
+      var i = Ze(this.duration) > 0;
+      return it(e, i, t);
+    },
+    updateTimeDisplay: function () {
+      var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : null,
+          t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0,
+          i = arguments.length > 2 && void 0 !== arguments[2] && arguments[2];
+      G(e) && K(t) && (e.innerText = nt.formatTime(t, i));
+    },
+    updateVolume: function () {
+      this.supported.ui && (G(this.elements.inputs.volume) && nt.setRange.call(this, this.elements.inputs.volume, this.muted ? 0 : this.volume), G(this.elements.buttons.mute) && (this.elements.buttons.mute.pressed = this.muted || 0 === this.volume));
+    },
+    setRange: function (e) {
+      var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
+      G(e) && (e.value = t, nt.updateRangeFill.call(this, e));
+    },
+    updateProgress: function (e) {
+      var t = this;
+
+      if (this.supported.ui && Z(e)) {
+        var i,
+            n,
+            a = 0;
+        if (e) switch (e.type) {
+          case "timeupdate":
+          case "seeking":
+          case "seeked":
+            i = this.currentTime, n = this.duration, a = 0 === i || 0 === n || Number.isNaN(i) || Number.isNaN(n) ? 0 : (i / n * 100).toFixed(2), "timeupdate" === e.type && nt.setRange.call(this, this.elements.inputs.seek, a);
+            break;
+
+          case "playing":
+          case "progress":
+            !function (e, i) {
+              var n = K(i) ? i : 0,
+                  a = G(e) ? e : t.elements.display.buffer;
+
+              if (G(a)) {
+                a.value = n;
+                var s = a.getElementsByTagName("span")[0];
+                G(s) && (s.childNodes[0].nodeValue = n);
+              }
+            }(this.elements.display.buffer, 100 * this.buffered);
+        }
+      }
+    },
+    updateRangeFill: function (e) {
+      var t = Z(e) ? e.target : e;
+
+      if (G(t) && "range" === t.getAttribute("type")) {
+        if (ke(t, this.config.selectors.inputs.seek)) {
+          t.setAttribute("aria-valuenow", this.currentTime);
+          var i = nt.formatTime(this.currentTime),
+              n = nt.formatTime(this.duration),
+              a = Xe("seekLabel", this.config);
+          t.setAttribute("aria-valuetext", a.replace("{currentTime}", i).replace("{duration}", n));
+        } else if (ke(t, this.config.selectors.inputs.volume)) {
+          var s = 100 * t.value;
+          t.setAttribute("aria-valuenow", s), t.setAttribute("aria-valuetext", "".concat(s.toFixed(1), "%"));
+        } else t.setAttribute("aria-valuenow", t.value);
+
+        oe.isWebkit && t.style.setProperty("--value", "".concat(t.value / t.max * 100, "%"));
+      }
+    },
+    updateSeekTooltip: function (e) {
+      var t = this;
+
+      if (this.config.tooltips.seek && G(this.elements.inputs.seek) && G(this.elements.display.seekTooltip) && 0 !== this.duration) {
+        var i = "".concat(this.config.classNames.tooltip, "--visible"),
+            n = function (e) {
+          return be(t.elements.display.seekTooltip, i, e);
+        };
+
+        if (this.touch) n(!1);else {
+          var a = 0,
+              s = this.elements.progress.getBoundingClientRect();
+          if (Z(e)) a = 100 / s.width * (e.pageX - s.left);else {
+            if (!we(this.elements.display.seekTooltip, i)) return;
+            a = parseFloat(this.elements.display.seekTooltip.style.left, 10);
+          }
+          a < 0 ? a = 0 : a > 100 && (a = 100), nt.updateTimeDisplay.call(this, this.elements.display.seekTooltip, this.duration / 100 * a), this.elements.display.seekTooltip.style.left = "".concat(a, "%"), Z(e) && ["mouseenter", "mouseleave"].includes(e.type) && n("mouseenter" === e.type);
+        }
+      }
+    },
+    timeUpdate: function (e) {
+      var t = !G(this.elements.display.duration) && this.config.invertTime;
+      nt.updateTimeDisplay.call(this, this.elements.display.currentTime, t ? this.duration - this.currentTime : this.currentTime, t), e && "timeupdate" === e.type && this.media.seeking || nt.updateProgress.call(this, e);
+    },
+    durationUpdate: function () {
+      if (this.supported.ui && (this.config.invertTime || !this.currentTime)) {
+        if (this.duration >= Math.pow(2, 32)) return ve(this.elements.display.currentTime, !0), void ve(this.elements.progress, !0);
+        G(this.elements.inputs.seek) && this.elements.inputs.seek.setAttribute("aria-valuemax", this.duration);
+        var e = G(this.elements.display.duration);
+        !e && this.config.displayDuration && this.paused && nt.updateTimeDisplay.call(this, this.elements.display.currentTime, this.duration), e && nt.updateTimeDisplay.call(this, this.elements.display.duration, this.duration), nt.updateSeekTooltip.call(this);
+      }
+    },
+    toggleMenuButton: function (e, t) {
+      ve(this.elements.settings.buttons[e], !t);
+    },
+    updateSetting: function (e, t, i) {
+      var n = this.elements.settings.panels[e],
+          a = null,
+          s = t;
+      if ("captions" === e) a = this.currentTrack;else {
+        if (a = ae(i) ? this[e] : i, ae(a) && (a = this.config[e].default), !ae(this.options[e]) && !this.options[e].includes(a)) return void this.debug.warn("Unsupported value of '".concat(a, "' for ").concat(e));
+        if (!this.config[e].options.includes(a)) return void this.debug.warn("Disabled value of '".concat(a, "' for ").concat(e));
+      }
+
+      if (G(s) || (s = n && n.querySelector('[role="menu"]')), G(s)) {
+        this.elements.settings.buttons[e].querySelector(".".concat(this.config.classNames.menu.value)).innerHTML = nt.getLabel.call(this, e, a);
+        var r = s && s.querySelector('[value="'.concat(a, '"]'));
+        G(r) && (r.checked = !0);
+      }
+    },
+    getLabel: function (e, t) {
+      switch (e) {
+        case "speed":
+          return 1 === t ? Xe("normal", this.config) : "".concat(t, "&times;");
+
+        case "quality":
+          if (K(t)) {
+            var i = Xe("qualityLabel.".concat(t), this.config);
+            return i.length ? i : "".concat(t, "p");
+          }
+
+          return ze(t);
+
+        case "captions":
+          return rt.getLabel.call(this);
+
+        default:
+          return null;
+      }
+    },
+    setQualityMenu: function (e) {
+      var t = this;
+
+      if (G(this.elements.settings.panels.quality)) {
+        var i = this.elements.settings.panels.quality.querySelector('[role="menu"]');
+        $(e) && (this.options.quality = Be(e).filter(function (e) {
+          return t.config.quality.options.includes(e);
+        }));
+        var n = !ae(this.options.quality) && this.options.quality.length > 1;
+
+        if (nt.toggleMenuButton.call(this, "quality", n), fe(i), nt.checkMenu.call(this), n) {
+          var a = function (e) {
+            var i = Xe("qualityBadge.".concat(e), t.config);
+            return i.length ? nt.createBadge.call(t, i) : null;
+          };
+
+          this.options.quality.sort(function (e, i) {
+            var n = t.config.quality.options;
+            return n.indexOf(e) > n.indexOf(i) ? 1 : -1;
+          }).forEach(function (e) {
+            nt.createMenuItem.call(t, {
+              value: e,
+              list: i,
+              type: "quality",
+              title: nt.getLabel.call(t, "quality", e),
+              badge: a(e)
+            });
+          }), nt.updateSetting.call(this, "quality", i);
+        }
+      }
+    },
+    setCaptionsMenu: function () {
+      var e = this;
+
+      if (G(this.elements.settings.panels.captions)) {
+        var t = this.elements.settings.panels.captions.querySelector('[role="menu"]'),
+            i = rt.getTracks.call(this),
+            n = Boolean(i.length);
+
+        if (nt.toggleMenuButton.call(this, "captions", n), fe(t), nt.checkMenu.call(this), n) {
+          var a = i.map(function (i, n) {
+            return {
+              value: n,
+              checked: e.captions.toggled && e.currentTrack === n,
+              title: rt.getLabel.call(e, i),
+              badge: i.language && nt.createBadge.call(e, i.language.toUpperCase()),
+              list: t,
+              type: "language"
+            };
+          });
+          a.unshift({
+            value: -1,
+            checked: !this.captions.toggled,
+            title: Xe("disabled", this.config),
+            list: t,
+            type: "language"
+          }), a.forEach(nt.createMenuItem.bind(this)), nt.updateSetting.call(this, "captions", t);
+        }
+      }
+    },
+    setSpeedMenu: function () {
+      var e = this;
+
+      if (G(this.elements.settings.panels.speed)) {
+        var t = this.elements.settings.panels.speed.querySelector('[role="menu"]');
+        this.options.speed = this.options.speed.filter(function (t) {
+          return t >= e.minimumSpeed && t <= e.maximumSpeed;
+        });
+        var i = !ae(this.options.speed) && this.options.speed.length > 1;
+        nt.toggleMenuButton.call(this, "speed", i), fe(t), nt.checkMenu.call(this), i && (this.options.speed.forEach(function (i) {
+          nt.createMenuItem.call(e, {
+            value: i,
+            list: t,
+            type: "speed",
+            title: nt.getLabel.call(e, "speed", i)
+          });
+        }), nt.updateSetting.call(this, "speed", t));
+      }
+    },
+    checkMenu: function () {
+      var e = this.elements.settings.buttons,
+          t = !ae(e) && Object.values(e).some(function (e) {
+        return !e.hidden;
+      });
+      ve(this.elements.settings.menu, !t);
+    },
+    focusFirstMenuItem: function (e) {
+      var t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
+
+      if (!this.elements.settings.popup.hidden) {
+        var i = e;
+        G(i) || (i = Object.values(this.elements.settings.panels).find(function (e) {
+          return !e.hidden;
+        }));
+        var n = i.querySelector('[role^="menuitem"]');
+        Ae.call(this, n, t);
+      }
+    },
+    toggleMenu: function (e) {
+      var t = this.elements.settings.popup,
+          i = this.elements.buttons.settings;
+
+      if (G(t) && G(i)) {
+        var n = t.hidden,
+            a = n;
+        if (Q(e)) a = e;else if (ee(e) && 27 === e.which) a = !1;else if (Z(e)) {
+          var s = X(e.composedPath) ? e.composedPath()[0] : e.target,
+              r = t.contains(s);
+          if (r || !r && e.target !== i && a) return;
+        }
+        i.setAttribute("aria-expanded", a), ve(t, !a), be(this.elements.container, this.config.classNames.menu.open, a), a && ee(e) ? nt.focusFirstMenuItem.call(this, null, !0) : a || n || Ae.call(this, i, ee(e));
+      }
+    },
+    getMenuSize: function (e) {
+      var t = e.cloneNode(!0);
+      t.style.position = "absolute", t.style.opacity = 0, t.removeAttribute("hidden"), e.parentNode.appendChild(t);
+      var i = t.scrollWidth,
+          n = t.scrollHeight;
+      return me(t), {
+        width: i,
+        height: n
+      };
+    },
+    showMenuPanel: function () {
+      var e = this,
+          t = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "",
+          i = arguments.length > 1 && void 0 !== arguments[1] && arguments[1],
+          n = this.elements.container.querySelector("#plyr-settings-".concat(this.id, "-").concat(t));
+
+      if (G(n)) {
+        var a = n.parentNode,
+            s = Array.from(a.children).find(function (e) {
+          return !e.hidden;
+        });
+
+        if (Ee.transitions && !Ee.reducedMotion) {
+          a.style.width = "".concat(s.scrollWidth, "px"), a.style.height = "".concat(s.scrollHeight, "px");
+
+          var r = nt.getMenuSize.call(this, n),
+              o = function t(i) {
+            i.target === a && ["width", "height"].includes(i.propertyName) && (a.style.width = "", a.style.height = "", Ie.call(e, a, se, t));
+          };
+
+          xe.call(this, a, se, o), a.style.width = "".concat(r.width, "px"), a.style.height = "".concat(r.height, "px");
+        }
+
+        ve(s, !0), ve(n, !1), nt.focusFirstMenuItem.call(this, n, i);
+      }
+    },
+    setDownloadUrl: function () {
+      var e = this.elements.buttons.download;
+      G(e) && e.setAttribute("href", this.download);
+    },
+    create: function (e) {
+      var t = this,
+          i = nt.bindMenuItemShortcuts,
+          n = nt.createButton,
+          a = nt.createProgress,
+          s = nt.createRange,
+          r = nt.createTime,
+          o = nt.setQualityMenu,
+          l = nt.setSpeedMenu,
+          c = nt.showMenuPanel;
+      this.elements.controls = null, $(this.config.controls) && this.config.controls.includes("play-large") && this.elements.container.appendChild(n.call(this, "play-large"));
+      var u = he("div", ye(this.config.selectors.controls.wrapper));
+      this.elements.controls = u;
+      var d = {
+        class: "plyr__controls__item"
+      };
+      return Be($(this.config.controls) ? this.config.controls : []).forEach(function (o) {
+        if ("restart" === o && u.appendChild(n.call(t, "restart", d)), "rewind" === o && u.appendChild(n.call(t, "rewind", d)), "play" === o && u.appendChild(n.call(t, "play", d)), "fast-forward" === o && u.appendChild(n.call(t, "fast-forward", d)), "progress" === o) {
+          var l = he("div", {
+            class: "".concat(d.class, " plyr__progress__container")
+          }),
+              h = he("div", ye(t.config.selectors.progress));
+
+          if (h.appendChild(s.call(t, "seek", {
+            id: "plyr-seek-".concat(e.id)
+          })), h.appendChild(a.call(t, "buffer")), t.config.tooltips.seek) {
+            var p = he("span", {
+              class: t.config.classNames.tooltip
+            }, "00:00");
+            h.appendChild(p), t.elements.display.seekTooltip = p;
+          }
+
+          t.elements.progress = h, l.appendChild(t.elements.progress), u.appendChild(l);
+        }
+
+        if ("current-time" === o && u.appendChild(r.call(t, "currentTime", d)), "duration" === o && u.appendChild(r.call(t, "duration", d)), "mute" === o || "volume" === o) {
+          var m = t.elements.volume;
+
+          if (G(m) && u.contains(m) || (m = he("div", ce({}, d, {
+            class: "".concat(d.class, " plyr__volume").trim()
+          })), t.elements.volume = m, u.appendChild(m)), "mute" === o && m.appendChild(n.call(t, "mute")), "volume" === o && !oe.isIos) {
+            var f = {
+              max: 1,
+              step: .05,
+              value: t.config.volume
+            };
+            m.appendChild(s.call(t, "volume", ce(f, {
+              id: "plyr-volume-".concat(e.id)
+            })));
+          }
+        }
+
+        if ("captions" === o && u.appendChild(n.call(t, "captions", d)), "settings" === o && !ae(t.config.settings)) {
+          var g = he("div", ce({}, d, {
+            class: "".concat(d.class, " plyr__menu").trim(),
+            hidden: ""
+          }));
+          g.appendChild(n.call(t, "settings", {
+            "aria-haspopup": !0,
+            "aria-controls": "plyr-settings-".concat(e.id),
+            "aria-expanded": !1
+          }));
+          var y = he("div", {
+            class: "plyr__menu__container",
+            id: "plyr-settings-".concat(e.id),
+            hidden: ""
+          }),
+              v = he("div"),
+              b = he("div", {
+            id: "plyr-settings-".concat(e.id, "-home")
+          }),
+              w = he("div", {
+            role: "menu"
+          });
+          b.appendChild(w), v.appendChild(b), t.elements.settings.panels.home = b, t.config.settings.forEach(function (n) {
+            var a = he("button", ce(ye(t.config.selectors.buttons.settings), {
+              type: "button",
+              class: "".concat(t.config.classNames.control, " ").concat(t.config.classNames.control, "--forward"),
+              role: "menuitem",
+              "aria-haspopup": !0,
+              hidden: ""
+            }));
+            i.call(t, a, n), xe.call(t, a, "click", function () {
+              c.call(t, n, !1);
+            });
+            var s = he("span", null, Xe(n, t.config)),
+                r = he("span", {
+              class: t.config.classNames.menu.value
+            });
+            r.innerHTML = e[n], s.appendChild(r), a.appendChild(s), w.appendChild(a);
+            var o = he("div", {
+              id: "plyr-settings-".concat(e.id, "-").concat(n),
+              hidden: ""
+            }),
+                l = he("button", {
+              type: "button",
+              class: "".concat(t.config.classNames.control, " ").concat(t.config.classNames.control, "--back")
+            });
+            l.appendChild(he("span", {
+              "aria-hidden": !0
+            }, Xe(n, t.config))), l.appendChild(he("span", {
+              class: t.config.classNames.hidden
+            }, Xe("menuBack", t.config))), xe.call(t, o, "keydown", function (e) {
+              37 === e.which && (e.preventDefault(), e.stopPropagation(), c.call(t, "home", !0));
+            }, !1), xe.call(t, l, "click", function () {
+              c.call(t, "home", !1);
+            }), o.appendChild(l), o.appendChild(he("div", {
+              role: "menu"
+            })), v.appendChild(o), t.elements.settings.buttons[n] = a, t.elements.settings.panels[n] = o;
+          }), y.appendChild(v), g.appendChild(y), u.appendChild(g), t.elements.settings.popup = y, t.elements.settings.menu = g;
+        }
+
+        if ("pip" === o && Ee.pip && u.appendChild(n.call(t, "pip", d)), "airplay" === o && Ee.airplay && u.appendChild(n.call(t, "airplay", d)), "download" === o) {
+          var k = ce({}, d, {
+            element: "a",
+            href: t.download,
+            target: "_blank"
+          });
+          t.isHTML5 && (k.download = "");
+          var T = t.config.urls.download;
+          !ne(T) && t.isEmbed && ce(k, {
+            icon: "logo-".concat(t.provider),
+            label: t.provider
+          }), u.appendChild(n.call(t, "download", k));
+        }
+
+        "fullscreen" === o && u.appendChild(n.call(t, "fullscreen", d));
+      }), this.isHTML5 && o.call(this, Ve.getQualityOptions.call(this)), l.call(this), u;
+    },
+    inject: function () {
+      var e = this;
+
+      if (this.config.loadSprite) {
+        var t = nt.getIconUrl.call(this);
+        t.cors && Ge(t.url, "sprite-plyr");
+      }
+
+      this.id = Math.floor(1e4 * Math.random());
+      var i = null;
+      this.elements.controls = null;
+      var n = {
+        id: this.id,
+        seektime: this.config.seekTime,
+        title: this.config.title
+      },
+          a = !0;
+      X(this.config.controls) && (this.config.controls = this.config.controls.call(this, n)), this.config.controls || (this.config.controls = []), G(this.config.controls) || Y(this.config.controls) ? i = this.config.controls : (i = nt.create.call(this, {
+        id: this.id,
+        seektime: this.config.seekTime,
+        speed: this.speed,
+        quality: this.quality,
+        captions: rt.getLabel.call(this)
+      }), a = !1);
+      var s, r;
+
+      if (a && Y(this.config.controls) && (s = i, Object.entries(n).forEach(function (e) {
+        var t = o(e, 2),
+            i = t[0],
+            n = t[1];
+        s = We(s, "{".concat(i, "}"), n);
+      }), i = s), Y(this.config.selectors.controls.container) && (r = document.querySelector(this.config.selectors.controls.container)), G(r) || (r = this.elements.container), r[G(i) ? "insertAdjacentElement" : "insertAdjacentHTML"]("afterbegin", i), G(this.elements.controls) || nt.findElements.call(this), !ae(this.elements.buttons)) {
+        var l = function (t) {
+          var i = e.config.classNames.controlPressed;
+          Object.defineProperty(t, "pressed", {
+            enumerable: !0,
+            get: function () {
+              return we(t, i);
+            },
+            set: function () {
+              var e = arguments.length > 0 && void 0 !== arguments[0] && arguments[0];
+              be(t, i, e);
+            }
+          });
+        };
+
+        Object.values(this.elements.buttons).filter(Boolean).forEach(function (e) {
+          $(e) || J(e) ? Array.from(e).filter(Boolean).forEach(l) : l(e);
+        });
+      }
+
+      if (oe.isEdge && re(r), this.config.tooltips.controls) {
+        var c = this.config,
+            u = c.classNames,
+            d = c.selectors,
+            h = "".concat(d.controls.wrapper, " ").concat(d.labels, " .").concat(u.hidden),
+            p = Te.call(this, h);
+        Array.from(p).forEach(function (t) {
+          be(t, e.config.classNames.hidden, !1), be(t, e.config.classNames.tooltip, !0);
+        });
+      }
+    }
+  };
+
+  function at(e) {
+    var t = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1],
+        i = e;
+
+    if (t) {
+      var n = document.createElement("a");
+      n.href = i, i = n.href;
+    }
+
+    try {
+      return new URL(i);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function st(e) {
+    var t = new URLSearchParams();
+    return z(e) && Object.entries(e).forEach(function (e) {
+      var i = o(e, 2),
+          n = i[0],
+          a = i[1];
+      t.set(n, a);
+    }), t;
+  }
+
+  var rt = {
+    setup: function () {
+      if (this.supported.ui) if (!this.isVideo || this.isYouTube || this.isHTML5 && !Ee.textTracks) $(this.config.controls) && this.config.controls.includes("settings") && this.config.settings.includes("captions") && nt.setCaptionsMenu.call(this);else {
+        if (G(this.elements.captions) || (this.elements.captions = he("div", ye(this.config.selectors.captions)), function (e, t) {
+          G(e) && G(t) && t.parentNode.insertBefore(e, t.nextSibling);
+        }(this.elements.captions, this.elements.wrapper)), oe.isIE && window.URL) {
+          var e = this.media.querySelectorAll("track");
+          Array.from(e).forEach(function (e) {
+            var t = e.getAttribute("src"),
+                i = at(t);
+            null !== i && i.hostname !== window.location.href.hostname && ["http:", "https:"].includes(i.protocol) && Je(t, "blob").then(function (t) {
+              e.setAttribute("src", window.URL.createObjectURL(t));
+            }).catch(function () {
+              me(e);
+            });
+          });
+        }
+
+        var t = Be((navigator.languages || [navigator.language || navigator.userLanguage || "en"]).map(function (e) {
+          return e.split("-")[0];
+        })),
+            i = (this.storage.get("language") || this.config.captions.language || "auto").toLowerCase();
+        if ("auto" === i) i = o(t, 1)[0];
+        var n = this.storage.get("captions");
+
+        if (Q(n) || (n = this.config.captions.active), Object.assign(this.captions, {
+          toggled: !1,
+          active: n,
+          language: i,
+          languages: t
+        }), this.isHTML5) {
+          var a = this.config.captions.update ? "addtrack removetrack" : "removetrack";
+          xe.call(this, this.media.textTracks, a, rt.update.bind(this));
+        }
+
+        setTimeout(rt.update.bind(this), 0);
+      }
+    },
+    update: function () {
+      var e = this,
+          t = rt.getTracks.call(this, !0),
+          i = this.captions,
+          n = i.active,
+          a = i.language,
+          s = i.meta,
+          r = i.currentTrackNode,
+          o = Boolean(t.find(function (e) {
+        return e.language === a;
+      }));
+      this.isHTML5 && this.isVideo && t.filter(function (e) {
+        return !s.get(e);
+      }).forEach(function (t) {
+        e.debug.log("Track added", t), s.set(t, {
+          default: "showing" === t.mode
+        }), "showing" === t.mode && (t.mode = "hidden"), xe.call(e, t, "cuechange", function () {
+          return rt.updateCues.call(e);
+        });
+      }), (o && this.language !== a || !t.includes(r)) && (rt.setLanguage.call(this, a), rt.toggle.call(this, n && o)), be(this.elements.container, this.config.classNames.captions.enabled, !ae(t)), $(this.config.controls) && this.config.controls.includes("settings") && this.config.settings.includes("captions") && nt.setCaptionsMenu.call(this);
+    },
+    toggle: function (e) {
+      var t = this,
+          i = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1];
+
+      if (this.supported.ui) {
+        var n = this.captions.toggled,
+            a = this.config.classNames.captions.active,
+            s = W(e) ? !n : e;
+
+        if (s !== n) {
+          if (i || (this.captions.active = s, this.storage.set({
+            captions: s
+          })), !this.language && s && !i) {
+            var r = rt.getTracks.call(this),
+                o = rt.findTrack.call(this, [this.captions.language].concat(l(this.captions.languages)), !0);
+            return this.captions.language = o.language, void rt.set.call(this, r.indexOf(o));
+          }
+
+          this.elements.buttons.captions && (this.elements.buttons.captions.pressed = s), be(this.elements.container, a, s), this.captions.toggled = s, nt.updateSetting.call(this, "captions"), Oe.call(this, this.media, s ? "captionsenabled" : "captionsdisabled");
+        }
+
+        setTimeout(function () {
+          s && t.captions.toggled && (t.captions.currentTrackNode.mode = "hidden");
+        });
+      }
+    },
+    set: function (e) {
+      var t = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1],
+          i = rt.getTracks.call(this);
+      if (-1 !== e) {
+        if (K(e)) {
+          if (e in i) {
+            if (this.captions.currentTrack !== e) {
+              this.captions.currentTrack = e;
+              var n = i[e],
+                  a = n || {},
+                  s = a.language;
+              this.captions.currentTrackNode = n, nt.updateSetting.call(this, "captions"), t || (this.captions.language = s, this.storage.set({
+                language: s
+              })), this.isVimeo && this.embed.enableTextTrack(s), Oe.call(this, this.media, "languagechange");
+            }
+
+            rt.toggle.call(this, !0, t), this.isHTML5 && this.isVideo && rt.updateCues.call(this);
+          } else this.debug.warn("Track not found", e);
+        } else this.debug.warn("Invalid caption argument", e);
+      } else rt.toggle.call(this, !1, t);
+    },
+    setLanguage: function (e) {
+      var t = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1];
+
+      if (Y(e)) {
+        var i = e.toLowerCase();
+        this.captions.language = i;
+        var n = rt.getTracks.call(this),
+            a = rt.findTrack.call(this, [i]);
+        rt.set.call(this, n.indexOf(a), t);
+      } else this.debug.warn("Invalid language argument", e);
+    },
+    getTracks: function () {
+      var e = this,
+          t = arguments.length > 0 && void 0 !== arguments[0] && arguments[0],
+          i = Array.from((this.media || {}).textTracks || []);
+      return i.filter(function (i) {
+        return !e.isHTML5 || t || e.captions.meta.has(i);
+      }).filter(function (e) {
+        return ["captions", "subtitles"].includes(e.kind);
+      });
+    },
+    findTrack: function (e) {
+      var t,
+          i = this,
+          n = arguments.length > 1 && void 0 !== arguments[1] && arguments[1],
+          a = rt.getTracks.call(this),
+          s = function (e) {
+        return Number((i.captions.meta.get(e) || {}).default);
+      },
+          r = Array.from(a).sort(function (e, t) {
+        return s(t) - s(e);
+      });
+
+      return e.every(function (e) {
+        return !(t = r.find(function (t) {
+          return t.language === e;
+        }));
+      }), t || (n ? r[0] : void 0);
+    },
+    getCurrentTrack: function () {
+      return rt.getTracks.call(this)[this.currentTrack];
+    },
+    getLabel: function (e) {
+      var t = e;
+      return !te(t) && Ee.textTracks && this.captions.toggled && (t = rt.getCurrentTrack.call(this)), te(t) ? ae(t.label) ? ae(t.language) ? Xe("enabled", this.config) : e.language.toUpperCase() : t.label : Xe("disabled", this.config);
+    },
+    updateCues: function (e) {
+      if (this.supported.ui) if (G(this.elements.captions)) {
+        if (W(e) || Array.isArray(e)) {
+          var t = e;
+
+          if (!t) {
+            var i = rt.getCurrentTrack.call(this);
+            t = Array.from((i || {}).activeCues || []).map(function (e) {
+              return e.getCueAsHTML();
+            }).map(Ye);
+          }
+
+          var n = t.map(function (e) {
+            return e.trim();
+          }).join("\n");
+
+          if (n !== this.elements.captions.innerHTML) {
+            fe(this.elements.captions);
+            var a = he("span", ye(this.config.selectors.caption));
+            a.innerHTML = n, this.elements.captions.appendChild(a), Oe.call(this, this.media, "cuechange");
+          }
+        } else this.debug.warn("updateCues: Invalid input", e);
+      } else this.debug.warn("No captions element to render to");
+    }
+  },
+      ot = {
+    enabled: !0,
+    title: "",
+    debug: !1,
+    autoplay: !1,
+    autopause: !0,
+    playsinline: !0,
+    seekTime: 10,
+    volume: 1,
+    muted: !1,
+    duration: null,
+    displayDuration: !0,
+    invertTime: !0,
+    toggleInvert: !0,
+    ratio: null,
+    clickToPlay: !0,
+    hideControls: !0,
+    resetOnEnd: !1,
+    disableContextMenu: !0,
+    loadSprite: !0,
+    iconPrefix: "plyr",
+    iconUrl: "https://cdn.plyr.io/3.6.2/plyr.svg",
+    blankVideo: "https://cdn.plyr.io/static/blank.mp4",
+    quality: {
+      default: 576,
+      options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240],
+      forced: !1,
+      onChange: null
+    },
+    loop: {
+      active: !1
+    },
+    speed: {
+      selected: 1,
+      options: [.5, .75, 1, 1.25, 1.5, 1.75, 2, 4]
+    },
+    keyboard: {
+      focused: !0,
+      global: !1
+    },
+    tooltips: {
+      controls: !1,
+      seek: !0
+    },
+    captions: {
+      active: !1,
+      language: "auto",
+      update: !1
+    },
+    fullscreen: {
+      enabled: !0,
+      fallback: !0,
+      iosNative: !1
+    },
+    storage: {
+      enabled: !0,
+      key: "plyr"
+    },
+    controls: ["play-large", "play", "progress", "current-time", "mute", "volume", "captions", "settings", "pip", "airplay", "fullscreen"],
+    settings: ["captions", "quality", "speed"],
+    i18n: {
+      restart: "Restart",
+      rewind: "Rewind {seektime}s",
+      play: "Play",
+      pause: "Pause",
+      fastForward: "Forward {seektime}s",
+      seek: "Seek",
+      seekLabel: "{currentTime} of {duration}",
+      played: "Played",
+      buffered: "Buffered",
+      currentTime: "Current time",
+      duration: "Duration",
+      volume: "Volume",
+      mute: "Mute",
+      unmute: "Unmute",
+      enableCaptions: "Enable captions",
+      disableCaptions: "Disable captions",
+      download: "Download",
+      enterFullscreen: "Enter fullscreen",
+      exitFullscreen: "Exit fullscreen",
+      frameTitle: "Player for {title}",
+      captions: "Captions",
+      settings: "Settings",
+      pip: "PIP",
+      menuBack: "Go back to previous menu",
+      speed: "Speed",
+      normal: "Normal",
+      quality: "Quality",
+      loop: "Loop",
+      start: "Start",
+      end: "End",
+      all: "All",
+      reset: "Reset",
+      disabled: "Disabled",
+      enabled: "Enabled",
+      advertisement: "Ad",
+      qualityBadge: {
+        2160: "4K",
+        1440: "HD",
+        1080: "HD",
+        720: "HD",
+        576: "SD",
+        480: "SD"
+      }
+    },
+    urls: {
+      download: null,
+      vimeo: {
+        sdk: "https://player.vimeo.com/api/player.js",
+        iframe: "https://player.vimeo.com/video/{0}?{1}",
+        api: "https://vimeo.com/api/v2/video/{0}.json"
+      },
+      youtube: {
+        sdk: "https://www.youtube.com/iframe_api",
+        api: "https://noembed.com/embed?url=https://www.youtube.com/watch?v={0}"
+      },
+      googleIMA: {
+        sdk: "https://imasdk.googleapis.com/js/sdkloader/ima3.js"
+      }
+    },
+    listeners: {
+      seek: null,
+      play: null,
+      pause: null,
+      restart: null,
+      rewind: null,
+      fastForward: null,
+      mute: null,
+      volume: null,
+      captions: null,
+      download: null,
+      fullscreen: null,
+      pip: null,
+      airplay: null,
+      speed: null,
+      quality: null,
+      loop: null,
+      language: null
+    },
+    events: ["ended", "progress", "stalled", "playing", "waiting", "canplay", "canplaythrough", "loadstart", "loadeddata", "loadedmetadata", "timeupdate", "volumechange", "play", "pause", "error", "seeking", "seeked", "emptied", "ratechange", "cuechange", "download", "enterfullscreen", "exitfullscreen", "captionsenabled", "captionsdisabled", "languagechange", "controlshidden", "controlsshown", "ready", "statechange", "qualitychange", "adsloaded", "adscontentpause", "adscontentresume", "adstarted", "adsmidpoint", "adscomplete", "adsallcomplete", "adsimpression", "adsclick"],
+    selectors: {
+      editable: "input, textarea, select, [contenteditable]",
+      container: ".plyr",
+      controls: {
+        container: null,
+        wrapper: ".plyr__controls"
+      },
+      labels: "[data-plyr]",
+      buttons: {
+        play: '[data-plyr="play"]',
+        pause: '[data-plyr="pause"]',
+        restart: '[data-plyr="restart"]',
+        rewind: '[data-plyr="rewind"]',
+        fastForward: '[data-plyr="fast-forward"]',
+        mute: '[data-plyr="mute"]',
+        captions: '[data-plyr="captions"]',
+        download: '[data-plyr="download"]',
+        fullscreen: '[data-plyr="fullscreen"]',
+        pip: '[data-plyr="pip"]',
+        airplay: '[data-plyr="airplay"]',
+        settings: '[data-plyr="settings"]',
+        loop: '[data-plyr="loop"]'
+      },
+      inputs: {
+        seek: '[data-plyr="seek"]',
+        volume: '[data-plyr="volume"]',
+        speed: '[data-plyr="speed"]',
+        language: '[data-plyr="language"]',
+        quality: '[data-plyr="quality"]'
+      },
+      display: {
+        currentTime: ".plyr__time--current",
+        duration: ".plyr__time--duration",
+        buffer: ".plyr__progress__buffer",
+        loop: ".plyr__progress__loop",
+        volume: ".plyr__volume--display"
+      },
+      progress: ".plyr__progress",
+      captions: ".plyr__captions",
+      caption: ".plyr__caption"
+    },
+    classNames: {
+      type: "plyr--{0}",
+      provider: "plyr--{0}",
+      video: "plyr__video-wrapper",
+      embed: "plyr__video-embed",
+      videoFixedRatio: "plyr__video-wrapper--fixed-ratio",
+      embedContainer: "plyr__video-embed__container",
+      poster: "plyr__poster",
+      posterEnabled: "plyr__poster-enabled",
+      ads: "plyr__ads",
+      control: "plyr__control",
+      controlPressed: "plyr__control--pressed",
+      playing: "plyr--playing",
+      paused: "plyr--paused",
+      stopped: "plyr--stopped",
+      loading: "plyr--loading",
+      hover: "plyr--hover",
+      tooltip: "plyr__tooltip",
+      cues: "plyr__cues",
+      hidden: "plyr__sr-only",
+      hideControls: "plyr--hide-controls",
+      isIos: "plyr--is-ios",
+      isTouch: "plyr--is-touch",
+      uiSupported: "plyr--full-ui",
+      noTransition: "plyr--no-transition",
+      display: {
+        time: "plyr__time"
+      },
+      menu: {
+        value: "plyr__menu__value",
+        badge: "plyr__badge",
+        open: "plyr--menu-open"
+      },
+      captions: {
+        enabled: "plyr--captions-enabled",
+        active: "plyr--captions-active"
+      },
+      fullscreen: {
+        enabled: "plyr--fullscreen-enabled",
+        fallback: "plyr--fullscreen-fallback"
+      },
+      pip: {
+        supported: "plyr--pip-supported",
+        active: "plyr--pip-active"
+      },
+      airplay: {
+        supported: "plyr--airplay-supported",
+        active: "plyr--airplay-active"
+      },
+      tabFocus: "plyr__tab-focus",
+      previewThumbnails: {
+        thumbContainer: "plyr__preview-thumb",
+        thumbContainerShown: "plyr__preview-thumb--is-shown",
+        imageContainer: "plyr__preview-thumb__image-container",
+        timeContainer: "plyr__preview-thumb__time-container",
+        scrubbingContainer: "plyr__preview-scrubbing",
+        scrubbingContainerShown: "plyr__preview-scrubbing--is-shown"
+      }
+    },
+    attributes: {
+      embed: {
+        provider: "data-plyr-provider",
+        id: "data-plyr-embed-id"
+      }
+    },
+    ads: {
+      enabled: !1,
+      publisherId: "",
+      tagUrl: ""
+    },
+    previewThumbnails: {
+      enabled: !1,
+      src: ""
+    },
+    vimeo: {
+      byline: !1,
+      portrait: !1,
+      title: !1,
+      speed: !0,
+      transparent: !1,
+      premium: !1,
+      referrerPolicy: null
+    },
+    youtube: {
+      noCookie: !0,
+      rel: 0,
+      showinfo: 0,
+      iv_load_policy: 3,
+      modestbranding: 1
+    }
+  },
+      lt = "picture-in-picture",
+      ct = "inline",
+      ut = {
+    html5: "html5",
+    youtube: "youtube",
+    vimeo: "vimeo"
+  },
+      dt = "audio",
+      ht = "video";
+
+  var pt = function () {},
+      mt = function () {
+    function t() {
+      var i = arguments.length > 0 && void 0 !== arguments[0] && arguments[0];
+      e(this, t), this.enabled = window.console && i, this.enabled && this.log("Debugging enabled");
+    }
+
+    return i(t, [{
+      key: "log",
+      get: function () {
+        return this.enabled ? Function.prototype.bind.call(console.log, console) : pt;
+      }
+    }, {
+      key: "warn",
+      get: function () {
+        return this.enabled ? Function.prototype.bind.call(console.warn, console) : pt;
+      }
+    }, {
+      key: "error",
+      get: function () {
+        return this.enabled ? Function.prototype.bind.call(console.error, console) : pt;
+      }
+    }]), t;
+  }(),
+      ft = function () {
+    function t(i) {
+      var n = this;
+      e(this, t), this.player = i, this.prefix = t.prefix, this.property = t.property, this.scrollPosition = {
+        x: 0,
+        y: 0
+      }, this.forceFallback = "force" === i.config.fullscreen.fallback, this.player.elements.fullscreen = i.config.fullscreen.container && function (e, t) {
+        return (Element.prototype.closest || function () {
+          var e = this;
+
+          do {
+            if (ke.matches(e, t)) return e;
+            e = e.parentElement || e.parentNode;
+          } while (null !== e && 1 === e.nodeType);
+
+          return null;
+        }).call(e, t);
+      }(this.player.elements.container, i.config.fullscreen.container), xe.call(this.player, document, "ms" === this.prefix ? "MSFullscreenChange" : "".concat(this.prefix, "fullscreenchange"), function () {
+        n.onChange();
+      }), xe.call(this.player, this.player.elements.container, "dblclick", function (e) {
+        G(n.player.elements.controls) && n.player.elements.controls.contains(e.target) || n.toggle();
+      }), xe.call(this, this.player.elements.container, "keydown", function (e) {
+        return n.trapFocus(e);
+      }), this.update();
+    }
+
+    return i(t, [{
+      key: "onChange",
+      value: function () {
+        if (this.enabled) {
+          var e = this.player.elements.buttons.fullscreen;
+          G(e) && (e.pressed = this.active), Oe.call(this.player, this.target, this.active ? "enterfullscreen" : "exitfullscreen", !0);
+        }
+      }
+    }, {
+      key: "toggleFallback",
+      value: function () {
+        var e = arguments.length > 0 && void 0 !== arguments[0] && arguments[0];
+
+        if (e ? this.scrollPosition = {
+          x: window.scrollX || 0,
+          y: window.scrollY || 0
+        } : window.scrollTo(this.scrollPosition.x, this.scrollPosition.y), document.body.style.overflow = e ? "hidden" : "", be(this.target, this.player.config.classNames.fullscreen.fallback, e), oe.isIos) {
+          var t = document.head.querySelector('meta[name="viewport"]'),
+              i = "viewport-fit=cover";
+          t || (t = document.createElement("meta")).setAttribute("name", "viewport");
+          var n = Y(t.content) && t.content.includes(i);
+          e ? (this.cleanupViewport = !n, n || (t.content += ",".concat(i))) : this.cleanupViewport && (t.content = t.content.split(",").filter(function (e) {
+            return e.trim() !== i;
+          }).join(","));
+        }
+
+        this.onChange();
+      }
+    }, {
+      key: "trapFocus",
+      value: function (e) {
+        if (!oe.isIos && this.active && "Tab" === e.key && 9 === e.keyCode) {
+          var t = document.activeElement,
+              i = Te.call(this.player, "a[href], button:not(:disabled), input:not(:disabled), [tabindex]"),
+              n = o(i, 1)[0],
+              a = i[i.length - 1];
+          t !== a || e.shiftKey ? t === n && e.shiftKey && (a.focus(), e.preventDefault()) : (n.focus(), e.preventDefault());
+        }
+      }
+    }, {
+      key: "update",
+      value: function () {
+        var e;
+        this.enabled ? (e = this.forceFallback ? "Fallback (forced)" : t.native ? "Native" : "Fallback", this.player.debug.log("".concat(e, " fullscreen enabled"))) : this.player.debug.log("Fullscreen not supported and fallback disabled");
+        be(this.player.elements.container, this.player.config.classNames.fullscreen.enabled, this.enabled);
+      }
+    }, {
+      key: "enter",
+      value: function () {
+        this.enabled && (oe.isIos && this.player.config.fullscreen.iosNative ? this.target.webkitEnterFullscreen() : !t.native || this.forceFallback ? this.toggleFallback(!0) : this.prefix ? ae(this.prefix) || this.target["".concat(this.prefix, "Request").concat(this.property)]() : this.target.requestFullscreen({
+          navigationUI: "hide"
+        }));
+      }
+    }, {
+      key: "exit",
+      value: function () {
+        if (this.enabled) if (oe.isIos && this.player.config.fullscreen.iosNative) this.target.webkitExitFullscreen(), qe(this.player.play());else if (!t.native || this.forceFallback) this.toggleFallback(!1);else if (this.prefix) {
+          if (!ae(this.prefix)) {
+            var e = "moz" === this.prefix ? "Cancel" : "Exit";
+            document["".concat(this.prefix).concat(e).concat(this.property)]();
+          }
+        } else (document.cancelFullScreen || document.exitFullscreen).call(document);
+      }
+    }, {
+      key: "toggle",
+      value: function () {
+        this.active ? this.exit() : this.enter();
+      }
+    }, {
+      key: "usingNative",
+      get: function () {
+        return t.native && !this.forceFallback;
+      }
+    }, {
+      key: "enabled",
+      get: function () {
+        return (t.native || this.player.config.fullscreen.fallback) && this.player.config.fullscreen.enabled && this.player.supported.ui && this.player.isVideo;
+      }
+    }, {
+      key: "active",
+      get: function () {
+        if (!this.enabled) return !1;
+        if (!t.native || this.forceFallback) return we(this.target, this.player.config.classNames.fullscreen.fallback);
+        var e = this.prefix ? document["".concat(this.prefix).concat(this.property, "Element")] : document.fullscreenElement;
+        return e && e.shadowRoot ? e === this.target.getRootNode().host : e === this.target;
+      }
+    }, {
+      key: "target",
+      get: function () {
+        return oe.isIos && this.player.config.fullscreen.iosNative ? this.player.media : this.player.elements.fullscreen || this.player.elements.container;
+      }
+    }], [{
+      key: "native",
+      get: function () {
+        return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled);
+      }
+    }, {
+      key: "prefix",
+      get: function () {
+        if (X(document.exitFullscreen)) return "";
+        var e = "";
+        return ["webkit", "moz", "ms"].some(function (t) {
+          return !(!X(document["".concat(t, "ExitFullscreen")]) && !X(document["".concat(t, "CancelFullScreen")])) && (e = t, !0);
+        }), e;
+      }
+    }, {
+      key: "property",
+      get: function () {
+        return "moz" === this.prefix ? "FullScreen" : "Fullscreen";
+      }
+    }]), t;
+  }();
+
+  function gt(e) {
+    var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 1;
+    return new Promise(function (i, n) {
+      var a = new Image(),
+          s = function () {
+        delete a.onload, delete a.onerror, (a.naturalWidth >= t ? i : n)(a);
+      };
+
+      Object.assign(a, {
+        onload: s,
+        onerror: s,
+        src: e
+      });
+    });
+  }
+
+  var yt = {
+    addStyleHook: function () {
+      be(this.elements.container, this.config.selectors.container.replace(".", ""), !0), be(this.elements.container, this.config.classNames.uiSupported, this.supported.ui);
+    },
+    toggleNativeControls: function () {
+      var e = arguments.length > 0 && void 0 !== arguments[0] && arguments[0];
+      e && this.isHTML5 ? this.media.setAttribute("controls", "") : this.media.removeAttribute("controls");
+    },
+    build: function () {
+      var e = this;
+      if (this.listeners.media(), !this.supported.ui) return this.debug.warn("Basic support only for ".concat(this.provider, " ").concat(this.type)), void yt.toggleNativeControls.call(this, !0);
+      G(this.elements.controls) || (nt.inject.call(this), this.listeners.controls()), yt.toggleNativeControls.call(this), this.isHTML5 && rt.setup.call(this), this.volume = null, this.muted = null, this.loop = null, this.quality = null, this.speed = null, nt.updateVolume.call(this), nt.timeUpdate.call(this), yt.checkPlaying.call(this), be(this.elements.container, this.config.classNames.pip.supported, Ee.pip && this.isHTML5 && this.isVideo), be(this.elements.container, this.config.classNames.airplay.supported, Ee.airplay && this.isHTML5), be(this.elements.container, this.config.classNames.isIos, oe.isIos), be(this.elements.container, this.config.classNames.isTouch, this.touch), this.ready = !0, setTimeout(function () {
+        Oe.call(e, e.media, "ready");
+      }, 0), yt.setTitle.call(this), this.poster && yt.setPoster.call(this, this.poster, !1).catch(function () {}), this.config.duration && nt.durationUpdate.call(this);
+    },
+    setTitle: function () {
+      var e = Xe("play", this.config);
+
+      if (Y(this.config.title) && !ae(this.config.title) && (e += ", ".concat(this.config.title)), Array.from(this.elements.buttons.play || []).forEach(function (t) {
+        t.setAttribute("aria-label", e);
+      }), this.isEmbed) {
+        var t = Ce.call(this, "iframe");
+        if (!G(t)) return;
+        var i = ae(this.config.title) ? "video" : this.config.title,
+            n = Xe("frameTitle", this.config);
+        t.setAttribute("title", n.replace("{title}", i));
+      }
+    },
+    togglePoster: function (e) {
+      be(this.elements.container, this.config.classNames.posterEnabled, e);
+    },
+    setPoster: function (e) {
+      var t = this,
+          i = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1];
+      return i && this.poster ? Promise.reject(new Error("Poster already set")) : (this.media.setAttribute("data-poster", e), je.call(this).then(function () {
+        return gt(e);
+      }).catch(function (i) {
+        throw e === t.poster && yt.togglePoster.call(t, !1), i;
+      }).then(function () {
+        if (e !== t.poster) throw new Error("setPoster cancelled by later call to setPoster");
+      }).then(function () {
+        return Object.assign(t.elements.poster.style, {
+          backgroundImage: "url('".concat(e, "')"),
+          backgroundSize: ""
+        }), yt.togglePoster.call(t, !0), e;
+      }));
+    },
+    checkPlaying: function (e) {
+      var t = this;
+      be(this.elements.container, this.config.classNames.playing, this.playing), be(this.elements.container, this.config.classNames.paused, this.paused), be(this.elements.container, this.config.classNames.stopped, this.stopped), Array.from(this.elements.buttons.play || []).forEach(function (e) {
+        Object.assign(e, {
+          pressed: t.playing
+        }), e.setAttribute("aria-label", Xe(t.playing ? "pause" : "play", t.config));
+      }), Z(e) && "timeupdate" === e.type || yt.toggleControls.call(this);
+    },
+    checkLoading: function (e) {
+      var t = this;
+      this.loading = ["stalled", "waiting"].includes(e.type), clearTimeout(this.timers.loading), this.timers.loading = setTimeout(function () {
+        be(t.elements.container, t.config.classNames.loading, t.loading), yt.toggleControls.call(t);
+      }, this.loading ? 250 : 0);
+    },
+    toggleControls: function (e) {
+      var t = this.elements.controls;
+
+      if (t && this.config.hideControls) {
+        var i = this.touch && this.lastSeekTime + 2e3 > Date.now();
+        this.toggleControls(Boolean(e || this.loading || this.paused || t.pressed || t.hover || i));
+      }
+    },
+    migrateStyles: function () {
+      var e = this;
+      Object.values(s({}, this.media.style)).filter(function (e) {
+        return !ae(e) && e.startsWith("--plyr");
+      }).forEach(function (t) {
+        e.elements.container.style.setProperty(t, e.media.style.getPropertyValue(t)), e.media.style.removeProperty(t);
+      }), ae(this.media.style) && this.media.removeAttribute("style");
+    }
+  },
+      vt = function () {
+    function t(i) {
+      e(this, t), this.player = i, this.lastKey = null, this.focusTimer = null, this.lastKeyDown = null, this.handleKey = this.handleKey.bind(this), this.toggleMenu = this.toggleMenu.bind(this), this.setTabFocus = this.setTabFocus.bind(this), this.firstTouch = this.firstTouch.bind(this);
+    }
+
+    return i(t, [{
+      key: "handleKey",
+      value: function (e) {
+        var t = this.player,
+            i = t.elements,
+            n = e.keyCode ? e.keyCode : e.which,
+            a = "keydown" === e.type,
+            s = a && n === this.lastKey;
+
+        if (!(e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) && K(n)) {
+          if (a) {
+            var r = document.activeElement;
+
+            if (G(r)) {
+              var o = t.config.selectors.editable;
+              if (r !== i.inputs.seek && ke(r, o)) return;
+              if (32 === e.which && ke(r, 'button, [role^="menuitem"]')) return;
+            }
+
+            switch ([32, 37, 38, 39, 40, 48, 49, 50, 51, 52, 53, 54, 56, 57, 67, 70, 73, 75, 76, 77, 79].includes(n) && (e.preventDefault(), e.stopPropagation()), n) {
+              case 48:
+              case 49:
+              case 50:
+              case 51:
+              case 52:
+              case 53:
+              case 54:
+              case 55:
+              case 56:
+              case 57:
+                s || (t.currentTime = t.duration / 10 * (n - 48));
+                break;
+
+              case 32:
+              case 75:
+                s || qe(t.togglePlay());
+                break;
+
+              case 38:
+                t.increaseVolume(.1);
+                break;
+
+              case 40:
+                t.decreaseVolume(.1);
+                break;
+
+              case 77:
+                s || (t.muted = !t.muted);
+                break;
+
+              case 39:
+                t.forward();
+                break;
+
+              case 37:
+                t.rewind();
+                break;
+
+              case 70:
+                t.fullscreen.toggle();
+                break;
+
+              case 67:
+                s || t.toggleCaptions();
+                break;
+
+              case 76:
+                t.loop = !t.loop;
+            }
+
+            27 === n && !t.fullscreen.usingNative && t.fullscreen.active && t.fullscreen.toggle(), this.lastKey = n;
+          } else this.lastKey = null;
+        }
+      }
+    }, {
+      key: "toggleMenu",
+      value: function (e) {
+        nt.toggleMenu.call(this.player, e);
+      }
+    }, {
+      key: "firstTouch",
+      value: function () {
+        var e = this.player,
+            t = e.elements;
+        e.touch = !0, be(t.container, e.config.classNames.isTouch, !0);
+      }
+    }, {
+      key: "setTabFocus",
+      value: function (e) {
+        var t = this.player,
+            i = t.elements;
+
+        if (clearTimeout(this.focusTimer), "keydown" !== e.type || 9 === e.which) {
+          "keydown" === e.type && (this.lastKeyDown = e.timeStamp);
+          var n,
+              a = e.timeStamp - this.lastKeyDown <= 20;
+          if ("focus" !== e.type || a) n = t.config.classNames.tabFocus, be(Te.call(t, ".".concat(n)), n, !1), "focusout" !== e.type && (this.focusTimer = setTimeout(function () {
+            var e = document.activeElement;
+            i.container.contains(e) && be(document.activeElement, t.config.classNames.tabFocus, !0);
+          }, 10));
+        }
+      }
+    }, {
+      key: "global",
+      value: function () {
+        var e = !(arguments.length > 0 && void 0 !== arguments[0]) || arguments[0],
+            t = this.player;
+        t.config.keyboard.global && Me.call(t, window, "keydown keyup", this.handleKey, e, !1), Me.call(t, document.body, "click", this.toggleMenu, e), Le.call(t, document.body, "touchstart", this.firstTouch), Me.call(t, document.body, "keydown focus blur focusout", this.setTabFocus, e, !1, !0);
+      }
+    }, {
+      key: "container",
+      value: function () {
+        var e = this.player,
+            t = e.config,
+            i = e.elements,
+            n = e.timers;
+        !t.keyboard.global && t.keyboard.focused && xe.call(e, i.container, "keydown keyup", this.handleKey, !1), xe.call(e, i.container, "mousemove mouseleave touchstart touchmove enterfullscreen exitfullscreen", function (t) {
+          var a = i.controls;
+          a && "enterfullscreen" === t.type && (a.pressed = !1, a.hover = !1);
+          var s = 0;
+          ["touchstart", "touchmove", "mousemove"].includes(t.type) && (yt.toggleControls.call(e, !0), s = e.touch ? 3e3 : 2e3), clearTimeout(n.controls), n.controls = setTimeout(function () {
+            return yt.toggleControls.call(e, !1);
+          }, s);
+        });
+
+        var a = function (t) {
+          if (!t) return Re.call(e);
+          var n = i.container.getBoundingClientRect(),
+              a = n.width,
+              s = n.height;
+          return Re.call(e, "".concat(a, ":").concat(s));
+        },
+            s = function () {
+          clearTimeout(n.resized), n.resized = setTimeout(a, 50);
+        };
+
+        xe.call(e, i.container, "enterfullscreen exitfullscreen", function (t) {
+          var n = e.fullscreen,
+              r = n.target,
+              l = n.usingNative;
+
+          if (r === i.container && (e.isEmbed || !ae(e.config.ratio))) {
+            var c = "enterfullscreen" === t.type,
+                u = a(c);
+            u.padding;
+            !function (t, i, n) {
+              if (e.isVimeo && !e.config.vimeo.premium) {
+                var a = e.elements.wrapper.firstChild,
+                    s = o(t, 2)[1],
+                    r = o(Fe.call(e), 2),
+                    l = r[0],
+                    c = r[1];
+                a.style.maxWidth = n ? "".concat(s / c * l, "px") : null, a.style.margin = n ? "0 auto" : null;
+              }
+            }(u.ratio, 0, c), l || (c ? xe.call(e, window, "resize", s) : Ie.call(e, window, "resize", s));
+          }
+        });
+      }
+    }, {
+      key: "media",
+      value: function () {
+        var e = this,
+            t = this.player,
+            i = t.elements;
+
+        if (xe.call(t, t.media, "timeupdate seeking seeked", function (e) {
+          return nt.timeUpdate.call(t, e);
+        }), xe.call(t, t.media, "durationchange loadeddata loadedmetadata", function (e) {
+          return nt.durationUpdate.call(t, e);
+        }), xe.call(t, t.media, "ended", function () {
+          t.isHTML5 && t.isVideo && t.config.resetOnEnd && (t.restart(), t.pause());
+        }), xe.call(t, t.media, "progress playing seeking seeked", function (e) {
+          return nt.updateProgress.call(t, e);
+        }), xe.call(t, t.media, "volumechange", function (e) {
+          return nt.updateVolume.call(t, e);
+        }), xe.call(t, t.media, "playing play pause ended emptied timeupdate", function (e) {
+          return yt.checkPlaying.call(t, e);
+        }), xe.call(t, t.media, "waiting canplay seeked playing", function (e) {
+          return yt.checkLoading.call(t, e);
+        }), t.supported.ui && t.config.clickToPlay && !t.isAudio) {
+          var n = Ce.call(t, ".".concat(t.config.classNames.video));
+          if (!G(n)) return;
+          xe.call(t, i.container, "click", function (a) {
+            ([i.container, n].includes(a.target) || n.contains(a.target)) && (t.touch && t.config.hideControls || (t.ended ? (e.proxy(a, t.restart, "restart"), e.proxy(a, function () {
+              qe(t.play());
+            }, "play")) : e.proxy(a, function () {
+              qe(t.togglePlay());
+            }, "play")));
+          });
+        }
+
+        t.supported.ui && t.config.disableContextMenu && xe.call(t, i.wrapper, "contextmenu", function (e) {
+          e.preventDefault();
+        }, !1), xe.call(t, t.media, "volumechange", function () {
+          t.storage.set({
+            volume: t.volume,
+            muted: t.muted
+          });
+        }), xe.call(t, t.media, "ratechange", function () {
+          nt.updateSetting.call(t, "speed"), t.storage.set({
+            speed: t.speed
+          });
+        }), xe.call(t, t.media, "qualitychange", function (e) {
+          nt.updateSetting.call(t, "quality", null, e.detail.quality);
+        }), xe.call(t, t.media, "ready qualitychange", function () {
+          nt.setDownloadUrl.call(t);
+        });
+        var a = t.config.events.concat(["keyup", "keydown"]).join(" ");
+        xe.call(t, t.media, a, function (e) {
+          var n = e.detail,
+              a = void 0 === n ? {} : n;
+          "error" === e.type && (a = t.media.error), Oe.call(t, i.container, e.type, !0, a);
+        });
+      }
+    }, {
+      key: "proxy",
+      value: function (e, t, i) {
+        var n = this.player,
+            a = n.config.listeners[i],
+            s = !0;
+        X(a) && (s = a.call(n, e)), !1 !== s && X(t) && t.call(n, e);
+      }
+    }, {
+      key: "bind",
+      value: function (e, t, i, n) {
+        var a = this,
+            s = !(arguments.length > 4 && void 0 !== arguments[4]) || arguments[4],
+            r = this.player,
+            o = r.config.listeners[n],
+            l = X(o);
+        xe.call(r, e, t, function (e) {
+          return a.proxy(e, i, n);
+        }, s && !l);
+      }
+    }, {
+      key: "controls",
+      value: function () {
+        var e = this,
+            t = this.player,
+            i = t.elements,
+            n = oe.isIE ? "change" : "input";
+
+        if (i.buttons.play && Array.from(i.buttons.play).forEach(function (i) {
+          e.bind(i, "click", function () {
+            qe(t.togglePlay());
+          }, "play");
+        }), this.bind(i.buttons.restart, "click", t.restart, "restart"), this.bind(i.buttons.rewind, "click", t.rewind, "rewind"), this.bind(i.buttons.fastForward, "click", t.forward, "fastForward"), this.bind(i.buttons.mute, "click", function () {
+          t.muted = !t.muted;
+        }, "mute"), this.bind(i.buttons.captions, "click", function () {
+          return t.toggleCaptions();
+        }), this.bind(i.buttons.download, "click", function () {
+          Oe.call(t, t.media, "download");
+        }, "download"), this.bind(i.buttons.fullscreen, "click", function () {
+          t.fullscreen.toggle();
+        }, "fullscreen"), this.bind(i.buttons.pip, "click", function () {
+          t.pip = "toggle";
+        }, "pip"), this.bind(i.buttons.airplay, "click", t.airplay, "airplay"), this.bind(i.buttons.settings, "click", function (e) {
+          e.stopPropagation(), e.preventDefault(), nt.toggleMenu.call(t, e);
+        }, null, !1), this.bind(i.buttons.settings, "keyup", function (e) {
+          var i = e.which;
+          [13, 32].includes(i) && (13 !== i ? (e.preventDefault(), e.stopPropagation(), nt.toggleMenu.call(t, e)) : nt.focusFirstMenuItem.call(t, null, !0));
+        }, null, !1), this.bind(i.settings.menu, "keydown", function (e) {
+          27 === e.which && nt.toggleMenu.call(t, e);
+        }), this.bind(i.inputs.seek, "mousedown mousemove", function (e) {
+          var t = i.progress.getBoundingClientRect(),
+              n = 100 / t.width * (e.pageX - t.left);
+          e.currentTarget.setAttribute("seek-value", n);
+        }), this.bind(i.inputs.seek, "mousedown mouseup keydown keyup touchstart touchend", function (e) {
+          var i = e.currentTarget,
+              n = e.keyCode ? e.keyCode : e.which;
+
+          if (!ee(e) || 39 === n || 37 === n) {
+            t.lastSeekTime = Date.now();
+            var a = i.hasAttribute("play-on-seeked"),
+                s = ["mouseup", "touchend", "keyup"].includes(e.type);
+            a && s ? (i.removeAttribute("play-on-seeked"), qe(t.play())) : !s && t.playing && (i.setAttribute("play-on-seeked", ""), t.pause());
+          }
+        }), oe.isIos) {
+          var a = Te.call(t, 'input[type="range"]');
+          Array.from(a).forEach(function (t) {
+            return e.bind(t, n, function (e) {
+              return re(e.target);
+            });
+          });
+        }
+
+        this.bind(i.inputs.seek, n, function (e) {
+          var i = e.currentTarget,
+              n = i.getAttribute("seek-value");
+          ae(n) && (n = i.value), i.removeAttribute("seek-value"), t.currentTime = n / i.max * t.duration;
+        }, "seek"), this.bind(i.progress, "mouseenter mouseleave mousemove", function (e) {
+          return nt.updateSeekTooltip.call(t, e);
+        }), this.bind(i.progress, "mousemove touchmove", function (e) {
+          var i = t.previewThumbnails;
+          i && i.loaded && i.startMove(e);
+        }), this.bind(i.progress, "mouseleave touchend click", function () {
+          var e = t.previewThumbnails;
+          e && e.loaded && e.endMove(!1, !0);
+        }), this.bind(i.progress, "mousedown touchstart", function (e) {
+          var i = t.previewThumbnails;
+          i && i.loaded && i.startScrubbing(e);
+        }), this.bind(i.progress, "mouseup touchend", function (e) {
+          var i = t.previewThumbnails;
+          i && i.loaded && i.endScrubbing(e);
+        }), oe.isWebkit && Array.from(Te.call(t, 'input[type="range"]')).forEach(function (i) {
+          e.bind(i, "input", function (e) {
+            return nt.updateRangeFill.call(t, e.target);
+          });
+        }), t.config.toggleInvert && !G(i.display.duration) && this.bind(i.display.currentTime, "click", function () {
+          0 !== t.currentTime && (t.config.invertTime = !t.config.invertTime, nt.timeUpdate.call(t));
+        }), this.bind(i.inputs.volume, n, function (e) {
+          t.volume = e.target.value;
+        }, "volume"), this.bind(i.controls, "mouseenter mouseleave", function (e) {
+          i.controls.hover = !t.touch && "mouseenter" === e.type;
+        }), i.fullscreen && Array.from(i.fullscreen.children).filter(function (e) {
+          return !e.contains(i.container);
+        }).forEach(function (n) {
+          e.bind(n, "mouseenter mouseleave", function (e) {
+            i.controls.hover = !t.touch && "mouseenter" === e.type;
+          });
+        }), this.bind(i.controls, "mousedown mouseup touchstart touchend touchcancel", function (e) {
+          i.controls.pressed = ["mousedown", "touchstart"].includes(e.type);
+        }), this.bind(i.controls, "focusin", function () {
+          var n = t.config,
+              a = t.timers;
+          be(i.controls, n.classNames.noTransition, !0), yt.toggleControls.call(t, !0), setTimeout(function () {
+            be(i.controls, n.classNames.noTransition, !1);
+          }, 0);
+          var s = e.touch ? 3e3 : 4e3;
+          clearTimeout(a.controls), a.controls = setTimeout(function () {
+            return yt.toggleControls.call(t, !1);
+          }, s);
+        }), this.bind(i.inputs.volume, "wheel", function (e) {
+          var i = e.webkitDirectionInvertedFromDevice,
+              n = o([e.deltaX, -e.deltaY].map(function (e) {
+            return i ? -e : e;
+          }), 2),
+              a = n[0],
+              s = n[1],
+              r = Math.sign(Math.abs(a) > Math.abs(s) ? a : s);
+          t.increaseVolume(r / 50);
+          var l = t.media.volume;
+          (1 === r && l < 1 || -1 === r && l > 0) && e.preventDefault();
+        }, "volume", !1);
+      }
+    }]), t;
+  }();
+
+  "undefined" != typeof globalThis ? globalThis : "undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof self && self;
+
+  var bt = function (e, t) {
+    return e(t = {
+      exports: {}
+    }, t.exports), t.exports;
+  }(function (e, t) {
+    e.exports = function () {
+      var e = function () {},
+          t = {},
+          i = {},
+          n = {};
+
+      function a(e, t) {
+        if (e) {
+          var a = n[e];
+          if (i[e] = t, a) for (; a.length;) a[0](e, t), a.splice(0, 1);
+        }
+      }
+
+      function s(t, i) {
+        t.call && (t = {
+          success: t
+        }), i.length ? (t.error || e)(i) : (t.success || e)(t);
+      }
+
+      function r(t, i, n, a) {
+        var s,
+            o,
+            l = document,
+            c = n.async,
+            u = (n.numRetries || 0) + 1,
+            d = n.before || e,
+            h = t.replace(/[\?|#].*$/, ""),
+            p = t.replace(/^(css|img)!/, "");
+        a = a || 0, /(^css!|\.css$)/.test(h) ? ((o = l.createElement("link")).rel = "stylesheet", o.href = p, (s = "hideFocus" in o) && o.relList && (s = 0, o.rel = "preload", o.as = "style")) : /(^img!|\.(png|gif|jpg|svg|webp)$)/.test(h) ? (o = l.createElement("img")).src = p : ((o = l.createElement("script")).src = t, o.async = void 0 === c || c), o.onload = o.onerror = o.onbeforeload = function (e) {
+          var l = e.type[0];
+          if (s) try {
+            o.sheet.cssText.length || (l = "e");
+          } catch (e) {
+            18 != e.code && (l = "e");
+          }
+
+          if ("e" == l) {
+            if ((a += 1) < u) return r(t, i, n, a);
+          } else if ("preload" == o.rel && "style" == o.as) return o.rel = "stylesheet";
+
+          i(t, l, e.defaultPrevented);
+        }, !1 !== d(t, o) && l.head.appendChild(o);
+      }
+
+      function o(e, i, n) {
+        var o, l;
+
+        if (i && i.trim && (o = i), l = (o ? n : i) || {}, o) {
+          if (o in t) throw "LoadJS";
+          t[o] = !0;
+        }
+
+        function c(t, i) {
+          !function (e, t, i) {
+            var n,
+                a,
+                s = (e = e.push ? e : [e]).length,
+                o = s,
+                l = [];
+
+            for (n = function (e, i, n) {
+              if ("e" == i && l.push(e), "b" == i) {
+                if (!n) return;
+                l.push(e);
+              }
+
+              --s || t(l);
+            }, a = 0; a < o; a++) r(e[a], n, i);
+          }(e, function (e) {
+            s(l, e), t && s({
+              success: t,
+              error: i
+            }, e), a(o, e);
+          }, l);
+        }
+
+        if (l.returnPromise) return new Promise(c);
+        c();
+      }
+
+      return o.ready = function (e, t) {
+        return function (e, t) {
+          e = e.push ? e : [e];
+          var a,
+              s,
+              r,
+              o = [],
+              l = e.length,
+              c = l;
+
+          for (a = function (e, i) {
+            i.length && o.push(e), --c || t(o);
+          }; l--;) s = e[l], (r = i[s]) ? a(s, r) : (n[s] = n[s] || []).push(a);
+        }(e, function (e) {
+          s(t, e);
+        }), o;
+      }, o.done = function (e) {
+        a(e, []);
+      }, o.reset = function () {
+        t = {}, i = {}, n = {};
+      }, o.isDefined = function (e) {
+        return e in t;
+      }, o;
+    }();
+  });
+
+  function wt(e) {
+    return new Promise(function (t, i) {
+      bt(e, {
+        success: t,
+        error: i
+      });
+    });
+  }
+
+  function kt(e) {
+    e && !this.embed.hasPlayed && (this.embed.hasPlayed = !0), this.media.paused === e && (this.media.paused = !e, Oe.call(this, this.media, e ? "play" : "pause"));
+  }
+
+  var Tt = {
+    setup: function () {
+      var e = this;
+      be(e.elements.wrapper, e.config.classNames.embed, !0), e.options.speed = e.config.speed.options, Re.call(e), z(window.Vimeo) ? Tt.ready.call(e) : wt(e.config.urls.vimeo.sdk).then(function () {
+        Tt.ready.call(e);
+      }).catch(function (t) {
+        e.debug.warn("Vimeo SDK (player.js) failed to load", t);
+      });
+    },
+    ready: function () {
+      var e = this,
+          t = this,
+          i = t.config.vimeo,
+          n = i.premium,
+          a = i.referrerPolicy,
+          l = r(i, ["premium", "referrerPolicy"]);
+      n && Object.assign(l, {
+        controls: !1,
+        sidedock: !1
+      });
+      var c = st(s({
+        loop: t.config.loop.active,
+        autoplay: t.autoplay,
+        muted: t.muted,
+        gesture: "media",
+        playsinline: !this.config.fullscreen.iosNative
+      }, l)),
+          u = t.media.getAttribute("src");
+      ae(u) && (u = t.media.getAttribute(t.config.attributes.embed.id));
+      var d,
+          h = ae(d = u) ? null : K(Number(d)) ? d : d.match(/^.*(vimeo.com\/|video\/)(\d+).*/) ? RegExp.$2 : d,
+          p = he("iframe"),
+          m = Ue(t.config.urls.vimeo.iframe, h, c);
+      p.setAttribute("src", m), p.setAttribute("allowfullscreen", ""), p.setAttribute("allow", "autoplay,fullscreen,picture-in-picture"), ae(a) || p.setAttribute("referrerPolicy", a);
+      var f = t.poster;
+      if (n) p.setAttribute("data-poster", f), t.media = ge(p, t.media);else {
+        var g = he("div", {
+          class: t.config.classNames.embedContainer,
+          "data-poster": f
+        });
+        g.appendChild(p), t.media = ge(g, t.media);
+      }
+      Je(Ue(t.config.urls.vimeo.api, h), "json").then(function (e) {
+        if (!ae(e)) {
+          var i = new URL(e[0].thumbnail_large);
+          i.pathname = "".concat(i.pathname.split("_")[0], ".jpg"), yt.setPoster.call(t, i.href).catch(function () {});
+        }
+      }), t.embed = new window.Vimeo.Player(p, {
+        autopause: t.config.autopause,
+        muted: t.muted
+      }), t.media.paused = !0, t.media.currentTime = 0, t.supported.ui && t.embed.disableTextTrack(), t.media.play = function () {
+        return kt.call(t, !0), t.embed.play();
+      }, t.media.pause = function () {
+        return kt.call(t, !1), t.embed.pause();
+      }, t.media.stop = function () {
+        t.pause(), t.currentTime = 0;
+      };
+      var y = t.media.currentTime;
+      Object.defineProperty(t.media, "currentTime", {
+        get: function () {
+          return y;
+        },
+        set: function (e) {
+          var i = t.embed,
+              n = t.media,
+              a = t.paused,
+              s = t.volume,
+              r = a && !i.hasPlayed;
+          n.seeking = !0, Oe.call(t, n, "seeking"), Promise.resolve(r && i.setVolume(0)).then(function () {
+            return i.setCurrentTime(e);
+          }).then(function () {
+            return r && i.pause();
+          }).then(function () {
+            return r && i.setVolume(s);
+          }).catch(function () {});
+        }
+      });
+      var v = t.config.speed.selected;
+      Object.defineProperty(t.media, "playbackRate", {
+        get: function () {
+          return v;
+        },
+        set: function (e) {
+          t.embed.setPlaybackRate(e).then(function () {
+            v = e, Oe.call(t, t.media, "ratechange");
+          }).catch(function () {
+            t.options.speed = [1];
+          });
+        }
+      });
+      var b = t.config.volume;
+      Object.defineProperty(t.media, "volume", {
+        get: function () {
+          return b;
+        },
+        set: function (e) {
+          t.embed.setVolume(e).then(function () {
+            b = e, Oe.call(t, t.media, "volumechange");
+          });
+        }
+      });
+      var w = t.config.muted;
+      Object.defineProperty(t.media, "muted", {
+        get: function () {
+          return w;
+        },
+        set: function (e) {
+          var i = !!Q(e) && e;
+          t.embed.setVolume(i ? 0 : t.config.volume).then(function () {
+            w = i, Oe.call(t, t.media, "volumechange");
+          });
+        }
+      });
+      var k,
+          T = t.config.loop;
+      Object.defineProperty(t.media, "loop", {
+        get: function () {
+          return T;
+        },
+        set: function (e) {
+          var i = Q(e) ? e : t.config.loop.active;
+          t.embed.setLoop(i).then(function () {
+            T = i;
+          });
+        }
+      }), t.embed.getVideoUrl().then(function (e) {
+        k = e, nt.setDownloadUrl.call(t);
+      }).catch(function (t) {
+        e.debug.warn(t);
+      }), Object.defineProperty(t.media, "currentSrc", {
+        get: function () {
+          return k;
+        }
+      }), Object.defineProperty(t.media, "ended", {
+        get: function () {
+          return t.currentTime === t.duration;
+        }
+      }), Promise.all([t.embed.getVideoWidth(), t.embed.getVideoHeight()]).then(function (i) {
+        var n = o(i, 2),
+            a = n[0],
+            s = n[1];
+        t.embed.ratio = [a, s], Re.call(e);
+      }), t.embed.setAutopause(t.config.autopause).then(function (e) {
+        t.config.autopause = e;
+      }), t.embed.getVideoTitle().then(function (i) {
+        t.config.title = i, yt.setTitle.call(e);
+      }), t.embed.getCurrentTime().then(function (e) {
+        y = e, Oe.call(t, t.media, "timeupdate");
+      }), t.embed.getDuration().then(function (e) {
+        t.media.duration = e, Oe.call(t, t.media, "durationchange");
+      }), t.embed.getTextTracks().then(function (e) {
+        t.media.textTracks = e, rt.setup.call(t);
+      }), t.embed.on("cuechange", function (e) {
+        var i = e.cues,
+            n = (void 0 === i ? [] : i).map(function (e) {
+          return function (e) {
+            var t = document.createDocumentFragment(),
+                i = document.createElement("div");
+            return t.appendChild(i), i.innerHTML = e, t.firstChild.innerText;
+          }(e.text);
+        });
+        rt.updateCues.call(t, n);
+      }), t.embed.on("loaded", function () {
+        (t.embed.getPaused().then(function (e) {
+          kt.call(t, !e), e || Oe.call(t, t.media, "playing");
+        }), G(t.embed.element) && t.supported.ui) && t.embed.element.setAttribute("tabindex", -1);
+      }), t.embed.on("bufferstart", function () {
+        Oe.call(t, t.media, "waiting");
+      }), t.embed.on("bufferend", function () {
+        Oe.call(t, t.media, "playing");
+      }), t.embed.on("play", function () {
+        kt.call(t, !0), Oe.call(t, t.media, "playing");
+      }), t.embed.on("pause", function () {
+        kt.call(t, !1);
+      }), t.embed.on("timeupdate", function (e) {
+        t.media.seeking = !1, y = e.seconds, Oe.call(t, t.media, "timeupdate");
+      }), t.embed.on("progress", function (e) {
+        t.media.buffered = e.percent, Oe.call(t, t.media, "progress"), 1 === parseInt(e.percent, 10) && Oe.call(t, t.media, "canplaythrough"), t.embed.getDuration().then(function (e) {
+          e !== t.media.duration && (t.media.duration = e, Oe.call(t, t.media, "durationchange"));
+        });
+      }), t.embed.on("seeked", function () {
+        t.media.seeking = !1, Oe.call(t, t.media, "seeked");
+      }), t.embed.on("ended", function () {
+        t.media.paused = !0, Oe.call(t, t.media, "ended");
+      }), t.embed.on("error", function (e) {
+        t.media.error = e, Oe.call(t, t.media, "error");
+      }), setTimeout(function () {
+        return yt.build.call(t);
+      }, 0);
+    }
+  };
+
+  function Ct(e) {
+    e && !this.embed.hasPlayed && (this.embed.hasPlayed = !0), this.media.paused === e && (this.media.paused = !e, Oe.call(this, this.media, e ? "play" : "pause"));
+  }
+
+  function At(e) {
+    return e.noCookie ? "https://www.youtube-nocookie.com" : "http:" === window.location.protocol ? "http://www.youtube.com" : void 0;
+  }
+
+  var St = {
+    setup: function () {
+      var e = this;
+      if (be(this.elements.wrapper, this.config.classNames.embed, !0), z(window.YT) && X(window.YT.Player)) St.ready.call(this);else {
+        var t = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function () {
+          X(t) && t(), St.ready.call(e);
+        }, wt(this.config.urls.youtube.sdk).catch(function (t) {
+          e.debug.warn("YouTube API failed to load", t);
+        });
+      }
+    },
+    getTitle: function (e) {
+      var t = this;
+      Je(Ue(this.config.urls.youtube.api, e)).then(function (e) {
+        if (z(e)) {
+          var i = e.title,
+              n = e.height,
+              a = e.width;
+          t.config.title = i, yt.setTitle.call(t), t.embed.ratio = [a, n];
+        }
+
+        Re.call(t);
+      }).catch(function () {
+        Re.call(t);
+      });
+    },
+    ready: function () {
+      var e = this,
+          t = e.media && e.media.getAttribute("id");
+
+      if (ae(t) || !t.startsWith("youtube-")) {
+        var i = e.media.getAttribute("src");
+        ae(i) && (i = e.media.getAttribute(this.config.attributes.embed.id));
+        var n,
+            a,
+            s = ae(n = i) ? null : n.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/) ? RegExp.$2 : n,
+            r = (a = e.provider, "".concat(a, "-").concat(Math.floor(1e4 * Math.random()))),
+            o = he("div", {
+          id: r,
+          "data-poster": e.poster
+        });
+        e.media = ge(o, e.media);
+
+        var l = function (e) {
+          return "https://i.ytimg.com/vi/".concat(s, "/").concat(e, "default.jpg");
+        };
+
+        gt(l("maxres"), 121).catch(function () {
+          return gt(l("sd"), 121);
+        }).catch(function () {
+          return gt(l("hq"));
+        }).then(function (t) {
+          return yt.setPoster.call(e, t.src);
+        }).then(function (t) {
+          t.includes("maxres") || (e.elements.poster.style.backgroundSize = "cover");
+        }).catch(function () {});
+        var c = e.config.youtube;
+        e.embed = new window.YT.Player(r, {
+          videoId: s,
+          host: At(c),
+          playerVars: ce({}, {
+            autoplay: e.config.autoplay ? 1 : 0,
+            hl: e.config.hl,
+            controls: e.supported.ui ? 0 : 1,
+            disablekb: 1,
+            playsinline: e.config.fullscreen.iosNative ? 0 : 1,
+            cc_load_policy: e.captions.active ? 1 : 0,
+            cc_lang_pref: e.config.captions.language,
+            widget_referrer: window ? window.location.href : null
+          }, c),
+          events: {
+            onError: function (t) {
+              if (!e.media.error) {
+                var i = t.data,
+                    n = {
+                  2: "The request contains an invalid parameter value. For example, this error occurs if you specify a video ID that does not have 11 characters, or if the video ID contains invalid characters, such as exclamation points or asterisks.",
+                  5: "The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.",
+                  100: "The video requested was not found. This error occurs when a video has been removed (for any reason) or has been marked as private.",
+                  101: "The owner of the requested video does not allow it to be played in embedded players.",
+                  150: "The owner of the requested video does not allow it to be played in embedded players."
+                }[i] || "An unknown error occured";
+                e.media.error = {
+                  code: i,
+                  message: n
+                }, Oe.call(e, e.media, "error");
+              }
+            },
+            onPlaybackRateChange: function (t) {
+              var i = t.target;
+              e.media.playbackRate = i.getPlaybackRate(), Oe.call(e, e.media, "ratechange");
+            },
+            onReady: function (t) {
+              if (!X(e.media.play)) {
+                var i = t.target;
+                St.getTitle.call(e, s), e.media.play = function () {
+                  Ct.call(e, !0), i.playVideo();
+                }, e.media.pause = function () {
+                  Ct.call(e, !1), i.pauseVideo();
+                }, e.media.stop = function () {
+                  i.stopVideo();
+                }, e.media.duration = i.getDuration(), e.media.paused = !0, e.media.currentTime = 0, Object.defineProperty(e.media, "currentTime", {
+                  get: function () {
+                    return Number(i.getCurrentTime());
+                  },
+                  set: function (t) {
+                    e.paused && !e.embed.hasPlayed && e.embed.mute(), e.media.seeking = !0, Oe.call(e, e.media, "seeking"), i.seekTo(t);
+                  }
+                }), Object.defineProperty(e.media, "playbackRate", {
+                  get: function () {
+                    return i.getPlaybackRate();
+                  },
+                  set: function (e) {
+                    i.setPlaybackRate(e);
+                  }
+                });
+                var n = e.config.volume;
+                Object.defineProperty(e.media, "volume", {
+                  get: function () {
+                    return n;
+                  },
+                  set: function (t) {
+                    n = t, i.setVolume(100 * n), Oe.call(e, e.media, "volumechange");
+                  }
+                });
+                var a = e.config.muted;
+                Object.defineProperty(e.media, "muted", {
+                  get: function () {
+                    return a;
+                  },
+                  set: function (t) {
+                    var n = Q(t) ? t : a;
+                    a = n, i[n ? "mute" : "unMute"](), Oe.call(e, e.media, "volumechange");
+                  }
+                }), Object.defineProperty(e.media, "currentSrc", {
+                  get: function () {
+                    return i.getVideoUrl();
+                  }
+                }), Object.defineProperty(e.media, "ended", {
+                  get: function () {
+                    return e.currentTime === e.duration;
+                  }
+                });
+                var r = i.getAvailablePlaybackRates();
+                e.options.speed = r.filter(function (t) {
+                  return e.config.speed.options.includes(t);
+                }), e.supported.ui && e.media.setAttribute("tabindex", -1), Oe.call(e, e.media, "timeupdate"), Oe.call(e, e.media, "durationchange"), clearInterval(e.timers.buffering), e.timers.buffering = setInterval(function () {
+                  e.media.buffered = i.getVideoLoadedFraction(), (null === e.media.lastBuffered || e.media.lastBuffered < e.media.buffered) && Oe.call(e, e.media, "progress"), e.media.lastBuffered = e.media.buffered, 1 === e.media.buffered && (clearInterval(e.timers.buffering), Oe.call(e, e.media, "canplaythrough"));
+                }, 200), setTimeout(function () {
+                  return yt.build.call(e);
+                }, 50);
+              }
+            },
+            onStateChange: function (t) {
+              var i = t.target;
+
+              switch (clearInterval(e.timers.playing), e.media.seeking && [1, 2].includes(t.data) && (e.media.seeking = !1, Oe.call(e, e.media, "seeked")), t.data) {
+                case -1:
+                  Oe.call(e, e.media, "timeupdate"), e.media.buffered = i.getVideoLoadedFraction(), Oe.call(e, e.media, "progress");
+                  break;
+
+                case 0:
+                  Ct.call(e, !1), e.media.loop ? (i.stopVideo(), i.playVideo()) : Oe.call(e, e.media, "ended");
+                  break;
+
+                case 1:
+                  e.config.autoplay || !e.media.paused || e.embed.hasPlayed ? (Ct.call(e, !0), Oe.call(e, e.media, "playing"), e.timers.playing = setInterval(function () {
+                    Oe.call(e, e.media, "timeupdate");
+                  }, 50), e.media.duration !== i.getDuration() && (e.media.duration = i.getDuration(), Oe.call(e, e.media, "durationchange"))) : e.media.pause();
+                  break;
+
+                case 2:
+                  e.muted || e.embed.unMute(), Ct.call(e, !1);
+                  break;
+
+                case 3:
+                  Oe.call(e, e.media, "waiting");
+              }
+
+              Oe.call(e, e.elements.container, "statechange", !1, {
+                code: t.data
+              });
+            }
+          }
+        });
+      }
+    }
+  },
+      Pt = {
+    setup: function () {
+      this.media ? (be(this.elements.container, this.config.classNames.type.replace("{0}", this.type), !0), be(this.elements.container, this.config.classNames.provider.replace("{0}", this.provider), !0), this.isEmbed && be(this.elements.container, this.config.classNames.type.replace("{0}", "video"), !0), this.isVideo && (this.elements.wrapper = he("div", {
+        class: this.config.classNames.video
+      }), ue(this.media, this.elements.wrapper), this.elements.poster = he("div", {
+        class: this.config.classNames.poster
+      }), this.elements.wrapper.appendChild(this.elements.poster)), this.isHTML5 ? Ve.setup.call(this) : this.isYouTube ? St.setup.call(this) : this.isVimeo && Tt.setup.call(this)) : this.debug.warn("No media element found!");
+    }
+  },
+      Et = function () {
+    function t(i) {
+      var n = this;
+      e(this, t), this.player = i, this.config = i.config.ads, this.playing = !1, this.initialized = !1, this.elements = {
+        container: null,
+        displayContainer: null
+      }, this.manager = null, this.loader = null, this.cuePoints = null, this.events = {}, this.safetyTimer = null, this.countdownTimer = null, this.managerPromise = new Promise(function (e, t) {
+        n.on("loaded", e), n.on("error", t);
+      }), this.load();
+    }
+
+    return i(t, [{
+      key: "load",
+      value: function () {
+        var e = this;
+        this.enabled && (z(window.google) && z(window.google.ima) ? this.ready() : wt(this.player.config.urls.googleIMA.sdk).then(function () {
+          e.ready();
+        }).catch(function () {
+          e.trigger("error", new Error("Google IMA SDK failed to load"));
+        }));
+      }
+    }, {
+      key: "ready",
+      value: function () {
+        var e,
+            t = this;
+        this.enabled || ((e = this).manager && e.manager.destroy(), e.elements.displayContainer && e.elements.displayContainer.destroy(), e.elements.container.remove()), this.startSafetyTimer(12e3, "ready()"), this.managerPromise.then(function () {
+          t.clearSafetyTimer("onAdsManagerLoaded()");
+        }), this.listeners(), this.setupIMA();
+      }
+    }, {
+      key: "setupIMA",
+      value: function () {
+        var e = this;
+        this.elements.container = he("div", {
+          class: this.player.config.classNames.ads
+        }), this.player.elements.container.appendChild(this.elements.container), google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED), google.ima.settings.setLocale(this.player.config.ads.language), google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.player.config.playsinline), this.elements.displayContainer = new google.ima.AdDisplayContainer(this.elements.container, this.player.media), this.loader = new google.ima.AdsLoader(this.elements.displayContainer), this.loader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (t) {
+          return e.onAdsManagerLoaded(t);
+        }, !1), this.loader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function (t) {
+          return e.onAdError(t);
+        }, !1), this.requestAds();
+      }
+    }, {
+      key: "requestAds",
+      value: function () {
+        var e = this.player.elements.container;
+
+        try {
+          var t = new google.ima.AdsRequest();
+          t.adTagUrl = this.tagUrl, t.linearAdSlotWidth = e.offsetWidth, t.linearAdSlotHeight = e.offsetHeight, t.nonLinearAdSlotWidth = e.offsetWidth, t.nonLinearAdSlotHeight = e.offsetHeight, t.forceNonLinearFullSlot = !1, t.setAdWillPlayMuted(!this.player.muted), this.loader.requestAds(t);
+        } catch (e) {
+          this.onAdError(e);
+        }
+      }
+    }, {
+      key: "pollCountdown",
+      value: function () {
+        var e = this,
+            t = arguments.length > 0 && void 0 !== arguments[0] && arguments[0];
+        if (!t) return clearInterval(this.countdownTimer), void this.elements.container.removeAttribute("data-badge-text");
+
+        var i = function () {
+          var t = it(Math.max(e.manager.getRemainingTime(), 0)),
+              i = "".concat(Xe("advertisement", e.player.config), " - ").concat(t);
+          e.elements.container.setAttribute("data-badge-text", i);
+        };
+
+        this.countdownTimer = setInterval(i, 100);
+      }
+    }, {
+      key: "onAdsManagerLoaded",
+      value: function (e) {
+        var t = this;
+
+        if (this.enabled) {
+          var i = new google.ima.AdsRenderingSettings();
+          i.restoreCustomPlaybackStateOnAdBreakComplete = !0, i.enablePreloading = !0, this.manager = e.getAdsManager(this.player, i), this.cuePoints = this.manager.getCuePoints(), this.manager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function (e) {
+            return t.onAdError(e);
+          }), Object.keys(google.ima.AdEvent.Type).forEach(function (e) {
+            t.manager.addEventListener(google.ima.AdEvent.Type[e], function (e) {
+              return t.onAdEvent(e);
+            });
+          }), this.trigger("loaded");
+        }
+      }
+    }, {
+      key: "addCuePoints",
+      value: function () {
+        var e = this;
+        ae(this.cuePoints) || this.cuePoints.forEach(function (t) {
+          if (0 !== t && -1 !== t && t < e.player.duration) {
+            var i = e.player.elements.progress;
+
+            if (G(i)) {
+              var n = 100 / e.player.duration * t,
+                  a = he("span", {
+                class: e.player.config.classNames.cues
+              });
+              a.style.left = "".concat(n.toString(), "%"), i.appendChild(a);
+            }
+          }
+        });
+      }
+    }, {
+      key: "onAdEvent",
+      value: function (e) {
+        var t = this,
+            i = this.player.elements.container,
+            n = e.getAd(),
+            a = e.getAdData();
+
+        switch (function (e) {
+          Oe.call(t.player, t.player.media, "ads".concat(e.replace(/_/g, "").toLowerCase()));
+        }(e.type), e.type) {
+          case google.ima.AdEvent.Type.LOADED:
+            this.trigger("loaded"), this.pollCountdown(!0), n.isLinear() || (n.width = i.offsetWidth, n.height = i.offsetHeight);
+            break;
+
+          case google.ima.AdEvent.Type.STARTED:
+            this.manager.setVolume(this.player.volume);
+            break;
+
+          case google.ima.AdEvent.Type.ALL_ADS_COMPLETED:
+            this.player.ended ? this.loadAds() : this.loader.contentComplete();
+            break;
+
+          case google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED:
+            this.pauseContent();
+            break;
+
+          case google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED:
+            this.pollCountdown(), this.resumeContent();
+            break;
+
+          case google.ima.AdEvent.Type.LOG:
+            a.adError && this.player.debug.warn("Non-fatal ad error: ".concat(a.adError.getMessage()));
+        }
+      }
+    }, {
+      key: "onAdError",
+      value: function (e) {
+        this.cancel(), this.player.debug.warn("Ads error", e);
+      }
+    }, {
+      key: "listeners",
+      value: function () {
+        var e,
+            t = this,
+            i = this.player.elements.container;
+        this.player.on("canplay", function () {
+          t.addCuePoints();
+        }), this.player.on("ended", function () {
+          t.loader.contentComplete();
+        }), this.player.on("timeupdate", function () {
+          e = t.player.currentTime;
+        }), this.player.on("seeked", function () {
+          var i = t.player.currentTime;
+          ae(t.cuePoints) || t.cuePoints.forEach(function (n, a) {
+            e < n && n < i && (t.manager.discardAdBreak(), t.cuePoints.splice(a, 1));
+          });
+        }), window.addEventListener("resize", function () {
+          t.manager && t.manager.resize(i.offsetWidth, i.offsetHeight, google.ima.ViewMode.NORMAL);
+        });
+      }
+    }, {
+      key: "play",
+      value: function () {
+        var e = this,
+            t = this.player.elements.container;
+        this.managerPromise || this.resumeContent(), this.managerPromise.then(function () {
+          e.manager.setVolume(e.player.volume), e.elements.displayContainer.initialize();
+
+          try {
+            e.initialized || (e.manager.init(t.offsetWidth, t.offsetHeight, google.ima.ViewMode.NORMAL), e.manager.start()), e.initialized = !0;
+          } catch (t) {
+            e.onAdError(t);
+          }
+        }).catch(function () {});
+      }
+    }, {
+      key: "resumeContent",
+      value: function () {
+        this.elements.container.style.zIndex = "", this.playing = !1, qe(this.player.media.play());
+      }
+    }, {
+      key: "pauseContent",
+      value: function () {
+        this.elements.container.style.zIndex = 3, this.playing = !0, this.player.media.pause();
+      }
+    }, {
+      key: "cancel",
+      value: function () {
+        this.initialized && this.resumeContent(), this.trigger("error"), this.loadAds();
+      }
+    }, {
+      key: "loadAds",
+      value: function () {
+        var e = this;
+        this.managerPromise.then(function () {
+          e.manager && e.manager.destroy(), e.managerPromise = new Promise(function (t) {
+            e.on("loaded", t), e.player.debug.log(e.manager);
+          }), e.initialized = !1, e.requestAds();
+        }).catch(function () {});
+      }
+    }, {
+      key: "trigger",
+      value: function (e) {
+        for (var t = this, i = arguments.length, n = new Array(i > 1 ? i - 1 : 0), a = 1; a < i; a++) n[a - 1] = arguments[a];
+
+        var s = this.events[e];
+        $(s) && s.forEach(function (e) {
+          X(e) && e.apply(t, n);
+        });
+      }
+    }, {
+      key: "on",
+      value: function (e, t) {
+        return $(this.events[e]) || (this.events[e] = []), this.events[e].push(t), this;
+      }
+    }, {
+      key: "startSafetyTimer",
+      value: function (e, t) {
+        var i = this;
+        this.player.debug.log("Safety timer invoked from: ".concat(t)), this.safetyTimer = setTimeout(function () {
+          i.cancel(), i.clearSafetyTimer("startSafetyTimer()");
+        }, e);
+      }
+    }, {
+      key: "clearSafetyTimer",
+      value: function (e) {
+        W(this.safetyTimer) || (this.player.debug.log("Safety timer cleared from: ".concat(e)), clearTimeout(this.safetyTimer), this.safetyTimer = null);
+      }
+    }, {
+      key: "enabled",
+      get: function () {
+        var e = this.config;
+        return this.player.isHTML5 && this.player.isVideo && e.enabled && (!ae(e.publisherId) || ne(e.tagUrl));
+      }
+    }, {
+      key: "tagUrl",
+      get: function () {
+        var e = this.config;
+        if (ne(e.tagUrl)) return e.tagUrl;
+        var t = {
+          AV_PUBLISHERID: "58c25bb0073ef448b1087ad6",
+          AV_CHANNELID: "5a0458dc28a06145e4519d21",
+          AV_URL: window.location.hostname,
+          cb: Date.now(),
+          AV_WIDTH: 640,
+          AV_HEIGHT: 480,
+          AV_CDIM2: e.publisherId
+        };
+        return "".concat("https://go.aniview.com/api/adserver6/vast/", "?").concat(st(t));
+      }
+    }]), t;
+  }(),
+      Nt = function (e, t) {
+    var i = {};
+    return e > t.width / t.height ? (i.width = t.width, i.height = 1 / e * t.width) : (i.height = t.height, i.width = e * t.height), i;
+  },
+      Mt = function () {
+    function t(i) {
+      e(this, t), this.player = i, this.thumbnails = [], this.loaded = !1, this.lastMouseMoveTime = Date.now(), this.mouseDown = !1, this.loadedImages = [], this.elements = {
+        thumb: {},
+        scrubbing: {}
+      }, this.load();
+    }
+
+    return i(t, [{
+      key: "load",
+      value: function () {
+        var e = this;
+        this.player.elements.display.seekTooltip && (this.player.elements.display.seekTooltip.hidden = this.enabled), this.enabled && this.getThumbnails().then(function () {
+          e.enabled && (e.render(), e.determineContainerAutoSizing(), e.loaded = !0);
+        });
+      }
+    }, {
+      key: "getThumbnails",
+      value: function () {
+        var e = this;
+        return new Promise(function (t) {
+          var i = e.player.config.previewThumbnails.src;
+          if (ae(i)) throw new Error("Missing previewThumbnails.src config attribute");
+
+          var n = function () {
+            e.thumbnails.sort(function (e, t) {
+              return e.height - t.height;
+            }), e.player.debug.log("Preview thumbnails", e.thumbnails), t();
+          };
+
+          if (X(i)) i(function (t) {
+            e.thumbnails = t, n();
+          });else {
+            var a = (Y(i) ? [i] : i).map(function (t) {
+              return e.getThumbnail(t);
+            });
+            Promise.all(a).then(n);
+          }
+        });
+      }
+    }, {
+      key: "getThumbnail",
+      value: function (e) {
+        var t = this;
+        return new Promise(function (i) {
+          Je(e).then(function (n) {
+            var a,
+                s,
+                r = {
+              frames: (a = n, s = [], a.split(/\r\n\r\n|\n\n|\r\r/).forEach(function (e) {
+                var t = {};
+                e.split(/\r\n|\n|\r/).forEach(function (e) {
+                  if (K(t.startTime)) {
+                    if (!ae(e.trim()) && ae(t.text)) {
+                      var i = e.trim().split("#xywh="),
+                          n = o(i, 1);
+
+                      if (t.text = n[0], i[1]) {
+                        var a = o(i[1].split(","), 4);
+                        t.x = a[0], t.y = a[1], t.w = a[2], t.h = a[3];
+                      }
+                    }
+                  } else {
+                    var s = e.match(/([0-9]{2})?:?([0-9]{2}):([0-9]{2}).([0-9]{2,3})( ?--> ?)([0-9]{2})?:?([0-9]{2}):([0-9]{2}).([0-9]{2,3})/);
+                    s && (t.startTime = 60 * Number(s[1] || 0) * 60 + 60 * Number(s[2]) + Number(s[3]) + Number("0.".concat(s[4])), t.endTime = 60 * Number(s[6] || 0) * 60 + 60 * Number(s[7]) + Number(s[8]) + Number("0.".concat(s[9])));
+                  }
+                }), t.text && s.push(t);
+              }), s),
+              height: null,
+              urlPrefix: ""
+            };
+            r.frames[0].text.startsWith("/") || r.frames[0].text.startsWith("http://") || r.frames[0].text.startsWith("https://") || (r.urlPrefix = e.substring(0, e.lastIndexOf("/") + 1));
+            var l = new Image();
+            l.onload = function () {
+              r.height = l.naturalHeight, r.width = l.naturalWidth, t.thumbnails.push(r), i();
+            }, l.src = r.urlPrefix + r.frames[0].text;
+          });
+        });
+      }
+    }, {
+      key: "startMove",
+      value: function (e) {
+        if (this.loaded && Z(e) && ["touchmove", "mousemove"].includes(e.type) && this.player.media.duration) {
+          if ("touchmove" === e.type) this.seekTime = this.player.media.duration * (this.player.elements.inputs.seek.value / 100);else {
+            var t = this.player.elements.progress.getBoundingClientRect(),
+                i = 100 / t.width * (e.pageX - t.left);
+            this.seekTime = this.player.media.duration * (i / 100), this.seekTime < 0 && (this.seekTime = 0), this.seekTime > this.player.media.duration - 1 && (this.seekTime = this.player.media.duration - 1), this.mousePosX = e.pageX, this.elements.thumb.time.innerText = it(this.seekTime);
+          }
+          this.showImageAtCurrentTime();
+        }
+      }
+    }, {
+      key: "endMove",
+      value: function () {
+        this.toggleThumbContainer(!1, !0);
+      }
+    }, {
+      key: "startScrubbing",
+      value: function (e) {
+        (W(e.button) || !1 === e.button || 0 === e.button) && (this.mouseDown = !0, this.player.media.duration && (this.toggleScrubbingContainer(!0), this.toggleThumbContainer(!1, !0), this.showImageAtCurrentTime()));
+      }
+    }, {
+      key: "endScrubbing",
+      value: function () {
+        var e = this;
+        this.mouseDown = !1, Math.ceil(this.lastTime) === Math.ceil(this.player.media.currentTime) ? this.toggleScrubbingContainer(!1) : Le.call(this.player, this.player.media, "timeupdate", function () {
+          e.mouseDown || e.toggleScrubbingContainer(!1);
+        });
+      }
+    }, {
+      key: "listeners",
+      value: function () {
+        var e = this;
+        this.player.on("play", function () {
+          e.toggleThumbContainer(!1, !0);
+        }), this.player.on("seeked", function () {
+          e.toggleThumbContainer(!1);
+        }), this.player.on("timeupdate", function () {
+          e.lastTime = e.player.media.currentTime;
+        });
+      }
+    }, {
+      key: "render",
+      value: function () {
+        this.elements.thumb.container = he("div", {
+          class: this.player.config.classNames.previewThumbnails.thumbContainer
+        }), this.elements.thumb.imageContainer = he("div", {
+          class: this.player.config.classNames.previewThumbnails.imageContainer
+        }), this.elements.thumb.container.appendChild(this.elements.thumb.imageContainer);
+        var e = he("div", {
+          class: this.player.config.classNames.previewThumbnails.timeContainer
+        });
+        this.elements.thumb.time = he("span", {}, "00:00"), e.appendChild(this.elements.thumb.time), this.elements.thumb.container.appendChild(e), G(this.player.elements.progress) && this.player.elements.progress.appendChild(this.elements.thumb.container), this.elements.scrubbing.container = he("div", {
+          class: this.player.config.classNames.previewThumbnails.scrubbingContainer
+        }), this.player.elements.wrapper.appendChild(this.elements.scrubbing.container);
+      }
+    }, {
+      key: "destroy",
+      value: function () {
+        this.elements.thumb.container && this.elements.thumb.container.remove(), this.elements.scrubbing.container && this.elements.scrubbing.container.remove();
+      }
+    }, {
+      key: "showImageAtCurrentTime",
+      value: function () {
+        var e = this;
+        this.mouseDown ? this.setScrubbingContainerSize() : this.setThumbContainerSizeAndPos();
+        var t = this.thumbnails[0].frames.findIndex(function (t) {
+          return e.seekTime >= t.startTime && e.seekTime <= t.endTime;
+        }),
+            i = t >= 0,
+            n = 0;
+        this.mouseDown || this.toggleThumbContainer(i), i && (this.thumbnails.forEach(function (i, a) {
+          e.loadedImages.includes(i.frames[t].text) && (n = a);
+        }), t !== this.showingThumb && (this.showingThumb = t, this.loadImage(n)));
+      }
+    }, {
+      key: "loadImage",
+      value: function () {
+        var e = this,
+            t = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
+            i = this.showingThumb,
+            n = this.thumbnails[t],
+            a = n.urlPrefix,
+            s = n.frames[i],
+            r = n.frames[i].text,
+            o = a + r;
+        if (this.currentImageElement && this.currentImageElement.dataset.filename === r) this.showImage(this.currentImageElement, s, t, i, r, !1), this.currentImageElement.dataset.index = i, this.removeOldImages(this.currentImageElement);else {
+          this.loadingImage && this.usingSprites && (this.loadingImage.onload = null);
+          var l = new Image();
+          l.src = o, l.dataset.index = i, l.dataset.filename = r, this.showingThumbFilename = r, this.player.debug.log("Loading image: ".concat(o)), l.onload = function () {
+            return e.showImage(l, s, t, i, r, !0);
+          }, this.loadingImage = l, this.removeOldImages(l);
+        }
+      }
+    }, {
+      key: "showImage",
+      value: function (e, t, i, n, a) {
+        var s = !(arguments.length > 5 && void 0 !== arguments[5]) || arguments[5];
+        this.player.debug.log("Showing thumb: ".concat(a, ". num: ").concat(n, ". qual: ").concat(i, ". newimg: ").concat(s)), this.setImageSizeAndOffset(e, t), s && (this.currentImageContainer.appendChild(e), this.currentImageElement = e, this.loadedImages.includes(a) || this.loadedImages.push(a)), this.preloadNearby(n, !0).then(this.preloadNearby(n, !1)).then(this.getHigherQuality(i, e, t, a));
+      }
+    }, {
+      key: "removeOldImages",
+      value: function (e) {
+        var t = this;
+        Array.from(this.currentImageContainer.children).forEach(function (i) {
+          if ("img" === i.tagName.toLowerCase()) {
+            var n = t.usingSprites ? 500 : 1e3;
+
+            if (i.dataset.index !== e.dataset.index && !i.dataset.deleting) {
+              i.dataset.deleting = !0;
+              var a = t.currentImageContainer;
+              setTimeout(function () {
+                a.removeChild(i), t.player.debug.log("Removing thumb: ".concat(i.dataset.filename));
+              }, n);
+            }
+          }
+        });
+      }
+    }, {
+      key: "preloadNearby",
+      value: function (e) {
+        var t = this,
+            i = !(arguments.length > 1 && void 0 !== arguments[1]) || arguments[1];
+        return new Promise(function (n) {
+          setTimeout(function () {
+            var a = t.thumbnails[0].frames[e].text;
+
+            if (t.showingThumbFilename === a) {
+              var s;
+              s = i ? t.thumbnails[0].frames.slice(e) : t.thumbnails[0].frames.slice(0, e).reverse();
+              var r = !1;
+              s.forEach(function (e) {
+                var i = e.text;
+
+                if (i !== a && !t.loadedImages.includes(i)) {
+                  r = !0, t.player.debug.log("Preloading thumb filename: ".concat(i));
+                  var s = t.thumbnails[0].urlPrefix + i,
+                      o = new Image();
+                  o.src = s, o.onload = function () {
+                    t.player.debug.log("Preloaded thumb filename: ".concat(i)), t.loadedImages.includes(i) || t.loadedImages.push(i), n();
+                  };
+                }
+              }), r || n();
+            }
+          }, 300);
+        });
+      }
+    }, {
+      key: "getHigherQuality",
+      value: function (e, t, i, n) {
+        var a = this;
+
+        if (e < this.thumbnails.length - 1) {
+          var s = t.naturalHeight;
+          this.usingSprites && (s = i.h), s < this.thumbContainerHeight && setTimeout(function () {
+            a.showingThumbFilename === n && (a.player.debug.log("Showing higher quality thumb for: ".concat(n)), a.loadImage(e + 1));
+          }, 300);
+        }
+      }
+    }, {
+      key: "toggleThumbContainer",
+      value: function () {
+        var e = arguments.length > 0 && void 0 !== arguments[0] && arguments[0],
+            t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1],
+            i = this.player.config.classNames.previewThumbnails.thumbContainerShown;
+        this.elements.thumb.container.classList.toggle(i, e), !e && t && (this.showingThumb = null, this.showingThumbFilename = null);
+      }
+    }, {
+      key: "toggleScrubbingContainer",
+      value: function () {
+        var e = arguments.length > 0 && void 0 !== arguments[0] && arguments[0],
+            t = this.player.config.classNames.previewThumbnails.scrubbingContainerShown;
+        this.elements.scrubbing.container.classList.toggle(t, e), e || (this.showingThumb = null, this.showingThumbFilename = null);
+      }
+    }, {
+      key: "determineContainerAutoSizing",
+      value: function () {
+        (this.elements.thumb.imageContainer.clientHeight > 20 || this.elements.thumb.imageContainer.clientWidth > 20) && (this.sizeSpecifiedInCSS = !0);
+      }
+    }, {
+      key: "setThumbContainerSizeAndPos",
+      value: function () {
+        if (this.sizeSpecifiedInCSS) {
+          if (this.elements.thumb.imageContainer.clientHeight > 20 && this.elements.thumb.imageContainer.clientWidth < 20) {
+            var e = Math.floor(this.elements.thumb.imageContainer.clientHeight * this.thumbAspectRatio);
+            this.elements.thumb.imageContainer.style.width = "".concat(e, "px");
+          } else if (this.elements.thumb.imageContainer.clientHeight < 20 && this.elements.thumb.imageContainer.clientWidth > 20) {
+            var t = Math.floor(this.elements.thumb.imageContainer.clientWidth / this.thumbAspectRatio);
+            this.elements.thumb.imageContainer.style.height = "".concat(t, "px");
+          }
+        } else {
+          var i = Math.floor(this.thumbContainerHeight * this.thumbAspectRatio);
+          this.elements.thumb.imageContainer.style.height = "".concat(this.thumbContainerHeight, "px"), this.elements.thumb.imageContainer.style.width = "".concat(i, "px");
+        }
+
+        this.setThumbContainerPos();
+      }
+    }, {
+      key: "setThumbContainerPos",
+      value: function () {
+        var e = this.player.elements.progress.getBoundingClientRect(),
+            t = this.player.elements.container.getBoundingClientRect(),
+            i = this.elements.thumb.container,
+            n = t.left - e.left + 10,
+            a = t.right - e.left - i.clientWidth - 10,
+            s = this.mousePosX - e.left - i.clientWidth / 2;
+        s < n && (s = n), s > a && (s = a), i.style.left = "".concat(s, "px");
+      }
+    }, {
+      key: "setScrubbingContainerSize",
+      value: function () {
+        var e = Nt(this.thumbAspectRatio, {
+          width: this.player.media.clientWidth,
+          height: this.player.media.clientHeight
+        }),
+            t = e.width,
+            i = e.height;
+        this.elements.scrubbing.container.style.width = "".concat(t, "px"), this.elements.scrubbing.container.style.height = "".concat(i, "px");
+      }
+    }, {
+      key: "setImageSizeAndOffset",
+      value: function (e, t) {
+        if (this.usingSprites) {
+          var i = this.thumbContainerHeight / t.h;
+          e.style.height = "".concat(e.naturalHeight * i, "px"), e.style.width = "".concat(e.naturalWidth * i, "px"), e.style.left = "-".concat(t.x * i, "px"), e.style.top = "-".concat(t.y * i, "px");
+        }
+      }
+    }, {
+      key: "enabled",
+      get: function () {
+        return this.player.isHTML5 && this.player.isVideo && this.player.config.previewThumbnails.enabled;
+      }
+    }, {
+      key: "currentImageContainer",
+      get: function () {
+        return this.mouseDown ? this.elements.scrubbing.container : this.elements.thumb.imageContainer;
+      }
+    }, {
+      key: "usingSprites",
+      get: function () {
+        return Object.keys(this.thumbnails[0].frames[0]).includes("w");
+      }
+    }, {
+      key: "thumbAspectRatio",
+      get: function () {
+        return this.usingSprites ? this.thumbnails[0].frames[0].w / this.thumbnails[0].frames[0].h : this.thumbnails[0].width / this.thumbnails[0].height;
+      }
+    }, {
+      key: "thumbContainerHeight",
+      get: function () {
+        return this.mouseDown ? Nt(this.thumbAspectRatio, {
+          width: this.player.media.clientWidth,
+          height: this.player.media.clientHeight
+        }).height : this.sizeSpecifiedInCSS ? this.elements.thumb.imageContainer.clientHeight : Math.floor(this.player.media.clientWidth / this.thumbAspectRatio / 4);
+      }
+    }, {
+      key: "currentImageElement",
+      get: function () {
+        return this.mouseDown ? this.currentScrubbingImageElement : this.currentThumbnailImageElement;
+      },
+      set: function (e) {
+        this.mouseDown ? this.currentScrubbingImageElement = e : this.currentThumbnailImageElement = e;
+      }
+    }]), t;
+  }(),
+      xt = {
+    insertElements: function (e, t) {
+      var i = this;
+      Y(t) ? pe(e, this.media, {
+        src: t
+      }) : $(t) && t.forEach(function (t) {
+        pe(e, i.media, t);
+      });
+    },
+    change: function (e) {
+      var t = this;
+      le(e, "sources.length") ? (Ve.cancelRequests.call(this), this.destroy.call(this, function () {
+        t.options.quality = [], me(t.media), t.media = null, G(t.elements.container) && t.elements.container.removeAttribute("class");
+        var i = e.sources,
+            n = e.type,
+            a = o(i, 1)[0],
+            s = a.provider,
+            r = void 0 === s ? ut.html5 : s,
+            l = a.src,
+            c = "html5" === r ? n : "div",
+            u = "html5" === r ? {} : {
+          src: l
+        };
+        Object.assign(t, {
+          provider: r,
+          type: n,
+          supported: Ee.check(n, r, t.config.playsinline),
+          media: he(c, u)
+        }), t.elements.container.appendChild(t.media), Q(e.autoplay) && (t.config.autoplay = e.autoplay), t.isHTML5 && (t.config.crossorigin && t.media.setAttribute("crossorigin", ""), t.config.autoplay && t.media.setAttribute("autoplay", ""), ae(e.poster) || (t.poster = e.poster), t.config.loop.active && t.media.setAttribute("loop", ""), t.config.muted && t.media.setAttribute("muted", ""), t.config.playsinline && t.media.setAttribute("playsinline", "")), yt.addStyleHook.call(t), t.isHTML5 && xt.insertElements.call(t, "source", i), t.config.title = e.title, Pt.setup.call(t), t.isHTML5 && Object.keys(e).includes("tracks") && xt.insertElements.call(t, "track", e.tracks), (t.isHTML5 || t.isEmbed && !t.supported.ui) && yt.build.call(t), t.isHTML5 && t.media.load(), ae(e.previewThumbnails) || (Object.assign(t.config.previewThumbnails, e.previewThumbnails), t.previewThumbnails && t.previewThumbnails.loaded && (t.previewThumbnails.destroy(), t.previewThumbnails = null), t.config.previewThumbnails.enabled && (t.previewThumbnails = new Mt(t))), t.fullscreen.update();
+      }, !0)) : this.debug.warn("Invalid source format");
+    }
+  };
+
+  var It,
+      Lt = function () {
+    function t(i, n) {
+      var a = this;
+      if (e(this, t), this.timers = {}, this.ready = !1, this.loading = !1, this.failed = !1, this.touch = Ee.touch, this.media = i, Y(this.media) && (this.media = document.querySelectorAll(this.media)), (window.jQuery && this.media instanceof jQuery || J(this.media) || $(this.media)) && (this.media = this.media[0]), this.config = ce({}, ot, t.defaults, n || {}, function () {
+        try {
+          return JSON.parse(a.media.getAttribute("data-plyr-config"));
+        } catch (e) {
+          return {};
+        }
+      }()), this.elements = {
+        container: null,
+        fullscreen: null,
+        captions: null,
+        buttons: {},
+        display: {},
+        progress: {},
+        inputs: {},
+        settings: {
+          popup: null,
+          menu: null,
+          panels: {},
+          buttons: {}
+        }
+      }, this.captions = {
+        active: null,
+        currentTrack: -1,
+        meta: new WeakMap()
+      }, this.fullscreen = {
+        active: !1
+      }, this.options = {
+        speed: [],
+        quality: []
+      }, this.debug = new mt(this.config.debug), this.debug.log("Config", this.config), this.debug.log("Support", Ee), !W(this.media) && G(this.media)) {
+        if (this.media.plyr) this.debug.warn("Target already setup");else if (this.config.enabled) {
+          if (Ee.check().api) {
+            var s = this.media.cloneNode(!0);
+            s.autoplay = !1, this.elements.original = s;
+            var r = this.media.tagName.toLowerCase(),
+                o = null,
+                l = null;
+
+            switch (r) {
+              case "div":
+                if (o = this.media.querySelector("iframe"), G(o)) {
+                  if (l = at(o.getAttribute("src")), this.provider = function (e) {
+                    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtube-nocookie\.com|youtu\.?be)\/.+$/.test(e) ? ut.youtube : /^https?:\/\/player.vimeo.com\/video\/\d{0,9}(?=\b|\/)/.test(e) ? ut.vimeo : null;
+                  }(l.toString()), this.elements.container = this.media, this.media = o, this.elements.container.className = "", l.search.length) {
+                    var c = ["1", "true"];
+                    c.includes(l.searchParams.get("autoplay")) && (this.config.autoplay = !0), c.includes(l.searchParams.get("loop")) && (this.config.loop.active = !0), this.isYouTube ? (this.config.playsinline = c.includes(l.searchParams.get("playsinline")), this.config.youtube.hl = l.searchParams.get("hl")) : this.config.playsinline = !0;
+                  }
+                } else this.provider = this.media.getAttribute(this.config.attributes.embed.provider), this.media.removeAttribute(this.config.attributes.embed.provider);
+
+                if (ae(this.provider) || !Object.keys(ut).includes(this.provider)) return void this.debug.error("Setup failed: Invalid provider");
+                this.type = ht;
+                break;
+
+              case "video":
+              case "audio":
+                this.type = r, this.provider = ut.html5, this.media.hasAttribute("crossorigin") && (this.config.crossorigin = !0), this.media.hasAttribute("autoplay") && (this.config.autoplay = !0), (this.media.hasAttribute("playsinline") || this.media.hasAttribute("webkit-playsinline")) && (this.config.playsinline = !0), this.media.hasAttribute("muted") && (this.config.muted = !0), this.media.hasAttribute("loop") && (this.config.loop.active = !0);
+                break;
+
+              default:
+                return void this.debug.error("Setup failed: unsupported type");
+            }
+
+            this.supported = Ee.check(this.type, this.provider, this.config.playsinline), this.supported.api ? (this.eventListeners = [], this.listeners = new vt(this), this.storage = new $e(this), this.media.plyr = this, G(this.elements.container) || (this.elements.container = he("div", {
+              tabindex: 0
+            }), ue(this.media, this.elements.container)), yt.migrateStyles.call(this), yt.addStyleHook.call(this), Pt.setup.call(this), this.config.debug && xe.call(this, this.elements.container, this.config.events.join(" "), function (e) {
+              a.debug.log("event: ".concat(e.type));
+            }), this.fullscreen = new ft(this), (this.isHTML5 || this.isEmbed && !this.supported.ui) && yt.build.call(this), this.listeners.container(), this.listeners.global(), this.config.ads.enabled && (this.ads = new Et(this)), this.isHTML5 && this.config.autoplay && setTimeout(function () {
+              return qe(a.play());
+            }, 10), this.lastSeekTime = 0, this.config.previewThumbnails.enabled && (this.previewThumbnails = new Mt(this))) : this.debug.error("Setup failed: no support");
+          } else this.debug.error("Setup failed: no support");
+        } else this.debug.error("Setup failed: disabled by config");
+      } else this.debug.error("Setup failed: no suitable element passed");
+    }
+
+    return i(t, [{
+      key: "play",
+      value: function () {
+        var e = this;
+        return X(this.media.play) ? (this.ads && this.ads.enabled && this.ads.managerPromise.then(function () {
+          return e.ads.play();
+        }).catch(function () {
+          return qe(e.media.play());
+        }), this.media.play()) : null;
+      }
+    }, {
+      key: "pause",
+      value: function () {
+        return this.playing && X(this.media.pause) ? this.media.pause() : null;
+      }
+    }, {
+      key: "togglePlay",
+      value: function (e) {
+        return (Q(e) ? e : !this.playing) ? this.play() : this.pause();
+      }
+    }, {
+      key: "stop",
+      value: function () {
+        this.isHTML5 ? (this.pause(), this.restart()) : X(this.media.stop) && this.media.stop();
+      }
+    }, {
+      key: "restart",
+      value: function () {
+        this.currentTime = 0;
+      }
+    }, {
+      key: "rewind",
+      value: function (e) {
+        this.currentTime -= K(e) ? e : this.config.seekTime;
+      }
+    }, {
+      key: "forward",
+      value: function (e) {
+        this.currentTime += K(e) ? e : this.config.seekTime;
+      }
+    }, {
+      key: "increaseVolume",
+      value: function (e) {
+        var t = this.media.muted ? 0 : this.volume;
+        this.volume = t + (K(e) ? e : 0);
+      }
+    }, {
+      key: "decreaseVolume",
+      value: function (e) {
+        this.increaseVolume(-e);
+      }
+    }, {
+      key: "toggleCaptions",
+      value: function (e) {
+        rt.toggle.call(this, e, !1);
+      }
+    }, {
+      key: "airplay",
+      value: function () {
+        Ee.airplay && this.media.webkitShowPlaybackTargetPicker();
+      }
+    }, {
+      key: "toggleControls",
+      value: function (e) {
+        if (this.supported.ui && !this.isAudio) {
+          var t = we(this.elements.container, this.config.classNames.hideControls),
+              i = void 0 === e ? void 0 : !e,
+              n = be(this.elements.container, this.config.classNames.hideControls, i);
+
+          if (n && $(this.config.controls) && this.config.controls.includes("settings") && !ae(this.config.settings) && nt.toggleMenu.call(this, !1), n !== t) {
+            var a = n ? "controlshidden" : "controlsshown";
+            Oe.call(this, this.media, a);
+          }
+
+          return !n;
+        }
+
+        return !1;
+      }
+    }, {
+      key: "on",
+      value: function (e, t) {
+        xe.call(this, this.elements.container, e, t);
+      }
+    }, {
+      key: "once",
+      value: function (e, t) {
+        Le.call(this, this.elements.container, e, t);
+      }
+    }, {
+      key: "off",
+      value: function (e, t) {
+        Ie(this.elements.container, e, t);
+      }
+    }, {
+      key: "destroy",
+      value: function (e) {
+        var t = this,
+            i = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
+
+        if (this.ready) {
+          var n = function () {
+            document.body.style.overflow = "", t.embed = null, i ? (Object.keys(t.elements).length && (me(t.elements.buttons.play), me(t.elements.captions), me(t.elements.controls), me(t.elements.wrapper), t.elements.buttons.play = null, t.elements.captions = null, t.elements.controls = null, t.elements.wrapper = null), X(e) && e()) : (_e.call(t), ge(t.elements.original, t.elements.container), Oe.call(t, t.elements.original, "destroyed", !0), X(e) && e.call(t.elements.original), t.ready = !1, setTimeout(function () {
+              t.elements = null, t.media = null;
+            }, 200));
+          };
+
+          this.stop(), clearTimeout(this.timers.loading), clearTimeout(this.timers.controls), clearTimeout(this.timers.resized), this.isHTML5 ? (yt.toggleNativeControls.call(this, !0), n()) : this.isYouTube ? (clearInterval(this.timers.buffering), clearInterval(this.timers.playing), null !== this.embed && X(this.embed.destroy) && this.embed.destroy(), n()) : this.isVimeo && (null !== this.embed && this.embed.unload().then(n), setTimeout(n, 200));
+        }
+      }
+    }, {
+      key: "supports",
+      value: function (e) {
+        return Ee.mime.call(this, e);
+      }
+    }, {
+      key: "isHTML5",
+      get: function () {
+        return this.provider === ut.html5;
+      }
+    }, {
+      key: "isEmbed",
+      get: function () {
+        return this.isYouTube || this.isVimeo;
+      }
+    }, {
+      key: "isYouTube",
+      get: function () {
+        return this.provider === ut.youtube;
+      }
+    }, {
+      key: "isVimeo",
+      get: function () {
+        return this.provider === ut.vimeo;
+      }
+    }, {
+      key: "isVideo",
+      get: function () {
+        return this.type === ht;
+      }
+    }, {
+      key: "isAudio",
+      get: function () {
+        return this.type === dt;
+      }
+    }, {
+      key: "playing",
+      get: function () {
+        return Boolean(this.ready && !this.paused && !this.ended);
+      }
+    }, {
+      key: "paused",
+      get: function () {
+        return Boolean(this.media.paused);
+      }
+    }, {
+      key: "stopped",
+      get: function () {
+        return Boolean(this.paused && 0 === this.currentTime);
+      }
+    }, {
+      key: "ended",
+      get: function () {
+        return Boolean(this.media.ended);
+      }
+    }, {
+      key: "currentTime",
+      set: function (e) {
+        if (this.duration) {
+          var t = K(e) && e > 0;
+          this.media.currentTime = t ? Math.min(e, this.duration) : 0, this.debug.log("Seeking to ".concat(this.currentTime, " seconds"));
+        }
+      },
+      get: function () {
+        return Number(this.media.currentTime);
+      }
+    }, {
+      key: "buffered",
+      get: function () {
+        var e = this.media.buffered;
+        return K(e) ? e : e && e.length && this.duration > 0 ? e.end(0) / this.duration : 0;
+      }
+    }, {
+      key: "seeking",
+      get: function () {
+        return Boolean(this.media.seeking);
+      }
+    }, {
+      key: "duration",
+      get: function () {
+        var e = parseFloat(this.config.duration),
+            t = (this.media || {}).duration,
+            i = K(t) && t !== 1 / 0 ? t : 0;
+        return e || i;
+      }
+    }, {
+      key: "volume",
+      set: function (e) {
+        var t = e;
+        Y(t) && (t = Number(t)), K(t) || (t = this.storage.get("volume")), K(t) || (t = this.config.volume), t > 1 && (t = 1), t < 0 && (t = 0), this.config.volume = t, this.media.volume = t, !ae(e) && this.muted && t > 0 && (this.muted = !1);
+      },
+      get: function () {
+        return Number(this.media.volume);
+      }
+    }, {
+      key: "muted",
+      set: function (e) {
+        var t = e;
+        Q(t) || (t = this.storage.get("muted")), Q(t) || (t = this.config.muted), this.config.muted = t, this.media.muted = t;
+      },
+      get: function () {
+        return Boolean(this.media.muted);
+      }
+    }, {
+      key: "hasAudio",
+      get: function () {
+        return !this.isHTML5 || !!this.isAudio || Boolean(this.media.mozHasAudio) || Boolean(this.media.webkitAudioDecodedByteCount) || Boolean(this.media.audioTracks && this.media.audioTracks.length);
+      }
+    }, {
+      key: "speed",
+      set: function (e) {
+        var t = this,
+            i = null;
+        K(e) && (i = e), K(i) || (i = this.storage.get("speed")), K(i) || (i = this.config.speed.selected);
+        var n = this.minimumSpeed,
+            a = this.maximumSpeed;
+        i = function () {
+          var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
+              t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0,
+              i = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : 255;
+          return Math.min(Math.max(e, t), i);
+        }(i, n, a), this.config.speed.selected = i, setTimeout(function () {
+          t.media.playbackRate = i;
+        }, 0);
+      },
+      get: function () {
+        return Number(this.media.playbackRate);
+      }
+    }, {
+      key: "minimumSpeed",
+      get: function () {
+        return this.isYouTube ? Math.min.apply(Math, l(this.options.speed)) : this.isVimeo ? .5 : .0625;
+      }
+    }, {
+      key: "maximumSpeed",
+      get: function () {
+        return this.isYouTube ? Math.max.apply(Math, l(this.options.speed)) : this.isVimeo ? 2 : 16;
+      }
+    }, {
+      key: "quality",
+      set: function (e) {
+        var t = this.config.quality,
+            i = this.options.quality;
+
+        if (i.length) {
+          var n = [!ae(e) && Number(e), this.storage.get("quality"), t.selected, t.default].find(K),
+              a = !0;
+
+          if (!i.includes(n)) {
+            var s = function (e, t) {
+              return $(e) && e.length ? e.reduce(function (e, i) {
+                return Math.abs(i - t) < Math.abs(e - t) ? i : e;
+              }) : null;
+            }(i, n);
+
+            this.debug.warn("Unsupported quality option: ".concat(n, ", using ").concat(s, " instead")), n = s, a = !1;
+          }
+
+          t.selected = n, this.media.quality = n, a && this.storage.set({
+            quality: n
+          });
+        }
+      },
+      get: function () {
+        return this.media.quality;
+      }
+    }, {
+      key: "loop",
+      set: function (e) {
+        var t = Q(e) ? e : this.config.loop.active;
+        this.config.loop.active = t, this.media.loop = t;
+      },
+      get: function () {
+        return Boolean(this.media.loop);
+      }
+    }, {
+      key: "source",
+      set: function (e) {
+        xt.change.call(this, e);
+      },
+      get: function () {
+        return this.media.currentSrc;
+      }
+    }, {
+      key: "download",
+      get: function () {
+        var e = this.config.urls.download;
+        return ne(e) ? e : this.source;
+      },
+      set: function (e) {
+        ne(e) && (this.config.urls.download = e, nt.setDownloadUrl.call(this));
+      }
+    }, {
+      key: "poster",
+      set: function (e) {
+        this.isVideo ? yt.setPoster.call(this, e, !1).catch(function () {}) : this.debug.warn("Poster can only be set for video");
+      },
+      get: function () {
+        return this.isVideo ? this.media.getAttribute("poster") || this.media.getAttribute("data-poster") : null;
+      }
+    }, {
+      key: "ratio",
+      get: function () {
+        if (!this.isVideo) return null;
+        var e = He(Fe.call(this));
+        return $(e) ? e.join(":") : e;
+      },
+      set: function (e) {
+        this.isVideo ? Y(e) && De(e) ? (this.config.ratio = e, Re.call(this)) : this.debug.error("Invalid aspect ratio specified (".concat(e, ")")) : this.debug.warn("Aspect ratio can only be set for video");
+      }
+    }, {
+      key: "autoplay",
+      set: function (e) {
+        var t = Q(e) ? e : this.config.autoplay;
+        this.config.autoplay = t;
+      },
+      get: function () {
+        return Boolean(this.config.autoplay);
+      }
+    }, {
+      key: "currentTrack",
+      set: function (e) {
+        rt.set.call(this, e, !1);
+      },
+      get: function () {
+        var e = this.captions,
+            t = e.toggled,
+            i = e.currentTrack;
+        return t ? i : -1;
+      }
+    }, {
+      key: "language",
+      set: function (e) {
+        rt.setLanguage.call(this, e, !1);
+      },
+      get: function () {
+        return (rt.getCurrentTrack.call(this) || {}).language;
+      }
+    }, {
+      key: "pip",
+      set: function (e) {
+        if (Ee.pip) {
+          var t = Q(e) ? e : !this.pip;
+          X(this.media.webkitSetPresentationMode) && this.media.webkitSetPresentationMode(t ? lt : ct), X(this.media.requestPictureInPicture) && (!this.pip && t ? this.media.requestPictureInPicture() : this.pip && !t && document.exitPictureInPicture());
+        }
+      },
+      get: function () {
+        return Ee.pip ? ae(this.media.webkitPresentationMode) ? this.media === document.pictureInPictureElement : this.media.webkitPresentationMode === lt : null;
+      }
+    }], [{
+      key: "supported",
+      value: function (e, t, i) {
+        return Ee.check(e, t, i);
+      }
+    }, {
+      key: "loadSprite",
+      value: function (e, t) {
+        return Ge(e, t);
+      }
+    }, {
+      key: "setup",
+      value: function (e) {
+        var i = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {},
+            n = null;
+        return Y(e) ? n = Array.from(document.querySelectorAll(e)) : J(e) ? n = Array.from(e) : $(e) && (n = e.filter(G)), ae(n) ? null : n.map(function (e) {
+          return new t(e, i);
+        });
+      }
+    }]), t;
+  }();
+
+  return Lt.defaults = (It = ot, JSON.parse(JSON.stringify(It))), Lt;
+});
+},{}],"../../node_modules/howler/dist/howler.js":[function(require,module,exports) {
+var define;
+var global = arguments[3];
+/*!
+ *  howler.js v2.2.0
+ *  howlerjs.com
+ *
+ *  (c) 2013-2020, James Simpson of GoldFire Studios
+ *  goldfirestudios.com
+ *
+ *  MIT License
+ */
+
+(function() {
+
+  'use strict';
+
+  /** Global Methods **/
+  /***************************************************************************/
+
+  /**
+   * Create the global controller. All contained methods and properties apply
+   * to all sounds that are currently playing or will be in the future.
+   */
+  var HowlerGlobal = function() {
+    this.init();
+  };
+  HowlerGlobal.prototype = {
+    /**
+     * Initialize the global Howler object.
+     * @return {Howler}
+     */
+    init: function() {
+      var self = this || Howler;
+
+      // Create a global ID counter.
+      self._counter = 1000;
+
+      // Pool of unlocked HTML5 Audio objects.
+      self._html5AudioPool = [];
+      self.html5PoolSize = 10;
+
+      // Internal properties.
+      self._codecs = {};
+      self._howls = [];
+      self._muted = false;
+      self._volume = 1;
+      self._canPlayEvent = 'canplaythrough';
+      self._navigator = (typeof window !== 'undefined' && window.navigator) ? window.navigator : null;
+
+      // Public properties.
+      self.masterGain = null;
+      self.noAudio = false;
+      self.usingWebAudio = true;
+      self.autoSuspend = true;
+      self.ctx = null;
+
+      // Set to false to disable the auto audio unlocker.
+      self.autoUnlock = true;
+
+      // Setup the various state values for global tracking.
+      self._setup();
+
+      return self;
+    },
+
+    /**
+     * Get/set the global volume for all sounds.
+     * @param  {Float} vol Volume from 0.0 to 1.0.
+     * @return {Howler/Float}     Returns self or current volume.
+     */
+    volume: function(vol) {
+      var self = this || Howler;
+      vol = parseFloat(vol);
+
+      // If we don't have an AudioContext created yet, run the setup.
+      if (!self.ctx) {
+        setupAudioContext();
+      }
+
+      if (typeof vol !== 'undefined' && vol >= 0 && vol <= 1) {
+        self._volume = vol;
+
+        // Don't update any of the nodes if we are muted.
+        if (self._muted) {
+          return self;
+        }
+
+        // When using Web Audio, we just need to adjust the master gain.
+        if (self.usingWebAudio) {
+          self.masterGain.gain.setValueAtTime(vol, Howler.ctx.currentTime);
+        }
+
+        // Loop through and change volume for all HTML5 audio nodes.
+        for (var i=0; i<self._howls.length; i++) {
+          if (!self._howls[i]._webAudio) {
+            // Get all of the sounds in this Howl group.
+            var ids = self._howls[i]._getSoundIds();
+
+            // Loop through all sounds and change the volumes.
+            for (var j=0; j<ids.length; j++) {
+              var sound = self._howls[i]._soundById(ids[j]);
+
+              if (sound && sound._node) {
+                sound._node.volume = sound._volume * vol;
+              }
+            }
+          }
+        }
+
+        return self;
+      }
+
+      return self._volume;
+    },
+
+    /**
+     * Handle muting and unmuting globally.
+     * @param  {Boolean} muted Is muted or not.
+     */
+    mute: function(muted) {
+      var self = this || Howler;
+
+      // If we don't have an AudioContext created yet, run the setup.
+      if (!self.ctx) {
+        setupAudioContext();
+      }
+
+      self._muted = muted;
+
+      // With Web Audio, we just need to mute the master gain.
+      if (self.usingWebAudio) {
+        self.masterGain.gain.setValueAtTime(muted ? 0 : self._volume, Howler.ctx.currentTime);
+      }
+
+      // Loop through and mute all HTML5 Audio nodes.
+      for (var i=0; i<self._howls.length; i++) {
+        if (!self._howls[i]._webAudio) {
+          // Get all of the sounds in this Howl group.
+          var ids = self._howls[i]._getSoundIds();
+
+          // Loop through all sounds and mark the audio node as muted.
+          for (var j=0; j<ids.length; j++) {
+            var sound = self._howls[i]._soundById(ids[j]);
+
+            if (sound && sound._node) {
+              sound._node.muted = (muted) ? true : sound._muted;
+            }
+          }
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Handle stopping all sounds globally.
+     */
+    stop: function() {
+      var self = this || Howler;
+
+      // Loop through all Howls and stop them.
+      for (var i=0; i<self._howls.length; i++) {
+        self._howls[i].stop();
+      }
+
+      return self;
+    },
+
+    /**
+     * Unload and destroy all currently loaded Howl objects.
+     * @return {Howler}
+     */
+    unload: function() {
+      var self = this || Howler;
+
+      for (var i=self._howls.length-1; i>=0; i--) {
+        self._howls[i].unload();
+      }
+
+      // Create a new AudioContext to make sure it is fully reset.
+      if (self.usingWebAudio && self.ctx && typeof self.ctx.close !== 'undefined') {
+        self.ctx.close();
+        self.ctx = null;
+        setupAudioContext();
+      }
+
+      return self;
+    },
+
+    /**
+     * Check for codec support of specific extension.
+     * @param  {String} ext Audio file extention.
+     * @return {Boolean}
+     */
+    codecs: function(ext) {
+      return (this || Howler)._codecs[ext.replace(/^x-/, '')];
+    },
+
+    /**
+     * Setup various state values for global tracking.
+     * @return {Howler}
+     */
+    _setup: function() {
+      var self = this || Howler;
+
+      // Keeps track of the suspend/resume state of the AudioContext.
+      self.state = self.ctx ? self.ctx.state || 'suspended' : 'suspended';
+
+      // Automatically begin the 30-second suspend process
+      self._autoSuspend();
+
+      // Check if audio is available.
+      if (!self.usingWebAudio) {
+        // No audio is available on this system if noAudio is set to true.
+        if (typeof Audio !== 'undefined') {
+          try {
+            var test = new Audio();
+
+            // Check if the canplaythrough event is available.
+            if (typeof test.oncanplaythrough === 'undefined') {
+              self._canPlayEvent = 'canplay';
+            }
+          } catch(e) {
+            self.noAudio = true;
+          }
+        } else {
+          self.noAudio = true;
+        }
+      }
+
+      // Test to make sure audio isn't disabled in Internet Explorer.
+      try {
+        var test = new Audio();
+        if (test.muted) {
+          self.noAudio = true;
+        }
+      } catch (e) {}
+
+      // Check for supported codecs.
+      if (!self.noAudio) {
+        self._setupCodecs();
+      }
+
+      return self;
+    },
+
+    /**
+     * Check for browser support for various codecs and cache the results.
+     * @return {Howler}
+     */
+    _setupCodecs: function() {
+      var self = this || Howler;
+      var audioTest = null;
+
+      // Must wrap in a try/catch because IE11 in server mode throws an error.
+      try {
+        audioTest = (typeof Audio !== 'undefined') ? new Audio() : null;
+      } catch (err) {
+        return self;
+      }
+
+      if (!audioTest || typeof audioTest.canPlayType !== 'function') {
+        return self;
+      }
+
+      var mpegTest = audioTest.canPlayType('audio/mpeg;').replace(/^no$/, '');
+
+      // Opera version <33 has mixed MP3 support, so we need to check for and block it.
+      var checkOpera = self._navigator && self._navigator.userAgent.match(/OPR\/([0-6].)/g);
+      var isOldOpera = (checkOpera && parseInt(checkOpera[0].split('/')[1], 10) < 33);
+
+      self._codecs = {
+        mp3: !!(!isOldOpera && (mpegTest || audioTest.canPlayType('audio/mp3;').replace(/^no$/, ''))),
+        mpeg: !!mpegTest,
+        opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
+        ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
+        oga: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
+        wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
+        aac: !!audioTest.canPlayType('audio/aac;').replace(/^no$/, ''),
+        caf: !!audioTest.canPlayType('audio/x-caf;').replace(/^no$/, ''),
+        m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+        m4b: !!(audioTest.canPlayType('audio/x-m4b;') || audioTest.canPlayType('audio/m4b;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+        mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+        weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
+        webm: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
+        dolby: !!audioTest.canPlayType('audio/mp4; codecs="ec-3"').replace(/^no$/, ''),
+        flac: !!(audioTest.canPlayType('audio/x-flac;') || audioTest.canPlayType('audio/flac;')).replace(/^no$/, '')
+      };
+
+      return self;
+    },
+
+    /**
+     * Some browsers/devices will only allow audio to be played after a user interaction.
+     * Attempt to automatically unlock audio on the first user interaction.
+     * Concept from: http://paulbakaus.com/tutorials/html5/web-audio-on-ios/
+     * @return {Howler}
+     */
+    _unlockAudio: function() {
+      var self = this || Howler;
+
+      // Only run this if Web Audio is supported and it hasn't already been unlocked.
+      if (self._audioUnlocked || !self.ctx) {
+        return;
+      }
+
+      self._audioUnlocked = false;
+      self.autoUnlock = false;
+
+      // Some mobile devices/platforms have distortion issues when opening/closing tabs and/or web views.
+      // Bugs in the browser (especially Mobile Safari) can cause the sampleRate to change from 44100 to 48000.
+      // By calling Howler.unload(), we create a new AudioContext with the correct sampleRate.
+      if (!self._mobileUnloaded && self.ctx.sampleRate !== 44100) {
+        self._mobileUnloaded = true;
+        self.unload();
+      }
+
+      // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:
+      // http://stackoverflow.com/questions/24119684
+      self._scratchBuffer = self.ctx.createBuffer(1, 1, 22050);
+
+      // Call this method on touch start to create and play a buffer,
+      // then check if the audio actually played to determine if
+      // audio has now been unlocked on iOS, Android, etc.
+      var unlock = function(e) {
+        // Create a pool of unlocked HTML5 Audio objects that can
+        // be used for playing sounds without user interaction. HTML5
+        // Audio objects must be individually unlocked, as opposed
+        // to the WebAudio API which only needs a single activation.
+        // This must occur before WebAudio setup or the source.onended
+        // event will not fire.
+        while (self._html5AudioPool.length < self.html5PoolSize) {
+          try {
+            var audioNode = new Audio();
+
+            // Mark this Audio object as unlocked to ensure it can get returned
+            // to the unlocked pool when released.
+            audioNode._unlocked = true;
+
+            // Add the audio node to the pool.
+            self._releaseHtml5Audio(audioNode);
+          } catch (e) {
+            self.noAudio = true;
+            break;
+          }
+        }
+
+        // Loop through any assigned audio nodes and unlock them.
+        for (var i=0; i<self._howls.length; i++) {
+          if (!self._howls[i]._webAudio) {
+            // Get all of the sounds in this Howl group.
+            var ids = self._howls[i]._getSoundIds();
+
+            // Loop through all sounds and unlock the audio nodes.
+            for (var j=0; j<ids.length; j++) {
+              var sound = self._howls[i]._soundById(ids[j]);
+
+              if (sound && sound._node && !sound._node._unlocked) {
+                sound._node._unlocked = true;
+                sound._node.load();
+              }
+            }
+          }
+        }
+
+        // Fix Android can not play in suspend state.
+        self._autoResume();
+
+        // Create an empty buffer.
+        var source = self.ctx.createBufferSource();
+        source.buffer = self._scratchBuffer;
+        source.connect(self.ctx.destination);
+
+        // Play the empty buffer.
+        if (typeof source.start === 'undefined') {
+          source.noteOn(0);
+        } else {
+          source.start(0);
+        }
+
+        // Calling resume() on a stack initiated by user gesture is what actually unlocks the audio on Android Chrome >= 55.
+        if (typeof self.ctx.resume === 'function') {
+          self.ctx.resume();
+        }
+
+        // Setup a timeout to check that we are unlocked on the next event loop.
+        source.onended = function() {
+          source.disconnect(0);
+
+          // Update the unlocked state and prevent this check from happening again.
+          self._audioUnlocked = true;
+
+          // Remove the touch start listener.
+          document.removeEventListener('touchstart', unlock, true);
+          document.removeEventListener('touchend', unlock, true);
+          document.removeEventListener('click', unlock, true);
+
+          // Let all sounds know that audio has been unlocked.
+          for (var i=0; i<self._howls.length; i++) {
+            self._howls[i]._emit('unlock');
+          }
+        };
+      };
+
+      // Setup a touch start listener to attempt an unlock in.
+      document.addEventListener('touchstart', unlock, true);
+      document.addEventListener('touchend', unlock, true);
+      document.addEventListener('click', unlock, true);
+
+      return self;
+    },
+
+    /**
+     * Get an unlocked HTML5 Audio object from the pool. If none are left,
+     * return a new Audio object and throw a warning.
+     * @return {Audio} HTML5 Audio object.
+     */
+    _obtainHtml5Audio: function() {
+      var self = this || Howler;
+
+      // Return the next object from the pool if one exists.
+      if (self._html5AudioPool.length) {
+        return self._html5AudioPool.pop();
+      }
+
+      //.Check if the audio is locked and throw a warning.
+      var testPlay = new Audio().play();
+      if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
+        testPlay.catch(function() {
+          console.warn('HTML5 Audio pool exhausted, returning potentially locked audio object.');
+        });
+      }
+
+      return new Audio();
+    },
+
+    /**
+     * Return an activated HTML5 Audio object to the pool.
+     * @return {Howler}
+     */
+    _releaseHtml5Audio: function(audio) {
+      var self = this || Howler;
+
+      // Don't add audio to the pool if we don't know if it has been unlocked.
+      if (audio._unlocked) {
+        self._html5AudioPool.push(audio);
+      }
+
+      return self;
+    },
+
+    /**
+     * Automatically suspend the Web Audio AudioContext after no sound has played for 30 seconds.
+     * This saves processing/energy and fixes various browser-specific bugs with audio getting stuck.
+     * @return {Howler}
+     */
+    _autoSuspend: function() {
+      var self = this;
+
+      if (!self.autoSuspend || !self.ctx || typeof self.ctx.suspend === 'undefined' || !Howler.usingWebAudio) {
+        return;
+      }
+
+      // Check if any sounds are playing.
+      for (var i=0; i<self._howls.length; i++) {
+        if (self._howls[i]._webAudio) {
+          for (var j=0; j<self._howls[i]._sounds.length; j++) {
+            if (!self._howls[i]._sounds[j]._paused) {
+              return self;
+            }
+          }
+        }
+      }
+
+      if (self._suspendTimer) {
+        clearTimeout(self._suspendTimer);
+      }
+
+      // If no sound has played after 30 seconds, suspend the context.
+      self._suspendTimer = setTimeout(function() {
+        if (!self.autoSuspend) {
+          return;
+        }
+
+        self._suspendTimer = null;
+        self.state = 'suspending';
+
+        // Handle updating the state of the audio context after suspending.
+        var handleSuspension = function() {
+          self.state = 'suspended';
+
+          if (self._resumeAfterSuspend) {
+            delete self._resumeAfterSuspend;
+            self._autoResume();
+          }
+        };
+
+        // Either the state gets suspended or it is interrupted.
+        // Either way, we need to update the state to suspended.
+        self.ctx.suspend().then(handleSuspension, handleSuspension);
+      }, 30000);
+
+      return self;
+    },
+
+    /**
+     * Automatically resume the Web Audio AudioContext when a new sound is played.
+     * @return {Howler}
+     */
+    _autoResume: function() {
+      var self = this;
+
+      if (!self.ctx || typeof self.ctx.resume === 'undefined' || !Howler.usingWebAudio) {
+        return;
+      }
+
+      if (self.state === 'running' && self.ctx.state !== 'interrupted' && self._suspendTimer) {
+        clearTimeout(self._suspendTimer);
+        self._suspendTimer = null;
+      } else if (self.state === 'suspended' || self.state === 'running' && self.ctx.state === 'interrupted') {
+        self.ctx.resume().then(function() {
+          self.state = 'running';
+
+          // Emit to all Howls that the audio has resumed.
+          for (var i=0; i<self._howls.length; i++) {
+            self._howls[i]._emit('resume');
+          }
+        });
+
+        if (self._suspendTimer) {
+          clearTimeout(self._suspendTimer);
+          self._suspendTimer = null;
+        }
+      } else if (self.state === 'suspending') {
+        self._resumeAfterSuspend = true;
+      }
+
+      return self;
+    }
+  };
+
+  // Setup the global audio controller.
+  var Howler = new HowlerGlobal();
+
+  /** Group Methods **/
+  /***************************************************************************/
+
+  /**
+   * Create an audio group controller.
+   * @param {Object} o Passed in properties for this group.
+   */
+  var Howl = function(o) {
+    var self = this;
+
+    // Throw an error if no source is provided.
+    if (!o.src || o.src.length === 0) {
+      console.error('An array of source files must be passed with any new Howl.');
+      return;
+    }
+
+    self.init(o);
+  };
+  Howl.prototype = {
+    /**
+     * Initialize a new Howl group object.
+     * @param  {Object} o Passed in properties for this group.
+     * @return {Howl}
+     */
+    init: function(o) {
+      var self = this;
+
+      // If we don't have an AudioContext created yet, run the setup.
+      if (!Howler.ctx) {
+        setupAudioContext();
+      }
+
+      // Setup user-defined default properties.
+      self._autoplay = o.autoplay || false;
+      self._format = (typeof o.format !== 'string') ? o.format : [o.format];
+      self._html5 = o.html5 || false;
+      self._muted = o.mute || false;
+      self._loop = o.loop || false;
+      self._pool = o.pool || 5;
+      self._preload = (typeof o.preload === 'boolean' || o.preload === 'metadata') ? o.preload : true;
+      self._rate = o.rate || 1;
+      self._sprite = o.sprite || {};
+      self._src = (typeof o.src !== 'string') ? o.src : [o.src];
+      self._volume = o.volume !== undefined ? o.volume : 1;
+      self._xhr = {
+        method: o.xhr && o.xhr.method ? o.xhr.method : 'GET',
+        headers: o.xhr && o.xhr.headers ? o.xhr.headers : null,
+        withCredentials: o.xhr && o.xhr.withCredentials ? o.xhr.withCredentials : false,
+      };
+
+      // Setup all other default properties.
+      self._duration = 0;
+      self._state = 'unloaded';
+      self._sounds = [];
+      self._endTimers = {};
+      self._queue = [];
+      self._playLock = false;
+
+      // Setup event listeners.
+      self._onend = o.onend ? [{fn: o.onend}] : [];
+      self._onfade = o.onfade ? [{fn: o.onfade}] : [];
+      self._onload = o.onload ? [{fn: o.onload}] : [];
+      self._onloaderror = o.onloaderror ? [{fn: o.onloaderror}] : [];
+      self._onplayerror = o.onplayerror ? [{fn: o.onplayerror}] : [];
+      self._onpause = o.onpause ? [{fn: o.onpause}] : [];
+      self._onplay = o.onplay ? [{fn: o.onplay}] : [];
+      self._onstop = o.onstop ? [{fn: o.onstop}] : [];
+      self._onmute = o.onmute ? [{fn: o.onmute}] : [];
+      self._onvolume = o.onvolume ? [{fn: o.onvolume}] : [];
+      self._onrate = o.onrate ? [{fn: o.onrate}] : [];
+      self._onseek = o.onseek ? [{fn: o.onseek}] : [];
+      self._onunlock = o.onunlock ? [{fn: o.onunlock}] : [];
+      self._onresume = [];
+
+      // Web Audio or HTML5 Audio?
+      self._webAudio = Howler.usingWebAudio && !self._html5;
+
+      // Automatically try to enable audio.
+      if (typeof Howler.ctx !== 'undefined' && Howler.ctx && Howler.autoUnlock) {
+        Howler._unlockAudio();
+      }
+
+      // Keep track of this Howl group in the global controller.
+      Howler._howls.push(self);
+
+      // If they selected autoplay, add a play event to the load queue.
+      if (self._autoplay) {
+        self._queue.push({
+          event: 'play',
+          action: function() {
+            self.play();
+          }
+        });
+      }
+
+      // Load the source file unless otherwise specified.
+      if (self._preload && self._preload !== 'none') {
+        self.load();
+      }
+
+      return self;
+    },
+
+    /**
+     * Load the audio file.
+     * @return {Howler}
+     */
+    load: function() {
+      var self = this;
+      var url = null;
+
+      // If no audio is available, quit immediately.
+      if (Howler.noAudio) {
+        self._emit('loaderror', null, 'No audio support.');
+        return;
+      }
+
+      // Make sure our source is in an array.
+      if (typeof self._src === 'string') {
+        self._src = [self._src];
+      }
+
+      // Loop through the sources and pick the first one that is compatible.
+      for (var i=0; i<self._src.length; i++) {
+        var ext, str;
+
+        if (self._format && self._format[i]) {
+          // If an extension was specified, use that instead.
+          ext = self._format[i];
+        } else {
+          // Make sure the source is a string.
+          str = self._src[i];
+          if (typeof str !== 'string') {
+            self._emit('loaderror', null, 'Non-string found in selected audio sources - ignoring.');
+            continue;
+          }
+
+          // Extract the file extension from the URL or base64 data URI.
+          ext = /^data:audio\/([^;,]+);/i.exec(str);
+          if (!ext) {
+            ext = /\.([^.]+)$/.exec(str.split('?', 1)[0]);
+          }
+
+          if (ext) {
+            ext = ext[1].toLowerCase();
+          }
+        }
+
+        // Log a warning if no extension was found.
+        if (!ext) {
+          console.warn('No file extension was found. Consider using the "format" property or specify an extension.');
+        }
+
+        // Check if this extension is available.
+        if (ext && Howler.codecs(ext)) {
+          url = self._src[i];
+          break;
+        }
+      }
+
+      if (!url) {
+        self._emit('loaderror', null, 'No codec support for selected audio sources.');
+        return;
+      }
+
+      self._src = url;
+      self._state = 'loading';
+
+      // If the hosting page is HTTPS and the source isn't,
+      // drop down to HTML5 Audio to avoid Mixed Content errors.
+      if (window.location.protocol === 'https:' && url.slice(0, 5) === 'http:') {
+        self._html5 = true;
+        self._webAudio = false;
+      }
+
+      // Create a new sound object and add it to the pool.
+      new Sound(self);
+
+      // Load and decode the audio data for playback.
+      if (self._webAudio) {
+        loadBuffer(self);
+      }
+
+      return self;
+    },
+
+    /**
+     * Play a sound or resume previous playback.
+     * @param  {String/Number} sprite   Sprite name for sprite playback or sound id to continue previous.
+     * @param  {Boolean} internal Internal Use: true prevents event firing.
+     * @return {Number}          Sound ID.
+     */
+    play: function(sprite, internal) {
+      var self = this;
+      var id = null;
+
+      // Determine if a sprite, sound id or nothing was passed
+      if (typeof sprite === 'number') {
+        id = sprite;
+        sprite = null;
+      } else if (typeof sprite === 'string' && self._state === 'loaded' && !self._sprite[sprite]) {
+        // If the passed sprite doesn't exist, do nothing.
+        return null;
+      } else if (typeof sprite === 'undefined') {
+        // Use the default sound sprite (plays the full audio length).
+        sprite = '__default';
+
+        // Check if there is a single paused sound that isn't ended.
+        // If there is, play that sound. If not, continue as usual.
+        if (!self._playLock) {
+          var num = 0;
+          for (var i=0; i<self._sounds.length; i++) {
+            if (self._sounds[i]._paused && !self._sounds[i]._ended) {
+              num++;
+              id = self._sounds[i]._id;
+            }
+          }
+
+          if (num === 1) {
+            sprite = null;
+          } else {
+            id = null;
+          }
+        }
+      }
+
+      // Get the selected node, or get one from the pool.
+      var sound = id ? self._soundById(id) : self._inactiveSound();
+
+      // If the sound doesn't exist, do nothing.
+      if (!sound) {
+        return null;
+      }
+
+      // Select the sprite definition.
+      if (id && !sprite) {
+        sprite = sound._sprite || '__default';
+      }
+
+      // If the sound hasn't loaded, we must wait to get the audio's duration.
+      // We also need to wait to make sure we don't run into race conditions with
+      // the order of function calls.
+      if (self._state !== 'loaded') {
+        // Set the sprite value on this sound.
+        sound._sprite = sprite;
+
+        // Mark this sound as not ended in case another sound is played before this one loads.
+        sound._ended = false;
+
+        // Add the sound to the queue to be played on load.
+        var soundId = sound._id;
+        self._queue.push({
+          event: 'play',
+          action: function() {
+            self.play(soundId);
+          }
+        });
+
+        return soundId;
+      }
+
+      // Don't play the sound if an id was passed and it is already playing.
+      if (id && !sound._paused) {
+        // Trigger the play event, in order to keep iterating through queue.
+        if (!internal) {
+          self._loadQueue('play');
+        }
+
+        return sound._id;
+      }
+
+      // Make sure the AudioContext isn't suspended, and resume it if it is.
+      if (self._webAudio) {
+        Howler._autoResume();
+      }
+
+      // Determine how long to play for and where to start playing.
+      var seek = Math.max(0, sound._seek > 0 ? sound._seek : self._sprite[sprite][0] / 1000);
+      var duration = Math.max(0, ((self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000) - seek);
+      var timeout = (duration * 1000) / Math.abs(sound._rate);
+      var start = self._sprite[sprite][0] / 1000;
+      var stop = (self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000;
+      sound._sprite = sprite;
+
+      // Mark the sound as ended instantly so that this async playback
+      // doesn't get grabbed by another call to play while this one waits to start.
+      sound._ended = false;
+
+      // Update the parameters of the sound.
+      var setParams = function() {
+        sound._paused = false;
+        sound._seek = seek;
+        sound._start = start;
+        sound._stop = stop;
+        sound._loop = !!(sound._loop || self._sprite[sprite][2]);
+      };
+
+      // End the sound instantly if seek is at the end.
+      if (seek >= stop) {
+        self._ended(sound);
+        return;
+      }
+
+      // Begin the actual playback.
+      var node = sound._node;
+      if (self._webAudio) {
+        // Fire this when the sound is ready to play to begin Web Audio playback.
+        var playWebAudio = function() {
+          self._playLock = false;
+          setParams();
+          self._refreshBuffer(sound);
+
+          // Setup the playback params.
+          var vol = (sound._muted || self._muted) ? 0 : sound._volume;
+          node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
+          sound._playStart = Howler.ctx.currentTime;
+
+          // Play the sound using the supported method.
+          if (typeof node.bufferSource.start === 'undefined') {
+            sound._loop ? node.bufferSource.noteGrainOn(0, seek, 86400) : node.bufferSource.noteGrainOn(0, seek, duration);
+          } else {
+            sound._loop ? node.bufferSource.start(0, seek, 86400) : node.bufferSource.start(0, seek, duration);
+          }
+
+          // Start a new timer if none is present.
+          if (timeout !== Infinity) {
+            self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
+          }
+
+          if (!internal) {
+            setTimeout(function() {
+              self._emit('play', sound._id);
+              self._loadQueue();
+            }, 0);
+          }
+        };
+
+        if (Howler.state === 'running' && Howler.ctx.state !== 'interrupted') {
+          playWebAudio();
+        } else {
+          self._playLock = true;
+
+          // Wait for the audio context to resume before playing.
+          self.once('resume', playWebAudio);
+
+          // Cancel the end timer.
+          self._clearTimer(sound._id);
+        }
+      } else {
+        // Fire this when the sound is ready to play to begin HTML5 Audio playback.
+        var playHtml5 = function() {
+          node.currentTime = seek;
+          node.muted = sound._muted || self._muted || Howler._muted || node.muted;
+          node.volume = sound._volume * Howler.volume();
+          node.playbackRate = sound._rate;
+
+          // Some browsers will throw an error if this is called without user interaction.
+          try {
+            var play = node.play();
+
+            // Support older browsers that don't support promises, and thus don't have this issue.
+            if (play && typeof Promise !== 'undefined' && (play instanceof Promise || typeof play.then === 'function')) {
+              // Implements a lock to prevent DOMException: The play() request was interrupted by a call to pause().
+              self._playLock = true;
+
+              // Set param values immediately.
+              setParams();
+
+              // Releases the lock and executes queued actions.
+              play
+                .then(function() {
+                  self._playLock = false;
+                  node._unlocked = true;
+                  if (!internal) {
+                    self._emit('play', sound._id);
+                    self._loadQueue();
+                  }
+                })
+                .catch(function() {
+                  self._playLock = false;
+                  self._emit('playerror', sound._id, 'Playback was unable to start. This is most commonly an issue ' +
+                    'on mobile devices and Chrome where playback was not within a user interaction.');
+
+                  // Reset the ended and paused values.
+                  sound._ended = true;
+                  sound._paused = true;
+                });
+            } else if (!internal) {
+              self._playLock = false;
+              setParams();
+              self._emit('play', sound._id);
+              self._loadQueue();
+            }
+
+            // Setting rate before playing won't work in IE, so we set it again here.
+            node.playbackRate = sound._rate;
+
+            // If the node is still paused, then we can assume there was a playback issue.
+            if (node.paused) {
+              self._emit('playerror', sound._id, 'Playback was unable to start. This is most commonly an issue ' +
+                'on mobile devices and Chrome where playback was not within a user interaction.');
+              return;
+            }
+
+            // Setup the end timer on sprites or listen for the ended event.
+            if (sprite !== '__default' || sound._loop) {
+              self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
+            } else {
+              self._endTimers[sound._id] = function() {
+                // Fire ended on this audio node.
+                self._ended(sound);
+
+                // Clear this listener.
+                node.removeEventListener('ended', self._endTimers[sound._id], false);
+              };
+              node.addEventListener('ended', self._endTimers[sound._id], false);
+            }
+          } catch (err) {
+            self._emit('playerror', sound._id, err);
+          }
+        };
+
+        // If this is streaming audio, make sure the src is set and load again.
+        if (node.src === 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA') {
+          node.src = self._src;
+          node.load();
+        }
+
+        // Play immediately if ready, or wait for the 'canplaythrough'e vent.
+        var loadedNoReadyState = (window && window.ejecta) || (!node.readyState && Howler._navigator.isCocoonJS);
+        if (node.readyState >= 3 || loadedNoReadyState) {
+          playHtml5();
+        } else {
+          self._playLock = true;
+
+          var listener = function() {
+            // Begin playback.
+            playHtml5();
+
+            // Clear this listener.
+            node.removeEventListener(Howler._canPlayEvent, listener, false);
+          };
+          node.addEventListener(Howler._canPlayEvent, listener, false);
+
+          // Cancel the end timer.
+          self._clearTimer(sound._id);
+        }
+      }
+
+      return sound._id;
+    },
+
+    /**
+     * Pause playback and save current position.
+     * @param  {Number} id The sound ID (empty to pause all in group).
+     * @return {Howl}
+     */
+    pause: function(id) {
+      var self = this;
+
+      // If the sound hasn't loaded or a play() promise is pending, add it to the load queue to pause when capable.
+      if (self._state !== 'loaded' || self._playLock) {
+        self._queue.push({
+          event: 'pause',
+          action: function() {
+            self.pause(id);
+          }
+        });
+
+        return self;
+      }
+
+      // If no id is passed, get all ID's to be paused.
+      var ids = self._getSoundIds(id);
+
+      for (var i=0; i<ids.length; i++) {
+        // Clear the end timer.
+        self._clearTimer(ids[i]);
+
+        // Get the sound.
+        var sound = self._soundById(ids[i]);
+
+        if (sound && !sound._paused) {
+          // Reset the seek position.
+          sound._seek = self.seek(ids[i]);
+          sound._rateSeek = 0;
+          sound._paused = true;
+
+          // Stop currently running fades.
+          self._stopFade(ids[i]);
+
+          if (sound._node) {
+            if (self._webAudio) {
+              // Make sure the sound has been created.
+              if (!sound._node.bufferSource) {
+                continue;
+              }
+
+              if (typeof sound._node.bufferSource.stop === 'undefined') {
+                sound._node.bufferSource.noteOff(0);
+              } else {
+                sound._node.bufferSource.stop(0);
+              }
+
+              // Clean up the buffer source.
+              self._cleanBuffer(sound._node);
+            } else if (!isNaN(sound._node.duration) || sound._node.duration === Infinity) {
+              sound._node.pause();
+            }
+          }
+        }
+
+        // Fire the pause event, unless `true` is passed as the 2nd argument.
+        if (!arguments[1]) {
+          self._emit('pause', sound ? sound._id : null);
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Stop playback and reset to start.
+     * @param  {Number} id The sound ID (empty to stop all in group).
+     * @param  {Boolean} internal Internal Use: true prevents event firing.
+     * @return {Howl}
+     */
+    stop: function(id, internal) {
+      var self = this;
+
+      // If the sound hasn't loaded, add it to the load queue to stop when capable.
+      if (self._state !== 'loaded' || self._playLock) {
+        self._queue.push({
+          event: 'stop',
+          action: function() {
+            self.stop(id);
+          }
+        });
+
+        return self;
+      }
+
+      // If no id is passed, get all ID's to be stopped.
+      var ids = self._getSoundIds(id);
+
+      for (var i=0; i<ids.length; i++) {
+        // Clear the end timer.
+        self._clearTimer(ids[i]);
+
+        // Get the sound.
+        var sound = self._soundById(ids[i]);
+
+        if (sound) {
+          // Reset the seek position.
+          sound._seek = sound._start || 0;
+          sound._rateSeek = 0;
+          sound._paused = true;
+          sound._ended = true;
+
+          // Stop currently running fades.
+          self._stopFade(ids[i]);
+
+          if (sound._node) {
+            if (self._webAudio) {
+              // Make sure the sound's AudioBufferSourceNode has been created.
+              if (sound._node.bufferSource) {
+                if (typeof sound._node.bufferSource.stop === 'undefined') {
+                  sound._node.bufferSource.noteOff(0);
+                } else {
+                  sound._node.bufferSource.stop(0);
+                }
+
+                // Clean up the buffer source.
+                self._cleanBuffer(sound._node);
+              }
+            } else if (!isNaN(sound._node.duration) || sound._node.duration === Infinity) {
+              sound._node.currentTime = sound._start || 0;
+              sound._node.pause();
+
+              // If this is a live stream, stop download once the audio is stopped.
+              if (sound._node.duration === Infinity) {
+                self._clearSound(sound._node);
+              }
+            }
+          }
+
+          if (!internal) {
+            self._emit('stop', sound._id);
+          }
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Mute/unmute a single sound or all sounds in this Howl group.
+     * @param  {Boolean} muted Set to true to mute and false to unmute.
+     * @param  {Number} id    The sound ID to update (omit to mute/unmute all).
+     * @return {Howl}
+     */
+    mute: function(muted, id) {
+      var self = this;
+
+      // If the sound hasn't loaded, add it to the load queue to mute when capable.
+      if (self._state !== 'loaded'|| self._playLock) {
+        self._queue.push({
+          event: 'mute',
+          action: function() {
+            self.mute(muted, id);
+          }
+        });
+
+        return self;
+      }
+
+      // If applying mute/unmute to all sounds, update the group's value.
+      if (typeof id === 'undefined') {
+        if (typeof muted === 'boolean') {
+          self._muted = muted;
+        } else {
+          return self._muted;
+        }
+      }
+
+      // If no id is passed, get all ID's to be muted.
+      var ids = self._getSoundIds(id);
+
+      for (var i=0; i<ids.length; i++) {
+        // Get the sound.
+        var sound = self._soundById(ids[i]);
+
+        if (sound) {
+          sound._muted = muted;
+
+          // Cancel active fade and set the volume to the end value.
+          if (sound._interval) {
+            self._stopFade(sound._id);
+          }
+
+          if (self._webAudio && sound._node) {
+            sound._node.gain.setValueAtTime(muted ? 0 : sound._volume, Howler.ctx.currentTime);
+          } else if (sound._node) {
+            sound._node.muted = Howler._muted ? true : muted;
+          }
+
+          self._emit('mute', sound._id);
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Get/set the volume of this sound or of the Howl group. This method can optionally take 0, 1 or 2 arguments.
+     *   volume() -> Returns the group's volume value.
+     *   volume(id) -> Returns the sound id's current volume.
+     *   volume(vol) -> Sets the volume of all sounds in this Howl group.
+     *   volume(vol, id) -> Sets the volume of passed sound id.
+     * @return {Howl/Number} Returns self or current volume.
+     */
+    volume: function() {
+      var self = this;
+      var args = arguments;
+      var vol, id;
+
+      // Determine the values based on arguments.
+      if (args.length === 0) {
+        // Return the value of the groups' volume.
+        return self._volume;
+      } else if (args.length === 1 || args.length === 2 && typeof args[1] === 'undefined') {
+        // First check if this is an ID, and if not, assume it is a new volume.
+        var ids = self._getSoundIds();
+        var index = ids.indexOf(args[0]);
+        if (index >= 0) {
+          id = parseInt(args[0], 10);
+        } else {
+          vol = parseFloat(args[0]);
+        }
+      } else if (args.length >= 2) {
+        vol = parseFloat(args[0]);
+        id = parseInt(args[1], 10);
+      }
+
+      // Update the volume or return the current volume.
+      var sound;
+      if (typeof vol !== 'undefined' && vol >= 0 && vol <= 1) {
+        // If the sound hasn't loaded, add it to the load queue to change volume when capable.
+        if (self._state !== 'loaded'|| self._playLock) {
+          self._queue.push({
+            event: 'volume',
+            action: function() {
+              self.volume.apply(self, args);
+            }
+          });
+
+          return self;
+        }
+
+        // Set the group volume.
+        if (typeof id === 'undefined') {
+          self._volume = vol;
+        }
+
+        // Update one or all volumes.
+        id = self._getSoundIds(id);
+        for (var i=0; i<id.length; i++) {
+          // Get the sound.
+          sound = self._soundById(id[i]);
+
+          if (sound) {
+            sound._volume = vol;
+
+            // Stop currently running fades.
+            if (!args[2]) {
+              self._stopFade(id[i]);
+            }
+
+            if (self._webAudio && sound._node && !sound._muted) {
+              sound._node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
+            } else if (sound._node && !sound._muted) {
+              sound._node.volume = vol * Howler.volume();
+            }
+
+            self._emit('volume', sound._id);
+          }
+        }
+      } else {
+        sound = id ? self._soundById(id) : self._sounds[0];
+        return sound ? sound._volume : 0;
+      }
+
+      return self;
+    },
+
+    /**
+     * Fade a currently playing sound between two volumes (if no id is passed, all sounds will fade).
+     * @param  {Number} from The value to fade from (0.0 to 1.0).
+     * @param  {Number} to   The volume to fade to (0.0 to 1.0).
+     * @param  {Number} len  Time in milliseconds to fade.
+     * @param  {Number} id   The sound id (omit to fade all sounds).
+     * @return {Howl}
+     */
+    fade: function(from, to, len, id) {
+      var self = this;
+
+      // If the sound hasn't loaded, add it to the load queue to fade when capable.
+      if (self._state !== 'loaded' || self._playLock) {
+        self._queue.push({
+          event: 'fade',
+          action: function() {
+            self.fade(from, to, len, id);
+          }
+        });
+
+        return self;
+      }
+
+      // Make sure the to/from/len values are numbers.
+      from = Math.min(Math.max(0, parseFloat(from)), 1);
+      to = Math.min(Math.max(0, parseFloat(to)), 1);
+      len = parseFloat(len);
+
+      // Set the volume to the start position.
+      self.volume(from, id);
+
+      // Fade the volume of one or all sounds.
+      var ids = self._getSoundIds(id);
+      for (var i=0; i<ids.length; i++) {
+        // Get the sound.
+        var sound = self._soundById(ids[i]);
+
+        // Create a linear fade or fall back to timeouts with HTML5 Audio.
+        if (sound) {
+          // Stop the previous fade if no sprite is being used (otherwise, volume handles this).
+          if (!id) {
+            self._stopFade(ids[i]);
+          }
+
+          // If we are using Web Audio, let the native methods do the actual fade.
+          if (self._webAudio && !sound._muted) {
+            var currentTime = Howler.ctx.currentTime;
+            var end = currentTime + (len / 1000);
+            sound._volume = from;
+            sound._node.gain.setValueAtTime(from, currentTime);
+            sound._node.gain.linearRampToValueAtTime(to, end);
+          }
+
+          self._startFadeInterval(sound, from, to, len, ids[i], typeof id === 'undefined');
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Starts the internal interval to fade a sound.
+     * @param  {Object} sound Reference to sound to fade.
+     * @param  {Number} from The value to fade from (0.0 to 1.0).
+     * @param  {Number} to   The volume to fade to (0.0 to 1.0).
+     * @param  {Number} len  Time in milliseconds to fade.
+     * @param  {Number} id   The sound id to fade.
+     * @param  {Boolean} isGroup   If true, set the volume on the group.
+     */
+    _startFadeInterval: function(sound, from, to, len, id, isGroup) {
+      var self = this;
+      var vol = from;
+      var diff = to - from;
+      var steps = Math.abs(diff / 0.01);
+      var stepLen = Math.max(4, (steps > 0) ? len / steps : len);
+      var lastTick = Date.now();
+
+      // Store the value being faded to.
+      sound._fadeTo = to;
+
+      // Update the volume value on each interval tick.
+      sound._interval = setInterval(function() {
+        // Update the volume based on the time since the last tick.
+        var tick = (Date.now() - lastTick) / len;
+        lastTick = Date.now();
+        vol += diff * tick;
+
+        // Make sure the volume is in the right bounds.
+        if (diff < 0) {
+          vol = Math.max(to, vol);
+        } else {
+          vol = Math.min(to, vol);
+        }
+
+        // Round to within 2 decimal points.
+        vol = Math.round(vol * 100) / 100;
+
+        // Change the volume.
+        if (self._webAudio) {
+          sound._volume = vol;
+        } else {
+          self.volume(vol, sound._id, true);
+        }
+
+        // Set the group's volume.
+        if (isGroup) {
+          self._volume = vol;
+        }
+
+        // When the fade is complete, stop it and fire event.
+        if ((to < from && vol <= to) || (to > from && vol >= to)) {
+          clearInterval(sound._interval);
+          sound._interval = null;
+          sound._fadeTo = null;
+          self.volume(to, sound._id);
+          self._emit('fade', sound._id);
+        }
+      }, stepLen);
+    },
+
+    /**
+     * Internal method that stops the currently playing fade when
+     * a new fade starts, volume is changed or the sound is stopped.
+     * @param  {Number} id The sound id.
+     * @return {Howl}
+     */
+    _stopFade: function(id) {
+      var self = this;
+      var sound = self._soundById(id);
+
+      if (sound && sound._interval) {
+        if (self._webAudio) {
+          sound._node.gain.cancelScheduledValues(Howler.ctx.currentTime);
+        }
+
+        clearInterval(sound._interval);
+        sound._interval = null;
+        self.volume(sound._fadeTo, id);
+        sound._fadeTo = null;
+        self._emit('fade', id);
+      }
+
+      return self;
+    },
+
+    /**
+     * Get/set the loop parameter on a sound. This method can optionally take 0, 1 or 2 arguments.
+     *   loop() -> Returns the group's loop value.
+     *   loop(id) -> Returns the sound id's loop value.
+     *   loop(loop) -> Sets the loop value for all sounds in this Howl group.
+     *   loop(loop, id) -> Sets the loop value of passed sound id.
+     * @return {Howl/Boolean} Returns self or current loop value.
+     */
+    loop: function() {
+      var self = this;
+      var args = arguments;
+      var loop, id, sound;
+
+      // Determine the values for loop and id.
+      if (args.length === 0) {
+        // Return the grou's loop value.
+        return self._loop;
+      } else if (args.length === 1) {
+        if (typeof args[0] === 'boolean') {
+          loop = args[0];
+          self._loop = loop;
+        } else {
+          // Return this sound's loop value.
+          sound = self._soundById(parseInt(args[0], 10));
+          return sound ? sound._loop : false;
+        }
+      } else if (args.length === 2) {
+        loop = args[0];
+        id = parseInt(args[1], 10);
+      }
+
+      // If no id is passed, get all ID's to be looped.
+      var ids = self._getSoundIds(id);
+      for (var i=0; i<ids.length; i++) {
+        sound = self._soundById(ids[i]);
+
+        if (sound) {
+          sound._loop = loop;
+          if (self._webAudio && sound._node && sound._node.bufferSource) {
+            sound._node.bufferSource.loop = loop;
+            if (loop) {
+              sound._node.bufferSource.loopStart = sound._start || 0;
+              sound._node.bufferSource.loopEnd = sound._stop;
+            }
+          }
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Get/set the playback rate of a sound. This method can optionally take 0, 1 or 2 arguments.
+     *   rate() -> Returns the first sound node's current playback rate.
+     *   rate(id) -> Returns the sound id's current playback rate.
+     *   rate(rate) -> Sets the playback rate of all sounds in this Howl group.
+     *   rate(rate, id) -> Sets the playback rate of passed sound id.
+     * @return {Howl/Number} Returns self or the current playback rate.
+     */
+    rate: function() {
+      var self = this;
+      var args = arguments;
+      var rate, id;
+
+      // Determine the values based on arguments.
+      if (args.length === 0) {
+        // We will simply return the current rate of the first node.
+        id = self._sounds[0]._id;
+      } else if (args.length === 1) {
+        // First check if this is an ID, and if not, assume it is a new rate value.
+        var ids = self._getSoundIds();
+        var index = ids.indexOf(args[0]);
+        if (index >= 0) {
+          id = parseInt(args[0], 10);
+        } else {
+          rate = parseFloat(args[0]);
+        }
+      } else if (args.length === 2) {
+        rate = parseFloat(args[0]);
+        id = parseInt(args[1], 10);
+      }
+
+      // Update the playback rate or return the current value.
+      var sound;
+      if (typeof rate === 'number') {
+        // If the sound hasn't loaded, add it to the load queue to change playback rate when capable.
+        if (self._state !== 'loaded' || self._playLock) {
+          self._queue.push({
+            event: 'rate',
+            action: function() {
+              self.rate.apply(self, args);
+            }
+          });
+
+          return self;
+        }
+
+        // Set the group rate.
+        if (typeof id === 'undefined') {
+          self._rate = rate;
+        }
+
+        // Update one or all volumes.
+        id = self._getSoundIds(id);
+        for (var i=0; i<id.length; i++) {
+          // Get the sound.
+          sound = self._soundById(id[i]);
+
+          if (sound) {
+            // Keep track of our position when the rate changed and update the playback
+            // start position so we can properly adjust the seek position for time elapsed.
+            if (self.playing(id[i])) {
+              sound._rateSeek = self.seek(id[i]);
+              sound._playStart = self._webAudio ? Howler.ctx.currentTime : sound._playStart;
+            }
+            sound._rate = rate;
+
+            // Change the playback rate.
+            if (self._webAudio && sound._node && sound._node.bufferSource) {
+              sound._node.bufferSource.playbackRate.setValueAtTime(rate, Howler.ctx.currentTime);
+            } else if (sound._node) {
+              sound._node.playbackRate = rate;
+            }
+
+            // Reset the timers.
+            var seek = self.seek(id[i]);
+            var duration = ((self._sprite[sound._sprite][0] + self._sprite[sound._sprite][1]) / 1000) - seek;
+            var timeout = (duration * 1000) / Math.abs(sound._rate);
+
+            // Start a new end timer if sound is already playing.
+            if (self._endTimers[id[i]] || !sound._paused) {
+              self._clearTimer(id[i]);
+              self._endTimers[id[i]] = setTimeout(self._ended.bind(self, sound), timeout);
+            }
+
+            self._emit('rate', sound._id);
+          }
+        }
+      } else {
+        sound = self._soundById(id);
+        return sound ? sound._rate : self._rate;
+      }
+
+      return self;
+    },
+
+    /**
+     * Get/set the seek position of a sound. This method can optionally take 0, 1 or 2 arguments.
+     *   seek() -> Returns the first sound node's current seek position.
+     *   seek(id) -> Returns the sound id's current seek position.
+     *   seek(seek) -> Sets the seek position of the first sound node.
+     *   seek(seek, id) -> Sets the seek position of passed sound id.
+     * @return {Howl/Number} Returns self or the current seek position.
+     */
+    seek: function() {
+      var self = this;
+      var args = arguments;
+      var seek, id;
+
+      // Determine the values based on arguments.
+      if (args.length === 0) {
+        // We will simply return the current position of the first node.
+        id = self._sounds[0]._id;
+      } else if (args.length === 1) {
+        // First check if this is an ID, and if not, assume it is a new seek position.
+        var ids = self._getSoundIds();
+        var index = ids.indexOf(args[0]);
+        if (index >= 0) {
+          id = parseInt(args[0], 10);
+        } else if (self._sounds.length) {
+          id = self._sounds[0]._id;
+          seek = parseFloat(args[0]);
+        }
+      } else if (args.length === 2) {
+        seek = parseFloat(args[0]);
+        id = parseInt(args[1], 10);
+      }
+
+      // If there is no ID, bail out.
+      if (typeof id === 'undefined') {
+        return self;
+      }
+
+      // If the sound hasn't loaded, add it to the load queue to seek when capable.
+      if (self._state !== 'loaded' || self._playLock) {
+        self._queue.push({
+          event: 'seek',
+          action: function() {
+            self.seek.apply(self, args);
+          }
+        });
+
+        return self;
+      }
+
+      // Get the sound.
+      var sound = self._soundById(id);
+
+      if (sound) {
+        if (typeof seek === 'number' && seek >= 0) {
+          // Pause the sound and update position for restarting playback.
+          var playing = self.playing(id);
+          if (playing) {
+            self.pause(id, true);
+          }
+
+          // Move the position of the track and cancel timer.
+          sound._seek = seek;
+          sound._ended = false;
+          self._clearTimer(id);
+
+          // Update the seek position for HTML5 Audio.
+          if (!self._webAudio && sound._node && !isNaN(sound._node.duration)) {
+            sound._node.currentTime = seek;
+          }
+
+          // Seek and emit when ready.
+          var seekAndEmit = function() {
+            self._emit('seek', id);
+
+            // Restart the playback if the sound was playing.
+            if (playing) {
+              self.play(id, true);
+            }
+          };
+
+          // Wait for the play lock to be unset before emitting (HTML5 Audio).
+          if (playing && !self._webAudio) {
+            var emitSeek = function() {
+              if (!self._playLock) {
+                seekAndEmit();
+              } else {
+                setTimeout(emitSeek, 0);
+              }
+            };
+            setTimeout(emitSeek, 0);
+          } else {
+            seekAndEmit();
+          }
+        } else {
+          if (self._webAudio) {
+            var realTime = self.playing(id) ? Howler.ctx.currentTime - sound._playStart : 0;
+            var rateSeek = sound._rateSeek ? sound._rateSeek - sound._seek : 0;
+            return sound._seek + (rateSeek + realTime * Math.abs(sound._rate));
+          } else {
+            return sound._node.currentTime;
+          }
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Check if a specific sound is currently playing or not (if id is provided), or check if at least one of the sounds in the group is playing or not.
+     * @param  {Number}  id The sound id to check. If none is passed, the whole sound group is checked.
+     * @return {Boolean} True if playing and false if not.
+     */
+    playing: function(id) {
+      var self = this;
+
+      // Check the passed sound ID (if any).
+      if (typeof id === 'number') {
+        var sound = self._soundById(id);
+        return sound ? !sound._paused : false;
+      }
+
+      // Otherwise, loop through all sounds and check if any are playing.
+      for (var i=0; i<self._sounds.length; i++) {
+        if (!self._sounds[i]._paused) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    /**
+     * Get the duration of this sound. Passing a sound id will return the sprite duration.
+     * @param  {Number} id The sound id to check. If none is passed, return full source duration.
+     * @return {Number} Audio duration in seconds.
+     */
+    duration: function(id) {
+      var self = this;
+      var duration = self._duration;
+
+      // If we pass an ID, get the sound and return the sprite length.
+      var sound = self._soundById(id);
+      if (sound) {
+        duration = self._sprite[sound._sprite][1] / 1000;
+      }
+
+      return duration;
+    },
+
+    /**
+     * Returns the current loaded state of this Howl.
+     * @return {String} 'unloaded', 'loading', 'loaded'
+     */
+    state: function() {
+      return this._state;
+    },
+
+    /**
+     * Unload and destroy the current Howl object.
+     * This will immediately stop all sound instances attached to this group.
+     */
+    unload: function() {
+      var self = this;
+
+      // Stop playing any active sounds.
+      var sounds = self._sounds;
+      for (var i=0; i<sounds.length; i++) {
+        // Stop the sound if it is currently playing.
+        if (!sounds[i]._paused) {
+          self.stop(sounds[i]._id);
+        }
+
+        // Remove the source or disconnect.
+        if (!self._webAudio) {
+          // Set the source to 0-second silence to stop any downloading (except in IE).
+          self._clearSound(sounds[i]._node);
+
+          // Remove any event listeners.
+          sounds[i]._node.removeEventListener('error', sounds[i]._errorFn, false);
+          sounds[i]._node.removeEventListener(Howler._canPlayEvent, sounds[i]._loadFn, false);
+
+          // Release the Audio object back to the pool.
+          Howler._releaseHtml5Audio(sounds[i]._node);
+        }
+
+        // Empty out all of the nodes.
+        delete sounds[i]._node;
+
+        // Make sure all timers are cleared out.
+        self._clearTimer(sounds[i]._id);
+      }
+
+      // Remove the references in the global Howler object.
+      var index = Howler._howls.indexOf(self);
+      if (index >= 0) {
+        Howler._howls.splice(index, 1);
+      }
+
+      // Delete this sound from the cache (if no other Howl is using it).
+      var remCache = true;
+      for (i=0; i<Howler._howls.length; i++) {
+        if (Howler._howls[i]._src === self._src || self._src.indexOf(Howler._howls[i]._src) >= 0) {
+          remCache = false;
+          break;
+        }
+      }
+
+      if (cache && remCache) {
+        delete cache[self._src];
+      }
+
+      // Clear global errors.
+      Howler.noAudio = false;
+
+      // Clear out `self`.
+      self._state = 'unloaded';
+      self._sounds = [];
+      self = null;
+
+      return null;
+    },
+
+    /**
+     * Listen to a custom event.
+     * @param  {String}   event Event name.
+     * @param  {Function} fn    Listener to call.
+     * @param  {Number}   id    (optional) Only listen to events for this sound.
+     * @param  {Number}   once  (INTERNAL) Marks event to fire only once.
+     * @return {Howl}
+     */
+    on: function(event, fn, id, once) {
+      var self = this;
+      var events = self['_on' + event];
+
+      if (typeof fn === 'function') {
+        events.push(once ? {id: id, fn: fn, once: once} : {id: id, fn: fn});
+      }
+
+      return self;
+    },
+
+    /**
+     * Remove a custom event. Call without parameters to remove all events.
+     * @param  {String}   event Event name.
+     * @param  {Function} fn    Listener to remove. Leave empty to remove all.
+     * @param  {Number}   id    (optional) Only remove events for this sound.
+     * @return {Howl}
+     */
+    off: function(event, fn, id) {
+      var self = this;
+      var events = self['_on' + event];
+      var i = 0;
+
+      // Allow passing just an event and ID.
+      if (typeof fn === 'number') {
+        id = fn;
+        fn = null;
+      }
+
+      if (fn || id) {
+        // Loop through event store and remove the passed function.
+        for (i=0; i<events.length; i++) {
+          var isId = (id === events[i].id);
+          if (fn === events[i].fn && isId || !fn && isId) {
+            events.splice(i, 1);
+            break;
+          }
+        }
+      } else if (event) {
+        // Clear out all events of this type.
+        self['_on' + event] = [];
+      } else {
+        // Clear out all events of every type.
+        var keys = Object.keys(self);
+        for (i=0; i<keys.length; i++) {
+          if ((keys[i].indexOf('_on') === 0) && Array.isArray(self[keys[i]])) {
+            self[keys[i]] = [];
+          }
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Listen to a custom event and remove it once fired.
+     * @param  {String}   event Event name.
+     * @param  {Function} fn    Listener to call.
+     * @param  {Number}   id    (optional) Only listen to events for this sound.
+     * @return {Howl}
+     */
+    once: function(event, fn, id) {
+      var self = this;
+
+      // Setup the event listener.
+      self.on(event, fn, id, 1);
+
+      return self;
+    },
+
+    /**
+     * Emit all events of a specific type and pass the sound id.
+     * @param  {String} event Event name.
+     * @param  {Number} id    Sound ID.
+     * @param  {Number} msg   Message to go with event.
+     * @return {Howl}
+     */
+    _emit: function(event, id, msg) {
+      var self = this;
+      var events = self['_on' + event];
+
+      // Loop through event store and fire all functions.
+      for (var i=events.length-1; i>=0; i--) {
+        // Only fire the listener if the correct ID is used.
+        if (!events[i].id || events[i].id === id || event === 'load') {
+          setTimeout(function(fn) {
+            fn.call(this, id, msg);
+          }.bind(self, events[i].fn), 0);
+
+          // If this event was setup with `once`, remove it.
+          if (events[i].once) {
+            self.off(event, events[i].fn, events[i].id);
+          }
+        }
+      }
+
+      // Pass the event type into load queue so that it can continue stepping.
+      self._loadQueue(event);
+
+      return self;
+    },
+
+    /**
+     * Queue of actions initiated before the sound has loaded.
+     * These will be called in sequence, with the next only firing
+     * after the previous has finished executing (even if async like play).
+     * @return {Howl}
+     */
+    _loadQueue: function(event) {
+      var self = this;
+
+      if (self._queue.length > 0) {
+        var task = self._queue[0];
+
+        // Remove this task if a matching event was passed.
+        if (task.event === event) {
+          self._queue.shift();
+          self._loadQueue();
+        }
+
+        // Run the task if no event type is passed.
+        if (!event) {
+          task.action();
+        }
+      }
+
+      return self;
+    },
+
+    /**
+     * Fired when playback ends at the end of the duration.
+     * @param  {Sound} sound The sound object to work with.
+     * @return {Howl}
+     */
+    _ended: function(sound) {
+      var self = this;
+      var sprite = sound._sprite;
+
+      // If we are using IE and there was network latency we may be clipping
+      // audio before it completes playing. Lets check the node to make sure it
+      // believes it has completed, before ending the playback.
+      if (!self._webAudio && sound._node && !sound._node.paused && !sound._node.ended && sound._node.currentTime < sound._stop) {
+        setTimeout(self._ended.bind(self, sound), 100);
+        return self;
+      }
+
+      // Should this sound loop?
+      var loop = !!(sound._loop || self._sprite[sprite][2]);
+
+      // Fire the ended event.
+      self._emit('end', sound._id);
+
+      // Restart the playback for HTML5 Audio loop.
+      if (!self._webAudio && loop) {
+        self.stop(sound._id, true).play(sound._id);
+      }
+
+      // Restart this timer if on a Web Audio loop.
+      if (self._webAudio && loop) {
+        self._emit('play', sound._id);
+        sound._seek = sound._start || 0;
+        sound._rateSeek = 0;
+        sound._playStart = Howler.ctx.currentTime;
+
+        var timeout = ((sound._stop - sound._start) * 1000) / Math.abs(sound._rate);
+        self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
+      }
+
+      // Mark the node as paused.
+      if (self._webAudio && !loop) {
+        sound._paused = true;
+        sound._ended = true;
+        sound._seek = sound._start || 0;
+        sound._rateSeek = 0;
+        self._clearTimer(sound._id);
+
+        // Clean up the buffer source.
+        self._cleanBuffer(sound._node);
+
+        // Attempt to auto-suspend AudioContext if no sounds are still playing.
+        Howler._autoSuspend();
+      }
+
+      // When using a sprite, end the track.
+      if (!self._webAudio && !loop) {
+        self.stop(sound._id, true);
+      }
+
+      return self;
+    },
+
+    /**
+     * Clear the end timer for a sound playback.
+     * @param  {Number} id The sound ID.
+     * @return {Howl}
+     */
+    _clearTimer: function(id) {
+      var self = this;
+
+      if (self._endTimers[id]) {
+        // Clear the timeout or remove the ended listener.
+        if (typeof self._endTimers[id] !== 'function') {
+          clearTimeout(self._endTimers[id]);
+        } else {
+          var sound = self._soundById(id);
+          if (sound && sound._node) {
+            sound._node.removeEventListener('ended', self._endTimers[id], false);
+          }
+        }
+
+        delete self._endTimers[id];
+      }
+
+      return self;
+    },
+
+    /**
+     * Return the sound identified by this ID, or return null.
+     * @param  {Number} id Sound ID
+     * @return {Object}    Sound object or null.
+     */
+    _soundById: function(id) {
+      var self = this;
+
+      // Loop through all sounds and find the one with this ID.
+      for (var i=0; i<self._sounds.length; i++) {
+        if (id === self._sounds[i]._id) {
+          return self._sounds[i];
+        }
+      }
+
+      return null;
+    },
+
+    /**
+     * Return an inactive sound from the pool or create a new one.
+     * @return {Sound} Sound playback object.
+     */
+    _inactiveSound: function() {
+      var self = this;
+
+      self._drain();
+
+      // Find the first inactive node to recycle.
+      for (var i=0; i<self._sounds.length; i++) {
+        if (self._sounds[i]._ended) {
+          return self._sounds[i].reset();
+        }
+      }
+
+      // If no inactive node was found, create a new one.
+      return new Sound(self);
+    },
+
+    /**
+     * Drain excess inactive sounds from the pool.
+     */
+    _drain: function() {
+      var self = this;
+      var limit = self._pool;
+      var cnt = 0;
+      var i = 0;
+
+      // If there are less sounds than the max pool size, we are done.
+      if (self._sounds.length < limit) {
+        return;
+      }
+
+      // Count the number of inactive sounds.
+      for (i=0; i<self._sounds.length; i++) {
+        if (self._sounds[i]._ended) {
+          cnt++;
+        }
+      }
+
+      // Remove excess inactive sounds, going in reverse order.
+      for (i=self._sounds.length - 1; i>=0; i--) {
+        if (cnt <= limit) {
+          return;
+        }
+
+        if (self._sounds[i]._ended) {
+          // Disconnect the audio source when using Web Audio.
+          if (self._webAudio && self._sounds[i]._node) {
+            self._sounds[i]._node.disconnect(0);
+          }
+
+          // Remove sounds until we have the pool size.
+          self._sounds.splice(i, 1);
+          cnt--;
+        }
+      }
+    },
+
+    /**
+     * Get all ID's from the sounds pool.
+     * @param  {Number} id Only return one ID if one is passed.
+     * @return {Array}    Array of IDs.
+     */
+    _getSoundIds: function(id) {
+      var self = this;
+
+      if (typeof id === 'undefined') {
+        var ids = [];
+        for (var i=0; i<self._sounds.length; i++) {
+          ids.push(self._sounds[i]._id);
+        }
+
+        return ids;
+      } else {
+        return [id];
+      }
+    },
+
+    /**
+     * Load the sound back into the buffer source.
+     * @param  {Sound} sound The sound object to work with.
+     * @return {Howl}
+     */
+    _refreshBuffer: function(sound) {
+      var self = this;
+
+      // Setup the buffer source for playback.
+      sound._node.bufferSource = Howler.ctx.createBufferSource();
+      sound._node.bufferSource.buffer = cache[self._src];
+
+      // Connect to the correct node.
+      if (sound._panner) {
+        sound._node.bufferSource.connect(sound._panner);
+      } else {
+        sound._node.bufferSource.connect(sound._node);
+      }
+
+      // Setup looping and playback rate.
+      sound._node.bufferSource.loop = sound._loop;
+      if (sound._loop) {
+        sound._node.bufferSource.loopStart = sound._start || 0;
+        sound._node.bufferSource.loopEnd = sound._stop || 0;
+      }
+      sound._node.bufferSource.playbackRate.setValueAtTime(sound._rate, Howler.ctx.currentTime);
+
+      return self;
+    },
+
+    /**
+     * Prevent memory leaks by cleaning up the buffer source after playback.
+     * @param  {Object} node Sound's audio node containing the buffer source.
+     * @return {Howl}
+     */
+    _cleanBuffer: function(node) {
+      var self = this;
+      var isIOS = Howler._navigator && Howler._navigator.vendor.indexOf('Apple') >= 0;
+
+      if (Howler._scratchBuffer && node.bufferSource) {
+        node.bufferSource.onended = null;
+        node.bufferSource.disconnect(0);
+        if (isIOS) {
+          try { node.bufferSource.buffer = Howler._scratchBuffer; } catch(e) {}
+        }
+      }
+      node.bufferSource = null;
+
+      return self;
+    },
+
+    /**
+     * Set the source to a 0-second silence to stop any downloading (except in IE).
+     * @param  {Object} node Audio node to clear.
+     */
+    _clearSound: function(node) {
+      var checkIE = /MSIE |Trident\//.test(Howler._navigator && Howler._navigator.userAgent);
+      if (!checkIE) {
+        node.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      }
+    }
+  };
+
+  /** Single Sound Methods **/
+  /***************************************************************************/
+
+  /**
+   * Setup the sound object, which each node attached to a Howl group is contained in.
+   * @param {Object} howl The Howl parent group.
+   */
+  var Sound = function(howl) {
+    this._parent = howl;
+    this.init();
+  };
+  Sound.prototype = {
+    /**
+     * Initialize a new Sound object.
+     * @return {Sound}
+     */
+    init: function() {
+      var self = this;
+      var parent = self._parent;
+
+      // Setup the default parameters.
+      self._muted = parent._muted;
+      self._loop = parent._loop;
+      self._volume = parent._volume;
+      self._rate = parent._rate;
+      self._seek = 0;
+      self._paused = true;
+      self._ended = true;
+      self._sprite = '__default';
+
+      // Generate a unique ID for this sound.
+      self._id = ++Howler._counter;
+
+      // Add itself to the parent's pool.
+      parent._sounds.push(self);
+
+      // Create the new node.
+      self.create();
+
+      return self;
+    },
+
+    /**
+     * Create and setup a new sound object, whether HTML5 Audio or Web Audio.
+     * @return {Sound}
+     */
+    create: function() {
+      var self = this;
+      var parent = self._parent;
+      var volume = (Howler._muted || self._muted || self._parent._muted) ? 0 : self._volume;
+
+      if (parent._webAudio) {
+        // Create the gain node for controlling volume (the source will connect to this).
+        self._node = (typeof Howler.ctx.createGain === 'undefined') ? Howler.ctx.createGainNode() : Howler.ctx.createGain();
+        self._node.gain.setValueAtTime(volume, Howler.ctx.currentTime);
+        self._node.paused = true;
+        self._node.connect(Howler.masterGain);
+      } else if (!Howler.noAudio) {
+        // Get an unlocked Audio object from the pool.
+        self._node = Howler._obtainHtml5Audio();
+
+        // Listen for errors (http://dev.w3.org/html5/spec-author-view/spec.html#mediaerror).
+        self._errorFn = self._errorListener.bind(self);
+        self._node.addEventListener('error', self._errorFn, false);
+
+        // Listen for 'canplaythrough' event to let us know the sound is ready.
+        self._loadFn = self._loadListener.bind(self);
+        self._node.addEventListener(Howler._canPlayEvent, self._loadFn, false);
+
+        // Setup the new audio node.
+        self._node.src = parent._src;
+        self._node.preload = parent._preload === true ? 'auto' : parent._preload;
+        self._node.volume = volume * Howler.volume();
+
+        // Begin loading the source.
+        self._node.load();
+      }
+
+      return self;
+    },
+
+    /**
+     * Reset the parameters of this sound to the original state (for recycle).
+     * @return {Sound}
+     */
+    reset: function() {
+      var self = this;
+      var parent = self._parent;
+
+      // Reset all of the parameters of this sound.
+      self._muted = parent._muted;
+      self._loop = parent._loop;
+      self._volume = parent._volume;
+      self._rate = parent._rate;
+      self._seek = 0;
+      self._rateSeek = 0;
+      self._paused = true;
+      self._ended = true;
+      self._sprite = '__default';
+
+      // Generate a new ID so that it isn't confused with the previous sound.
+      self._id = ++Howler._counter;
+
+      return self;
+    },
+
+    /**
+     * HTML5 Audio error listener callback.
+     */
+    _errorListener: function() {
+      var self = this;
+
+      // Fire an error event and pass back the code.
+      self._parent._emit('loaderror', self._id, self._node.error ? self._node.error.code : 0);
+
+      // Clear the event listener.
+      self._node.removeEventListener('error', self._errorFn, false);
+    },
+
+    /**
+     * HTML5 Audio canplaythrough listener callback.
+     */
+    _loadListener: function() {
+      var self = this;
+      var parent = self._parent;
+
+      // Round up the duration to account for the lower precision in HTML5 Audio.
+      parent._duration = Math.ceil(self._node.duration * 10) / 10;
+
+      // Setup a sprite if none is defined.
+      if (Object.keys(parent._sprite).length === 0) {
+        parent._sprite = {__default: [0, parent._duration * 1000]};
+      }
+
+      if (parent._state !== 'loaded') {
+        parent._state = 'loaded';
+        parent._emit('load');
+        parent._loadQueue();
+      }
+
+      // Clear the event listener.
+      self._node.removeEventListener(Howler._canPlayEvent, self._loadFn, false);
+    }
+  };
+
+  /** Helper Methods **/
+  /***************************************************************************/
+
+  var cache = {};
+
+  /**
+   * Buffer a sound from URL, Data URI or cache and decode to audio source (Web Audio API).
+   * @param  {Howl} self
+   */
+  var loadBuffer = function(self) {
+    var url = self._src;
+
+    // Check if the buffer has already been cached and use it instead.
+    if (cache[url]) {
+      // Set the duration from the cache.
+      self._duration = cache[url].duration;
+
+      // Load the sound into this Howl.
+      loadSound(self);
+
+      return;
+    }
+
+    if (/^data:[^;]+;base64,/.test(url)) {
+      // Decode the base64 data URI without XHR, since some browsers don't support it.
+      var data = atob(url.split(',')[1]);
+      var dataView = new Uint8Array(data.length);
+      for (var i=0; i<data.length; ++i) {
+        dataView[i] = data.charCodeAt(i);
+      }
+
+      decodeAudioData(dataView.buffer, self);
+    } else {
+      // Load the buffer from the URL.
+      var xhr = new XMLHttpRequest();
+      xhr.open(self._xhr.method, url, true);
+      xhr.withCredentials = self._xhr.withCredentials;
+      xhr.responseType = 'arraybuffer';
+
+      // Apply any custom headers to the request.
+      if (self._xhr.headers) {
+        Object.keys(self._xhr.headers).forEach(function(key) {
+          xhr.setRequestHeader(key, self._xhr.headers[key]);
+        });
+      }
+
+      xhr.onload = function() {
+        // Make sure we get a successful response back.
+        var code = (xhr.status + '')[0];
+        if (code !== '0' && code !== '2' && code !== '3') {
+          self._emit('loaderror', null, 'Failed loading audio file with status: ' + xhr.status + '.');
+          return;
+        }
+
+        decodeAudioData(xhr.response, self);
+      };
+      xhr.onerror = function() {
+        // If there is an error, switch to HTML5 Audio.
+        if (self._webAudio) {
+          self._html5 = true;
+          self._webAudio = false;
+          self._sounds = [];
+          delete cache[url];
+          self.load();
+        }
+      };
+      safeXhrSend(xhr);
+    }
+  };
+
+  /**
+   * Send the XHR request wrapped in a try/catch.
+   * @param  {Object} xhr XHR to send.
+   */
+  var safeXhrSend = function(xhr) {
+    try {
+      xhr.send();
+    } catch (e) {
+      xhr.onerror();
+    }
+  };
+
+  /**
+   * Decode audio data from an array buffer.
+   * @param  {ArrayBuffer} arraybuffer The audio data.
+   * @param  {Howl}        self
+   */
+  var decodeAudioData = function(arraybuffer, self) {
+    // Fire a load error if something broke.
+    var error = function() {
+      self._emit('loaderror', null, 'Decoding audio data failed.');
+    };
+
+    // Load the sound on success.
+    var success = function(buffer) {
+      if (buffer && self._sounds.length > 0) {
+        cache[self._src] = buffer;
+        loadSound(self, buffer);
+      } else {
+        error();
+      }
+    };
+
+    // Decode the buffer into an audio source.
+    if (typeof Promise !== 'undefined' && Howler.ctx.decodeAudioData.length === 1) {
+      Howler.ctx.decodeAudioData(arraybuffer).then(success).catch(error);
+    } else {
+      Howler.ctx.decodeAudioData(arraybuffer, success, error);
+    }
+  }
+
+  /**
+   * Sound is now loaded, so finish setting everything up and fire the loaded event.
+   * @param  {Howl} self
+   * @param  {Object} buffer The decoded buffer sound source.
+   */
+  var loadSound = function(self, buffer) {
+    // Set the duration.
+    if (buffer && !self._duration) {
+      self._duration = buffer.duration;
+    }
+
+    // Setup a sprite if none is defined.
+    if (Object.keys(self._sprite).length === 0) {
+      self._sprite = {__default: [0, self._duration * 1000]};
+    }
+
+    // Fire the loaded event.
+    if (self._state !== 'loaded') {
+      self._state = 'loaded';
+      self._emit('load');
+      self._loadQueue();
+    }
+  };
+
+  /**
+   * Setup the audio context when available, or switch to HTML5 Audio mode.
+   */
+  var setupAudioContext = function() {
+    // If we have already detected that Web Audio isn't supported, don't run this step again.
+    if (!Howler.usingWebAudio) {
+      return;
+    }
+
+    // Check if we are using Web Audio and setup the AudioContext if we are.
+    try {
+      if (typeof AudioContext !== 'undefined') {
+        Howler.ctx = new AudioContext();
+      } else if (typeof webkitAudioContext !== 'undefined') {
+        Howler.ctx = new webkitAudioContext();
+      } else {
+        Howler.usingWebAudio = false;
+      }
+    } catch(e) {
+      Howler.usingWebAudio = false;
+    }
+
+    // If the audio context creation still failed, set using web audio to false.
+    if (!Howler.ctx) {
+      Howler.usingWebAudio = false;
+    }
+
+    // Check if a webview is being used on iOS8 or earlier (rather than the browser).
+    // If it is, disable Web Audio as it causes crashing.
+    var iOS = (/iP(hone|od|ad)/.test(Howler._navigator && Howler._navigator.platform));
+    var appVersion = Howler._navigator && Howler._navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
+    var version = appVersion ? parseInt(appVersion[1], 10) : null;
+    if (iOS && version && version < 9) {
+      var safari = /safari/.test(Howler._navigator && Howler._navigator.userAgent.toLowerCase());
+      if (Howler._navigator && !safari) {
+        Howler.usingWebAudio = false;
+      }
+    }
+
+    // Create and expose the master GainNode when using Web Audio (useful for plugins or advanced usage).
+    if (Howler.usingWebAudio) {
+      Howler.masterGain = (typeof Howler.ctx.createGain === 'undefined') ? Howler.ctx.createGainNode() : Howler.ctx.createGain();
+      Howler.masterGain.gain.setValueAtTime(Howler._muted ? 0 : Howler._volume, Howler.ctx.currentTime);
+      Howler.masterGain.connect(Howler.ctx.destination);
+    }
+
+    // Re-run the setup on Howler.
+    Howler._setup();
+  };
+
+  // Add support for AMD (Asynchronous Module Definition) libraries such as require.js.
+  if (typeof define === 'function' && define.amd) {
+    define([], function() {
+      return {
+        Howler: Howler,
+        Howl: Howl
+      };
+    });
+  }
+
+  // Add support for CommonJS libraries such as browserify.
+  if (typeof exports !== 'undefined') {
+    exports.Howler = Howler;
+    exports.Howl = Howl;
+  }
+
+  // Add to global in Node.js (for testing, etc).
+  if (typeof global !== 'undefined') {
+    global.HowlerGlobal = HowlerGlobal;
+    global.Howler = Howler;
+    global.Howl = Howl;
+    global.Sound = Sound;
+  } else if (typeof window !== 'undefined') {  // Define globally in case AMD is not available or unused.
+    window.HowlerGlobal = HowlerGlobal;
+    window.Howler = Howler;
+    window.Howl = Howl;
+    window.Sound = Sound;
+  }
+})();
+
+
+/*!
+ *  Spatial Plugin - Adds support for stereo and 3D audio where Web Audio is supported.
+ *  
+ *  howler.js v2.2.0
+ *  howlerjs.com
+ *
+ *  (c) 2013-2020, James Simpson of GoldFire Studios
+ *  goldfirestudios.com
+ *
+ *  MIT License
+ */
+
+(function() {
+
+  'use strict';
+
+  // Setup default properties.
+  HowlerGlobal.prototype._pos = [0, 0, 0];
+  HowlerGlobal.prototype._orientation = [0, 0, -1, 0, 1, 0];
+
+  /** Global Methods **/
+  /***************************************************************************/
+
+  /**
+   * Helper method to update the stereo panning position of all current Howls.
+   * Future Howls will not use this value unless explicitly set.
+   * @param  {Number} pan A value of -1.0 is all the way left and 1.0 is all the way right.
+   * @return {Howler/Number}     Self or current stereo panning value.
+   */
+  HowlerGlobal.prototype.stereo = function(pan) {
+    var self = this;
+
+    // Stop right here if not using Web Audio.
+    if (!self.ctx || !self.ctx.listener) {
+      return self;
+    }
+
+    // Loop through all Howls and update their stereo panning.
+    for (var i=self._howls.length-1; i>=0; i--) {
+      self._howls[i].stereo(pan);
+    }
+
+    return self;
+  };
+
+  /**
+   * Get/set the position of the listener in 3D cartesian space. Sounds using
+   * 3D position will be relative to the listener's position.
+   * @param  {Number} x The x-position of the listener.
+   * @param  {Number} y The y-position of the listener.
+   * @param  {Number} z The z-position of the listener.
+   * @return {Howler/Array}   Self or current listener position.
+   */
+  HowlerGlobal.prototype.pos = function(x, y, z) {
+    var self = this;
+
+    // Stop right here if not using Web Audio.
+    if (!self.ctx || !self.ctx.listener) {
+      return self;
+    }
+
+    // Set the defaults for optional 'y' & 'z'.
+    y = (typeof y !== 'number') ? self._pos[1] : y;
+    z = (typeof z !== 'number') ? self._pos[2] : z;
+
+    if (typeof x === 'number') {
+      self._pos = [x, y, z];
+
+      if (typeof self.ctx.listener.positionX !== 'undefined') {
+        self.ctx.listener.positionX.setTargetAtTime(self._pos[0], Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.positionY.setTargetAtTime(self._pos[1], Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.positionZ.setTargetAtTime(self._pos[2], Howler.ctx.currentTime, 0.1);
+      } else {
+        self.ctx.listener.setPosition(self._pos[0], self._pos[1], self._pos[2]);
+      }
+    } else {
+      return self._pos;
+    }
+
+    return self;
+  };
+
+  /**
+   * Get/set the direction the listener is pointing in the 3D cartesian space.
+   * A front and up vector must be provided. The front is the direction the
+   * face of the listener is pointing, and up is the direction the top of the
+   * listener is pointing. Thus, these values are expected to be at right angles
+   * from each other.
+   * @param  {Number} x   The x-orientation of the listener.
+   * @param  {Number} y   The y-orientation of the listener.
+   * @param  {Number} z   The z-orientation of the listener.
+   * @param  {Number} xUp The x-orientation of the top of the listener.
+   * @param  {Number} yUp The y-orientation of the top of the listener.
+   * @param  {Number} zUp The z-orientation of the top of the listener.
+   * @return {Howler/Array}     Returns self or the current orientation vectors.
+   */
+  HowlerGlobal.prototype.orientation = function(x, y, z, xUp, yUp, zUp) {
+    var self = this;
+
+    // Stop right here if not using Web Audio.
+    if (!self.ctx || !self.ctx.listener) {
+      return self;
+    }
+
+    // Set the defaults for optional 'y' & 'z'.
+    var or = self._orientation;
+    y = (typeof y !== 'number') ? or[1] : y;
+    z = (typeof z !== 'number') ? or[2] : z;
+    xUp = (typeof xUp !== 'number') ? or[3] : xUp;
+    yUp = (typeof yUp !== 'number') ? or[4] : yUp;
+    zUp = (typeof zUp !== 'number') ? or[5] : zUp;
+
+    if (typeof x === 'number') {
+      self._orientation = [x, y, z, xUp, yUp, zUp];
+
+      if (typeof self.ctx.listener.forwardX !== 'undefined') {
+        self.ctx.listener.forwardX.setTargetAtTime(x, Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.forwardY.setTargetAtTime(y, Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.forwardZ.setTargetAtTime(z, Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.upX.setTargetAtTime(xUp, Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.upY.setTargetAtTime(yUp, Howler.ctx.currentTime, 0.1);
+        self.ctx.listener.upZ.setTargetAtTime(zUp, Howler.ctx.currentTime, 0.1);
+      } else {
+        self.ctx.listener.setOrientation(x, y, z, xUp, yUp, zUp);
+      }
+    } else {
+      return or;
+    }
+
+    return self;
+  };
+
+  /** Group Methods **/
+  /***************************************************************************/
+
+  /**
+   * Add new properties to the core init.
+   * @param  {Function} _super Core init method.
+   * @return {Howl}
+   */
+  Howl.prototype.init = (function(_super) {
+    return function(o) {
+      var self = this;
+
+      // Setup user-defined default properties.
+      self._orientation = o.orientation || [1, 0, 0];
+      self._stereo = o.stereo || null;
+      self._pos = o.pos || null;
+      self._pannerAttr = {
+        coneInnerAngle: typeof o.coneInnerAngle !== 'undefined' ? o.coneInnerAngle : 360,
+        coneOuterAngle: typeof o.coneOuterAngle !== 'undefined' ? o.coneOuterAngle : 360,
+        coneOuterGain: typeof o.coneOuterGain !== 'undefined' ? o.coneOuterGain : 0,
+        distanceModel: typeof o.distanceModel !== 'undefined' ? o.distanceModel : 'inverse',
+        maxDistance: typeof o.maxDistance !== 'undefined' ? o.maxDistance : 10000,
+        panningModel: typeof o.panningModel !== 'undefined' ? o.panningModel : 'HRTF',
+        refDistance: typeof o.refDistance !== 'undefined' ? o.refDistance : 1,
+        rolloffFactor: typeof o.rolloffFactor !== 'undefined' ? o.rolloffFactor : 1
+      };
+
+      // Setup event listeners.
+      self._onstereo = o.onstereo ? [{fn: o.onstereo}] : [];
+      self._onpos = o.onpos ? [{fn: o.onpos}] : [];
+      self._onorientation = o.onorientation ? [{fn: o.onorientation}] : [];
+
+      // Complete initilization with howler.js core's init function.
+      return _super.call(this, o);
+    };
+  })(Howl.prototype.init);
+
+  /**
+   * Get/set the stereo panning of the audio source for this sound or all in the group.
+   * @param  {Number} pan  A value of -1.0 is all the way left and 1.0 is all the way right.
+   * @param  {Number} id (optional) The sound ID. If none is passed, all in group will be updated.
+   * @return {Howl/Number}    Returns self or the current stereo panning value.
+   */
+  Howl.prototype.stereo = function(pan, id) {
+    var self = this;
+
+    // Stop right here if not using Web Audio.
+    if (!self._webAudio) {
+      return self;
+    }
+
+    // If the sound hasn't loaded, add it to the load queue to change stereo pan when capable.
+    if (self._state !== 'loaded') {
+      self._queue.push({
+        event: 'stereo',
+        action: function() {
+          self.stereo(pan, id);
+        }
+      });
+
+      return self;
+    }
+
+    // Check for PannerStereoNode support and fallback to PannerNode if it doesn't exist.
+    var pannerType = (typeof Howler.ctx.createStereoPanner === 'undefined') ? 'spatial' : 'stereo';
+
+    // Setup the group's stereo panning if no ID is passed.
+    if (typeof id === 'undefined') {
+      // Return the group's stereo panning if no parameters are passed.
+      if (typeof pan === 'number') {
+        self._stereo = pan;
+        self._pos = [pan, 0, 0];
+      } else {
+        return self._stereo;
+      }
+    }
+
+    // Change the streo panning of one or all sounds in group.
+    var ids = self._getSoundIds(id);
+    for (var i=0; i<ids.length; i++) {
+      // Get the sound.
+      var sound = self._soundById(ids[i]);
+
+      if (sound) {
+        if (typeof pan === 'number') {
+          sound._stereo = pan;
+          sound._pos = [pan, 0, 0];
+
+          if (sound._node) {
+            // If we are falling back, make sure the panningModel is equalpower.
+            sound._pannerAttr.panningModel = 'equalpower';
+
+            // Check if there is a panner setup and create a new one if not.
+            if (!sound._panner || !sound._panner.pan) {
+              setupPanner(sound, pannerType);
+            }
+
+            if (pannerType === 'spatial') {
+              if (typeof sound._panner.positionX !== 'undefined') {
+                sound._panner.positionX.setValueAtTime(pan, Howler.ctx.currentTime);
+                sound._panner.positionY.setValueAtTime(0, Howler.ctx.currentTime);
+                sound._panner.positionZ.setValueAtTime(0, Howler.ctx.currentTime);
+              } else {
+                sound._panner.setPosition(pan, 0, 0);
+              }
+            } else {
+              sound._panner.pan.setValueAtTime(pan, Howler.ctx.currentTime);
+            }
+          }
+
+          self._emit('stereo', sound._id);
+        } else {
+          return sound._stereo;
+        }
+      }
+    }
+
+    return self;
+  };
+
+  /**
+   * Get/set the 3D spatial position of the audio source for this sound or group relative to the global listener.
+   * @param  {Number} x  The x-position of the audio source.
+   * @param  {Number} y  The y-position of the audio source.
+   * @param  {Number} z  The z-position of the audio source.
+   * @param  {Number} id (optional) The sound ID. If none is passed, all in group will be updated.
+   * @return {Howl/Array}    Returns self or the current 3D spatial position: [x, y, z].
+   */
+  Howl.prototype.pos = function(x, y, z, id) {
+    var self = this;
+
+    // Stop right here if not using Web Audio.
+    if (!self._webAudio) {
+      return self;
+    }
+
+    // If the sound hasn't loaded, add it to the load queue to change position when capable.
+    if (self._state !== 'loaded') {
+      self._queue.push({
+        event: 'pos',
+        action: function() {
+          self.pos(x, y, z, id);
+        }
+      });
+
+      return self;
+    }
+
+    // Set the defaults for optional 'y' & 'z'.
+    y = (typeof y !== 'number') ? 0 : y;
+    z = (typeof z !== 'number') ? -0.5 : z;
+
+    // Setup the group's spatial position if no ID is passed.
+    if (typeof id === 'undefined') {
+      // Return the group's spatial position if no parameters are passed.
+      if (typeof x === 'number') {
+        self._pos = [x, y, z];
+      } else {
+        return self._pos;
+      }
+    }
+
+    // Change the spatial position of one or all sounds in group.
+    var ids = self._getSoundIds(id);
+    for (var i=0; i<ids.length; i++) {
+      // Get the sound.
+      var sound = self._soundById(ids[i]);
+
+      if (sound) {
+        if (typeof x === 'number') {
+          sound._pos = [x, y, z];
+
+          if (sound._node) {
+            // Check if there is a panner setup and create a new one if not.
+            if (!sound._panner || sound._panner.pan) {
+              setupPanner(sound, 'spatial');
+            }
+
+            if (typeof sound._panner.positionX !== 'undefined') {
+              sound._panner.positionX.setValueAtTime(x, Howler.ctx.currentTime);
+              sound._panner.positionY.setValueAtTime(y, Howler.ctx.currentTime);
+              sound._panner.positionZ.setValueAtTime(z, Howler.ctx.currentTime);
+            } else {
+              sound._panner.setPosition(x, y, z);
+            }
+          }
+
+          self._emit('pos', sound._id);
+        } else {
+          return sound._pos;
+        }
+      }
+    }
+
+    return self;
+  };
+
+  /**
+   * Get/set the direction the audio source is pointing in the 3D cartesian coordinate
+   * space. Depending on how direction the sound is, based on the `cone` attributes,
+   * a sound pointing away from the listener can be quiet or silent.
+   * @param  {Number} x  The x-orientation of the source.
+   * @param  {Number} y  The y-orientation of the source.
+   * @param  {Number} z  The z-orientation of the source.
+   * @param  {Number} id (optional) The sound ID. If none is passed, all in group will be updated.
+   * @return {Howl/Array}    Returns self or the current 3D spatial orientation: [x, y, z].
+   */
+  Howl.prototype.orientation = function(x, y, z, id) {
+    var self = this;
+
+    // Stop right here if not using Web Audio.
+    if (!self._webAudio) {
+      return self;
+    }
+
+    // If the sound hasn't loaded, add it to the load queue to change orientation when capable.
+    if (self._state !== 'loaded') {
+      self._queue.push({
+        event: 'orientation',
+        action: function() {
+          self.orientation(x, y, z, id);
+        }
+      });
+
+      return self;
+    }
+
+    // Set the defaults for optional 'y' & 'z'.
+    y = (typeof y !== 'number') ? self._orientation[1] : y;
+    z = (typeof z !== 'number') ? self._orientation[2] : z;
+
+    // Setup the group's spatial orientation if no ID is passed.
+    if (typeof id === 'undefined') {
+      // Return the group's spatial orientation if no parameters are passed.
+      if (typeof x === 'number') {
+        self._orientation = [x, y, z];
+      } else {
+        return self._orientation;
+      }
+    }
+
+    // Change the spatial orientation of one or all sounds in group.
+    var ids = self._getSoundIds(id);
+    for (var i=0; i<ids.length; i++) {
+      // Get the sound.
+      var sound = self._soundById(ids[i]);
+
+      if (sound) {
+        if (typeof x === 'number') {
+          sound._orientation = [x, y, z];
+
+          if (sound._node) {
+            // Check if there is a panner setup and create a new one if not.
+            if (!sound._panner) {
+              // Make sure we have a position to setup the node with.
+              if (!sound._pos) {
+                sound._pos = self._pos || [0, 0, -0.5];
+              }
+
+              setupPanner(sound, 'spatial');
+            }
+
+            if (typeof sound._panner.orientationX !== 'undefined') {
+              sound._panner.orientationX.setValueAtTime(x, Howler.ctx.currentTime);
+              sound._panner.orientationY.setValueAtTime(y, Howler.ctx.currentTime);
+              sound._panner.orientationZ.setValueAtTime(z, Howler.ctx.currentTime);
+            } else {
+              sound._panner.setOrientation(x, y, z);
+            }
+          }
+
+          self._emit('orientation', sound._id);
+        } else {
+          return sound._orientation;
+        }
+      }
+    }
+
+    return self;
+  };
+
+  /**
+   * Get/set the panner node's attributes for a sound or group of sounds.
+   * This method can optionall take 0, 1 or 2 arguments.
+   *   pannerAttr() -> Returns the group's values.
+   *   pannerAttr(id) -> Returns the sound id's values.
+   *   pannerAttr(o) -> Set's the values of all sounds in this Howl group.
+   *   pannerAttr(o, id) -> Set's the values of passed sound id.
+   *
+   *   Attributes:
+   *     coneInnerAngle - (360 by default) A parameter for directional audio sources, this is an angle, in degrees,
+   *                      inside of which there will be no volume reduction.
+   *     coneOuterAngle - (360 by default) A parameter for directional audio sources, this is an angle, in degrees,
+   *                      outside of which the volume will be reduced to a constant value of `coneOuterGain`.
+   *     coneOuterGain - (0 by default) A parameter for directional audio sources, this is the gain outside of the
+   *                     `coneOuterAngle`. It is a linear value in the range `[0, 1]`.
+   *     distanceModel - ('inverse' by default) Determines algorithm used to reduce volume as audio moves away from
+   *                     listener. Can be `linear`, `inverse` or `exponential.
+   *     maxDistance - (10000 by default) The maximum distance between source and listener, after which the volume
+   *                   will not be reduced any further.
+   *     refDistance - (1 by default) A reference distance for reducing volume as source moves further from the listener.
+   *                   This is simply a variable of the distance model and has a different effect depending on which model
+   *                   is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
+   *     rolloffFactor - (1 by default) How quickly the volume reduces as source moves from listener. This is simply a
+   *                     variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]`
+   *                     with `inverse` and `exponential`.
+   *     panningModel - ('HRTF' by default) Determines which spatialization algorithm is used to position audio.
+   *                     Can be `HRTF` or `equalpower`.
+   *
+   * @return {Howl/Object} Returns self or current panner attributes.
+   */
+  Howl.prototype.pannerAttr = function() {
+    var self = this;
+    var args = arguments;
+    var o, id, sound;
+
+    // Stop right here if not using Web Audio.
+    if (!self._webAudio) {
+      return self;
+    }
+
+    // Determine the values based on arguments.
+    if (args.length === 0) {
+      // Return the group's panner attribute values.
+      return self._pannerAttr;
+    } else if (args.length === 1) {
+      if (typeof args[0] === 'object') {
+        o = args[0];
+
+        // Set the grou's panner attribute values.
+        if (typeof id === 'undefined') {
+          if (!o.pannerAttr) {
+            o.pannerAttr = {
+              coneInnerAngle: o.coneInnerAngle,
+              coneOuterAngle: o.coneOuterAngle,
+              coneOuterGain: o.coneOuterGain,
+              distanceModel: o.distanceModel,
+              maxDistance: o.maxDistance,
+              refDistance: o.refDistance,
+              rolloffFactor: o.rolloffFactor,
+              panningModel: o.panningModel
+            };
+          }
+
+          self._pannerAttr = {
+            coneInnerAngle: typeof o.pannerAttr.coneInnerAngle !== 'undefined' ? o.pannerAttr.coneInnerAngle : self._coneInnerAngle,
+            coneOuterAngle: typeof o.pannerAttr.coneOuterAngle !== 'undefined' ? o.pannerAttr.coneOuterAngle : self._coneOuterAngle,
+            coneOuterGain: typeof o.pannerAttr.coneOuterGain !== 'undefined' ? o.pannerAttr.coneOuterGain : self._coneOuterGain,
+            distanceModel: typeof o.pannerAttr.distanceModel !== 'undefined' ? o.pannerAttr.distanceModel : self._distanceModel,
+            maxDistance: typeof o.pannerAttr.maxDistance !== 'undefined' ? o.pannerAttr.maxDistance : self._maxDistance,
+            refDistance: typeof o.pannerAttr.refDistance !== 'undefined' ? o.pannerAttr.refDistance : self._refDistance,
+            rolloffFactor: typeof o.pannerAttr.rolloffFactor !== 'undefined' ? o.pannerAttr.rolloffFactor : self._rolloffFactor,
+            panningModel: typeof o.pannerAttr.panningModel !== 'undefined' ? o.pannerAttr.panningModel : self._panningModel
+          };
+        }
+      } else {
+        // Return this sound's panner attribute values.
+        sound = self._soundById(parseInt(args[0], 10));
+        return sound ? sound._pannerAttr : self._pannerAttr;
+      }
+    } else if (args.length === 2) {
+      o = args[0];
+      id = parseInt(args[1], 10);
+    }
+
+    // Update the values of the specified sounds.
+    var ids = self._getSoundIds(id);
+    for (var i=0; i<ids.length; i++) {
+      sound = self._soundById(ids[i]);
+
+      if (sound) {
+        // Merge the new values into the sound.
+        var pa = sound._pannerAttr;
+        pa = {
+          coneInnerAngle: typeof o.coneInnerAngle !== 'undefined' ? o.coneInnerAngle : pa.coneInnerAngle,
+          coneOuterAngle: typeof o.coneOuterAngle !== 'undefined' ? o.coneOuterAngle : pa.coneOuterAngle,
+          coneOuterGain: typeof o.coneOuterGain !== 'undefined' ? o.coneOuterGain : pa.coneOuterGain,
+          distanceModel: typeof o.distanceModel !== 'undefined' ? o.distanceModel : pa.distanceModel,
+          maxDistance: typeof o.maxDistance !== 'undefined' ? o.maxDistance : pa.maxDistance,
+          refDistance: typeof o.refDistance !== 'undefined' ? o.refDistance : pa.refDistance,
+          rolloffFactor: typeof o.rolloffFactor !== 'undefined' ? o.rolloffFactor : pa.rolloffFactor,
+          panningModel: typeof o.panningModel !== 'undefined' ? o.panningModel : pa.panningModel
+        };
+
+        // Update the panner values or create a new panner if none exists.
+        var panner = sound._panner;
+        if (panner) {
+          panner.coneInnerAngle = pa.coneInnerAngle;
+          panner.coneOuterAngle = pa.coneOuterAngle;
+          panner.coneOuterGain = pa.coneOuterGain;
+          panner.distanceModel = pa.distanceModel;
+          panner.maxDistance = pa.maxDistance;
+          panner.refDistance = pa.refDistance;
+          panner.rolloffFactor = pa.rolloffFactor;
+          panner.panningModel = pa.panningModel;
+        } else {
+          // Make sure we have a position to setup the node with.
+          if (!sound._pos) {
+            sound._pos = self._pos || [0, 0, -0.5];
+          }
+
+          // Create a new panner node.
+          setupPanner(sound, 'spatial');
+        }
+      }
+    }
+
+    return self;
+  };
+
+  /** Single Sound Methods **/
+  /***************************************************************************/
+
+  /**
+   * Add new properties to the core Sound init.
+   * @param  {Function} _super Core Sound init method.
+   * @return {Sound}
+   */
+  Sound.prototype.init = (function(_super) {
+    return function() {
+      var self = this;
+      var parent = self._parent;
+
+      // Setup user-defined default properties.
+      self._orientation = parent._orientation;
+      self._stereo = parent._stereo;
+      self._pos = parent._pos;
+      self._pannerAttr = parent._pannerAttr;
+
+      // Complete initilization with howler.js core Sound's init function.
+      _super.call(this);
+
+      // If a stereo or position was specified, set it up.
+      if (self._stereo) {
+        parent.stereo(self._stereo);
+      } else if (self._pos) {
+        parent.pos(self._pos[0], self._pos[1], self._pos[2], self._id);
+      }
+    };
+  })(Sound.prototype.init);
+
+  /**
+   * Override the Sound.reset method to clean up properties from the spatial plugin.
+   * @param  {Function} _super Sound reset method.
+   * @return {Sound}
+   */
+  Sound.prototype.reset = (function(_super) {
+    return function() {
+      var self = this;
+      var parent = self._parent;
+
+      // Reset all spatial plugin properties on this sound.
+      self._orientation = parent._orientation;
+      self._stereo = parent._stereo;
+      self._pos = parent._pos;
+      self._pannerAttr = parent._pannerAttr;
+
+      // If a stereo or position was specified, set it up.
+      if (self._stereo) {
+        parent.stereo(self._stereo);
+      } else if (self._pos) {
+        parent.pos(self._pos[0], self._pos[1], self._pos[2], self._id);
+      } else if (self._panner) {
+        // Disconnect the panner.
+        self._panner.disconnect(0);
+        self._panner = undefined;
+        parent._refreshBuffer(self);
+      }
+
+      // Complete resetting of the sound.
+      return _super.call(this);
+    };
+  })(Sound.prototype.reset);
+
+  /** Helper Methods **/
+  /***************************************************************************/
+
+  /**
+   * Create a new panner node and save it on the sound.
+   * @param  {Sound} sound Specific sound to setup panning on.
+   * @param {String} type Type of panner to create: 'stereo' or 'spatial'.
+   */
+  var setupPanner = function(sound, type) {
+    type = type || 'spatial';
+
+    // Create the new panner node.
+    if (type === 'spatial') {
+      sound._panner = Howler.ctx.createPanner();
+      sound._panner.coneInnerAngle = sound._pannerAttr.coneInnerAngle;
+      sound._panner.coneOuterAngle = sound._pannerAttr.coneOuterAngle;
+      sound._panner.coneOuterGain = sound._pannerAttr.coneOuterGain;
+      sound._panner.distanceModel = sound._pannerAttr.distanceModel;
+      sound._panner.maxDistance = sound._pannerAttr.maxDistance;
+      sound._panner.refDistance = sound._pannerAttr.refDistance;
+      sound._panner.rolloffFactor = sound._pannerAttr.rolloffFactor;
+      sound._panner.panningModel = sound._pannerAttr.panningModel;
+
+      if (typeof sound._panner.positionX !== 'undefined') {
+        sound._panner.positionX.setValueAtTime(sound._pos[0], Howler.ctx.currentTime);
+        sound._panner.positionY.setValueAtTime(sound._pos[1], Howler.ctx.currentTime);
+        sound._panner.positionZ.setValueAtTime(sound._pos[2], Howler.ctx.currentTime);
+      } else {
+        sound._panner.setPosition(sound._pos[0], sound._pos[1], sound._pos[2]);
+      }
+
+      if (typeof sound._panner.orientationX !== 'undefined') {
+        sound._panner.orientationX.setValueAtTime(sound._orientation[0], Howler.ctx.currentTime);
+        sound._panner.orientationY.setValueAtTime(sound._orientation[1], Howler.ctx.currentTime);
+        sound._panner.orientationZ.setValueAtTime(sound._orientation[2], Howler.ctx.currentTime);
+      } else {
+        sound._panner.setOrientation(sound._orientation[0], sound._orientation[1], sound._orientation[2]);
+      }
+    } else {
+      sound._panner = Howler.ctx.createStereoPanner();
+      sound._panner.pan.setValueAtTime(sound._stereo, Howler.ctx.currentTime);
+    }
+
+    sound._panner.connect(sound._node);
+
+    // Update the connections.
+    if (!sound._paused) {
+      sound._parent.pause(sound._id, true).play(sound._id, true);
+    }
+  };
+})();
+
+},{}],"player.js":[function(require,module,exports) {
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _plyr = _interopRequireDefault(require("plyr"));
+
+var _howler = require("howler");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+// Changes audio source between IRIS and normal tracks
+// class Player {
+//   constructor(elementId, tracks) {
+//     this.player = new Plyr(`#${elementId}`, {
+//       controls: [
+//         "restart",
+//         "play",
+//         "progress",
+//         "current-time",
+//         "duration",
+//         "mute",
+//         "volume",
+//       ],
+//     });
+//     this.tracks = tracks;
+//     this.currentTrack;
+//     this.currentTime;
+//     this.irisActive = false;
+//     this.events();
+//     this.initPlayer();
+//   }
+//   events() {
+//     const prevBtn = document.getElementById("prevBtn");
+//     const nextBtn = document.getElementById("nextBtn");
+//     const irisBtn = document.getElementById("irisBtn");
+//     prevBtn.addEventListener("click", () => this.previousTrack());
+//     nextBtn.addEventListener("click", () => this.nextTrack());
+//     irisBtn.addEventListener("click", () => this.initIris());
+//   }
+//   initPlayer() {
+//     const firstTrack = this.tracks[0];
+//     this.player.source = firstTrack;
+//     this.currentTrack = 0;
+//   }
+//   previousTrack() {
+//     if (this.currentTrack === 0) return;
+//     this.irisActive = false;
+//     this.currentTrack--;
+//     this.player.source = this.tracks[this.currentTrack];
+//   }
+//   nextTrack() {
+//     if (this.currentTrack === this.tracks.length) return;
+//     this.irisActive = false;
+//     this.currentTrack++;
+//     this.player.source = this.tracks[this.currentTrack];
+//   }
+//   async initIris() {
+//     this.currentTime = this.player.currentTime;
+//     if (this.irisActive) {
+//       this.tracks[
+//         this.currentTrack
+//       ].sources[0].src = `../audio/track-${this.currentTrack}.mp3`;
+//       this.player.source = this.tracks[this.currentTrack];
+//       this.irisActive = false;
+//     } else {
+//       this.tracks[
+//         this.currentTrack
+//       ].sources[0].src = `../audio/track-${this.currentTrack}-iris.mp3`;
+//       this.player.source = this.tracks[this.currentTrack];
+//       this.irisActive = true;
+//     }
+//     await this.player.play();
+//     this.player.currentTime = this.currentTime;
+//     console.log(this.player.source);
+//   }
+// }
+// Creates two players and uses volume to switch between IRIS and normal tracks but shows volume as mute
+var Player = /*#__PURE__*/function () {
+  function Player(element1, element2) {
+    _classCallCheck(this, Player);
+
+    this.player = new _plyr.default("#".concat(element1), {
+      controls: ["play", "progress", "current-time", "duration"]
+    });
+    this.playerIris = new _plyr.default("#".concat(element2));
+    this.tracks = [];
+    this.tracksIris = [];
+    this.currentTrackIndex;
+    this.currentTime;
+    this.irisActive = false;
+    this.getTracks();
+    this.initPlayer();
+    this.events();
+  } // Handles all events assoicated with the Player
+
+
+  _createClass(Player, [{
+    key: "events",
+    value: function events() {
+      var _this = this;
+
+      var prevBtn = document.getElementById("prevBtn");
+      var nextBtn = document.getElementById("nextBtn");
+      var irisBtn = document.getElementById("irisBtn");
+      prevBtn.addEventListener("click", function () {
+        return _this.previousTrack();
+      });
+      nextBtn.addEventListener("click", function () {
+        return _this.nextTrack();
+      });
+      irisBtn.addEventListener("click", function () {
+        return _this.initIris();
+      }); // Ensures both players stay in sync
+
+      this.player.on("play", function () {
+        return _this.playBoth();
+      });
+      this.player.on("pause", function () {
+        return _this.pauseBoth();
+      });
+      this.player.on("seeking", function () {
+        _this.syncPlayers();
+      });
+      this.player.on("seeked", function () {
+        _this.syncPlayers();
+      });
+    } // Player methods
+    // Gets all elements from DOM with a data-track attribute and fills two seperate arrays of source tracks, one for normal and one for IRIS
+
+  }, {
+    key: "getTracks",
+    value: function getTracks() {
+      var _this2 = this;
+
+      var tracks = Array.from(document.querySelectorAll("[data-track]"));
+      tracks.forEach(function (el) {
+        var track = {
+          type: "audio",
+          title: el.innerHTML,
+          sources: [{
+            src: "../audio/".concat(el.dataset.track, ".mp3"),
+            type: "audio/mp3"
+          }]
+        };
+        var trackIris = {
+          type: "audio",
+          title: el.innerHTML,
+          sources: [{
+            src: "../audio/".concat(el.dataset.track, "-iris.mp3"),
+            type: "audio/mp3"
+          }]
+        };
+
+        _this2.tracks.push(track);
+
+        _this2.tracksIris.push(trackIris);
+      });
+    } // Initiates player on creation and loads first track while muting the IRIS player
+
+  }, {
+    key: "initPlayer",
+    value: function initPlayer() {
+      this.player.source = this.tracks[0];
+      this.playerIris.source = this.tracksIris[0];
+      this.playerIris.volume = 0;
+    } // Ensures IRIS player is played at the same time as the player
+
+  }, {
+    key: "playBoth",
+    value: function playBoth() {
+      this.playerIris.play();
+    } // Ensures IRIS player is paused at the same time as the player
+
+  }, {
+    key: "pauseBoth",
+    value: function pauseBoth() {
+      this.playerIris.pause();
+    } // Ensures IRIS player is synced at the same time as the player if seeked
+
+  }, {
+    key: "syncPlayers",
+    value: function syncPlayers() {
+      this.currentTime = this.player.currentTime;
+      this.playerIris.currentTime = this.currentTime;
+      console.log(this.currentTime);
+      console.log(this.player.currentTime);
+      console.log(this.playerIris.currentTime);
+    }
+  }, {
+    key: "previousTrack",
+    value: function previousTrack() {
+      if (this.currentTrackIndex === 0) return;
+      this.currentTrackIndex--;
+      this.player.source = this.tracks[this.currentTrackIndex];
+      this.playerIris.source = this.tracksIris[this.currentTrackIndex];
+      this.checkIris();
+    }
+  }, {
+    key: "nextTrack",
+    value: function nextTrack() {
+      if (this.currentTrackIndex === this.tracks.length) return;
+      this.currentTrackIndex++;
+      this.player.source = this.tracks[this.currentTrackIndex];
+      this.playerIris.source = this.tracksIris[this.currentTrackIndex];
+      this.checkIris();
+    } // If IRIS is active when switching tracks ensure the correct player is muted
+
+  }, {
+    key: "checkIris",
+    value: function checkIris() {
+      if (this.irisActive) {
+        this.player.volume = 0;
+        this.playerIris.volume = 1;
+      }
+    }
+  }, {
+    key: "initIris",
+    value: function initIris() {
+      if (this.irisActive) {
+        this.playerIris.volume = 0;
+        this.player.volume = 1;
+        this.irisActive = false;
+      } else {
+        this.player.volume = 0;
+        this.playerIris.volume = 1;
+        this.irisActive = true;
+      }
+
+      this.syncPlayers();
+    }
+  }]);
+
+  return Player;
+}(); // class Player {
+//   constructor(element) {
+//     // this.player = new Plyr(`#${element}`, {
+//     //   controls: ["play", "progress", "current-time", "duration", "volume"],
+//     // });
+//     // this.playerIris = new Plyr(`#${element2}`);
+//     // this.player = document.querySelector("audio");
+//     this.tracks = [];
+//     this.tracksIris = [];
+//     this.currentTrackIndex;
+//     this.currentTime;
+//     this.irisActive = false;
+//     // this.audioElement = document.querySelector("audio");
+//     this.getTracks();
+//     this.initPlayer();
+//     // this.initAudioContext();
+//     this.events();
+//     // this.gainNode1;
+//     // this.gainNode2;
+//   }
+//   // Handles all events assoicated with the Player
+//   events() {
+//     const prevBtn = document.getElementById("prevBtn");
+//     const nextBtn = document.getElementById("nextBtn");
+//     const irisBtn = document.getElementById("irisBtn");
+//     const playBtn = document.getElementById("playBtn");
+//     prevBtn.addEventListener("click", () => this.previousTrack());
+//     nextBtn.addEventListener("click", () => this.nextTrack());
+//     irisBtn.addEventListener("click", () => this.initIris());
+//     this.player.onplay = () => {
+//       if (!this.audioContext) {
+//         this.initAudioContext();
+//       }
+//       this.play();
+//     };
+//     this.player.onpause = () => this.pause();
+//     this.player.onseeking = () => this.syncPlayers();
+//     this.player.onseeked = () => this.syncPlayers();
+//   }
+//   // Player methods
+//   initAudioContext() {
+//     const AudioContext = window.AudioContext || window.webkitAudioContext;
+//     this.audioContext = new AudioContext();
+//     let track1 = this.audioContext.createMediaElementSource(this.player);
+//     let track2 = this.audioContext.createMediaElementSource(this.irisPlayer);
+//     this.gainNode1 = this.audioContext.createGain();
+//     this.gainNode2 = this.audioContext.createGain();
+//     this.gainNode2.gain.value = 0;
+//     track1.connect(this.gainNode1).connect(this.audioContext.destination);
+//     track2.connect(this.gainNode2).connect(this.audioContext.destination);
+//   }
+//   // Gets all elements from DOM with a data-track attribute and fills two seperate arrays of source tracks, one for normal and one for IRIS
+//   getTracks() {
+//     const tracks = Array.from(document.querySelectorAll("[data-track]"));
+//     tracks.forEach((el) => {
+//       this.tracks.push(`../audio/${el.dataset.track}.mp3`);
+//       this.tracksIris.push(`../audio/${el.dataset.track}-iris.mp3`);
+//     });
+//   }
+//   // Initiates player on creation and loads first track while muting the IRIS player
+//   initPlayer() {
+//     this.playerIris = document.createElement("audio");
+//     document.body.appendChild(this.playerIris);
+//     this.currentTrackIndex = 0;
+//     [this.player, this.irisPlayer] = Array.from(
+//       document.querySelectorAll("audio")
+//     );
+//     this.player.src = this.tracks[this.currentTrackIndex];
+//     this.irisPlayer.src = this.tracksIris[this.currentTrackIndex];
+//   }
+//   // Ensures IRIS player is played at the same time as the player
+//   play() {
+//     this.irisPlayer.play();
+//   }
+//   // Ensures IRIS player is paused at the same time as the player
+//   pause() {
+//     this.irisPlayer.pause();
+//   }
+//   // Ensures IRIS player is synced at the same time as the player if seeked
+//   syncPlayers() {
+//     this.currentTime = this.player.currentTime;
+//     this.irisPlayer.currentTime = this.currentTime;
+//   }
+//   previousTrack() {
+//     if (this.currentTrackIndex === 0) return;
+//     this.currentTrackIndex--;
+//     this.player.source = this.tracks[this.currentTrackIndex];
+//     this.playerIris.source = this.tracksIris[this.currentTrackIndex];
+//     this.checkIris();
+//   }
+//   nextTrack() {
+//     if (this.currentTrackIndex === this.tracks.length) return;
+//     this.currentTrackIndex++;
+//     this.player.source = this.tracks[this.currentTrackIndex];
+//     this.playerIris.source = this.tracksIris[this.currentTrackIndex];
+//     this.checkIris();
+//   }
+//   // If IRIS is active when switching tracks ensure the correct player is muted
+//   checkIris() {
+//     if (this.irisActive) {
+//       this.player.volume = 0;
+//       this.playerIris.volume = 1;
+//     }
+//   }
+//   initIris() {
+//     if (this.irisActive) {
+//       this.gainNode2.gain.value = 0;
+//       this.gainNode1.gain.value = 1;
+//       this.irisActive = false;
+//     } else {
+//       this.gainNode1.gain.value = 0;
+//       this.gainNode2.gain.value = 1;
+//       this.irisActive = true;
+//     }
+//   }
+// }
+// Howler
+// class Player {
+//   constructor(element) {
+//     // this.player = new Plyr(`#${element}`, {
+//     //   controls: ["play", "progress", "current-time", "duration", "volume"],
+//     // });
+//     // this.playerIris = new Plyr(`#${element2}`);
+//     // this.player = document.querySelector("audio");
+//     this.tracks = [];
+//     this.tracksIris = [];
+//     this.howlTracks = [];
+//     this.currentTrackIndex;
+//     this.currentTime;
+//     this.currentTrack;
+//     this.currentIrisTrack;
+//     this.irisActive = false;
+//     // this.audioElement = document.querySelector("audio");
+//     this.getTracks();
+//     // this.initPlayer();
+//     // this.initAudioContext();
+//     this.events();
+//     // this.gainNode1;
+//     // this.gainNode2;
+//   }
+//   // Handles all events assoicated with the Player
+//   events() {
+//     const prevBtn = document.getElementById("prevBtn");
+//     const nextBtn = document.getElementById("nextBtn");
+//     const irisBtn = document.getElementById("irisBtn");
+//     const playBtn = document.getElementById("playBtn");
+//     const pauseBtn = document.getElementById("pauseBtn");
+//     prevBtn.addEventListener("click", () => this.previousTrack());
+//     nextBtn.addEventListener("click", () => this.nextTrack());
+//     irisBtn.addEventListener("click", () => this.initIris());
+//     playBtn.addEventListener("click", () => this.play());
+//     pauseBtn.addEventListener("click", () => this.pause());
+//     // this.player.onplay = () => {
+//     //   if (!this.audioContext) {
+//     //     this.initAudioContext();
+//     //   }
+//     //   this.play();
+//     // };
+//     // this.player.onpause = () => this.pause();
+//     // this.player.onseeking = () => this.syncPlayers();
+//     // this.player.onseeked = () => this.syncPlayers();
+//   }
+//   // Player methods
+//   initAudioContext() {
+//     // const AudioContext = window.AudioContext || window.webkitAudioContext;
+//     // this.audioContext = new AudioContext();
+//     // let track1 = this.audioContext.createMediaElementSource(this.player);
+//     // let track2 = this.audioContext.createMediaElementSource(this.irisPlayer);
+//     // this.gainNode1 = this.audioContext.createGain();
+//     // this.gainNode2 = this.audioContext.createGain();
+//     // this.gainNode2.gain.value = 0;
+//     // track1.connect(this.gainNode1).connect(this.audioContext.destination);
+//     // track2.connect(this.gainNode2).connect(this.audioContext.destination);
+//     // const AudioContext = window.AudioContext || window.webkitAudioContext;
+//     // this.audioContext = new AudioContext();
+//     // this.audioContext
+//     //   .decodeAudioData(this.tracks[0])
+//     //   .then(function (decodedData) {
+//     //     console.log(decodedData);
+//     //   });
+//   }
+//   // Gets all elements from DOM with a data-track attribute and fills two seperate arrays of source tracks, one for normal and one for IRIS
+//   getTracks() {
+//     const tracks = Array.from(document.querySelectorAll("[data-track]"));
+//     tracks.forEach((el) => {
+//       const track = {
+//         normal: new Howl({
+//           src: [` ../audio/${el.dataset.track}.mp3`],
+//           // mute: true,
+//         }),
+//         iris: new Howl({
+//           src: [`../audio/${el.dataset.track}-iris.mp3`],
+//           volume: 0,
+//           // mute: true,
+//         }),
+//       };
+//       this.tracks.push(track);
+//     });
+//     this.currentTrackIndex = 0;
+//   }
+//   // Initiates player on creation and loads first track while muting the IRIS player
+//   initPlayer() {
+//     // this.playerIris = document.createElement("audio");
+//     // document.body.appendChild(this.playerIris);
+//     // this.currentTrackIndex = 0;
+//     // [this.player, this.irisPlayer] = Array.from(
+//     //   document.querySelectorAll("audio")
+//     // );
+//     // this.player.src = this.tracks[this.currentTrackIndex];
+//     // this.irisPlayer.src = this.tracksIris[this.currentTrackIndex];
+//     // this.tracks.forEach((track, index) => {
+//     //   this.howlTracks[index] = new Howl({
+//     //     src: track,
+//     //   });
+//     // });
+//     // console.log(this.howlTracks);
+//   }
+//   // Ensures IRIS player is played at the same time as the player
+//   play() {
+//     // this.irisPlayer.play();
+//     this.currentTrack = this.tracks[this.currentTrackIndex].normal.play();
+//     this.currentIrisTrack = this.tracks[this.currentTrackIndex].iris.play();
+//     // console.log(this.tracks[this.currentTrackIndex].normal.volume);
+//     // console.log(this.tracks[this.currentTrackIndex].iris.volume);
+//   }
+//   // Ensures IRIS player is paused at the same time as the player
+//   pause() {
+//     this.tracks[this.currentTrackIndex].normal.pause();
+//     this.tracks[this.currentTrackIndex].iris.pause();
+//   }
+//   // Ensures IRIS player is synced at the same time as the player if seeked
+//   syncPlayers() {
+//     this.currentTime = this.player.currentTime;
+//     this.irisPlayer.currentTime = this.currentTime;
+//   }
+//   previousTrack() {
+//     if (this.currentTrackIndex === 0) return;
+//     this.currentTrackIndex--;
+//     this.player.source = this.tracks[this.currentTrackIndex];
+//     this.playerIris.source = this.tracksIris[this.currentTrackIndex];
+//     this.checkIris();
+//   }
+//   nextTrack() {
+//     if (this.currentTrackIndex === this.tracks.length) return;
+//     this.currentTrackIndex++;
+//     this.player.source = this.tracks[this.currentTrackIndex];
+//     this.playerIris.source = this.tracksIris[this.currentTrackIndex];
+//     this.checkIris();
+//   }
+//   // If IRIS is active when switching tracks ensure the correct player is muted
+//   checkIris() {
+//     if (this.irisActive) {
+//       this.player.volume = 0;
+//       this.playerIris.volume = 1;
+//     }
+//   }
+//   initIris() {
+//     console.log(this.tracks[this.currentTrackIndex].iris.volume());
+//     if (this.irisActive) {
+//       this.tracks[this.currentTrackIndex].iris.volume(0, this.currentIrisTrack);
+//       this.tracks[this.currentTrackIndex].normal.volume(1, this.currentTrack);
+//       this.irisActive = false;
+//     } else {
+//       this.tracks[this.currentTrackIndex].normal.volume(0, this.currentTrack);
+//       this.tracks[this.currentTrackIndex].iris.volume(1, this.currentIrisTrack);
+//       this.irisActive = true;
+//     }
+//   }
+// }
+
+
+var _default = Player;
+exports.default = _default;
+},{"plyr":"../../node_modules/plyr/dist/plyr.min.js","howler":"../../node_modules/howler/dist/howler.js"}],"index.js":[function(require,module,exports) {
+"use strict";
+
+require("regenerator-runtime/runtime");
 
 var _gsap = _interopRequireDefault(require("gsap"));
 
 var _ScrollTrigger = _interopRequireDefault(require("gsap/ScrollTrigger"));
 
 var _basePage = require("./basePage");
+
+var _player = _interopRequireDefault(require("./player"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22303,8 +31185,92 @@ _ScrollTrigger.default.refresh();
 (0, _basePage.createScrollAnimationMultiple)(parallaxCards, parallaxOpts);
 (0, _basePage.createScrollAnimationMultiple)(waveCards, waveOpts);
 (0, _basePage.createFadeInAnimation)();
-(0, _basePage.lottieLoader)();
-},{"gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js","./basePage":"basePage.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+(0, _basePage.lottieLoader)(); // Audio Player testing
+
+var playList = document.getElementById("playlist");
+
+if (playList) {
+  new _player.default("player1", "player2");
+}
+
+var tracks = [{
+  type: "audio",
+  title: "track 0",
+  sources: [{
+    src: "../audio/track-0.mp3",
+    type: "audio/mp3"
+  }]
+}, {
+  type: "audio",
+  title: "track 1",
+  sources: [{
+    src: "../audio/track-1.mp3",
+    type: "audio/mp3"
+  }]
+}]; // const player = new Player("player1", tracks);
+// const AudioContext = window.AudioContext || window.webkitAudioContext;
+// const audioContext = new AudioContext();
+// // get the audio element
+// const audioElements = document.querySelectorAll("audio");
+// let track1 = audioContext.createMediaElementSource(audioElements[0]);
+// let track2 = audioContext.createMediaElementSource(audioElements[1]);
+// // pass it into the audio context
+// const playButton = document.getElementById("playBtn");
+// playButton.addEventListener(
+//   "click",
+//   function () {
+//     // play or pause track depending on state
+//     if (audioContext.state === "suspended") {
+//       audioContext.resume();
+//       this.dataset.playing = "true";
+//     } else {
+//       audioElements[0].play();
+//       audioElements[1].play();
+//       this.dataset.playing = "false";
+//     }
+//   },
+//   false
+// );
+// // audioElement.addEventListener(
+// //   "ended",
+// //   () => {
+// //     playButton.dataset.playing = "false";
+// //   },
+// //   false
+// // );
+// const gainNode = audioContext.createGain();
+// const gainNode2 = audioContext.createGain();
+// track1.connect(gainNode).connect(audioContext.destination);
+// track2.connect(gainNode2).connect(audioContext.destination);
+// gainNode2.gain.value = 0;
+// const volumeControl = document.querySelector("#volume");
+// volumeControl.addEventListener(
+//   "input",
+//   function () {
+//     if (irisOn) {
+//       gainNode2.gain.value = this.value;
+//     } else {
+//       gainNode.gain.value = this.value;
+//     }
+//   },
+//   false
+// );
+// let irisOn = false;
+// const irisBtn = document.getElementById("irisBtn");
+// irisBtn.addEventListener("click", () => {
+//   if (irisOn) {
+//     gainNode.gain.value = 1;
+//     gainNode2.gain.value = 0;
+//     console.log("Iris off");
+//     irisOn = false;
+//   } else {
+//     gainNode.gain.value = 0;
+//     gainNode2.gain.value = 1;
+//     console.log("Iris on");
+//     irisOn = true;
+//   }
+// });
+},{"regenerator-runtime/runtime":"../../node_modules/regenerator-runtime/runtime.js","gsap":"../../node_modules/gsap/index.js","gsap/ScrollTrigger":"../../node_modules/gsap/ScrollTrigger.js","./basePage":"basePage.js","./player":"player.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -22332,7 +31298,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55015" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60093" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

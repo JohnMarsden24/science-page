@@ -17,6 +17,8 @@
   --font-bold: "NeurialGrotesk-Bold", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
     sans-serif;
+
+  --plyr-color-main: red;
 }
 
 /* GLOBAL STYLING */
@@ -400,8 +402,90 @@ video {
   margin: 0 auto 64px;
 }
 
-@media screen and (max-width: 768px) {
+/* Audio player testing */
+
+.iris-player {
+  display: none;
+}
+
+.test-div {
+  width: 0;
+  height: 0;
+  content: "Hello world";
+
+  border-top: 10em solid transparent;
+  border-right: 10em solid transparent;
+  border-bottom: 10em solid lightsalmon;
+  border-left: 10em solid transparent;
+  border-bottom-right-radius: 10em;
+}
+
+.heart {
+  position: relative;
+
+  width: 200px;
+  height: 160px;
+}
+.heart:before,
+.heart:after {
+  position: absolute;
+  content: "";
+
+  width: 100px;
+  height: 160px;
+  left: 100px;
+
+  background-color: tomato;
+
+  border-radius: 100px 100px 0 0;
+
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+}
+
+.heart:after {
+  left: 0;
+
+  transform-origin: 100% 100%;
+  transform: rotate(45deg);
+}
+/* 
+.heart:hover {
+  transform: scale(1.5);
+} */
+
+.heart-wrapper {
+  cursor: pointer;
+
+  width: 200px;
+  height: 160px;
+
+  transition: transform 0.3s ease-in-out;
+}
+.heart-wrapper:hover {
+  transform-origin: 50% 50%;
+  transform: rotate(45deg) scale(1.25);
+  /* transform: scale(1.25); */
+}
+
+audio {
+  width: 100%;
+}
+
+audio::-webkit-media-controls-panel {
+  background-color: yellow;
+}
+
+audio::-webkit-media-controls-play-button {
+  background-color: violet;
+}
+
+@media screen and (max-width: 1000px) {
   /* GLOBAL STYLING */
+
+  body {
+    font-size: 0.5em;
+  }
 
   p {
     font-size: 1rem;
